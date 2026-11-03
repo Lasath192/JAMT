@@ -23,7 +23,8 @@ The mission parameters and environmental challenges are directly calibrated with
 - **NASA DONKI (Space Weather Database Of Notifications, Knowledge, Information):** The Chapter 5 Solar Particle Event (SPE) peaking at `2.45 mSv/h` is derived from historical Coronal Mass Ejections (CMEs) and solar proton flux events logged by NASA DONKI.
 - **NASA OSDR (Open Science Data Repository):** Chapter 4's dwarf wheat transpiration rates, Photosynthetically Active Radiation (PAR) lighting draw (5 kW), and biological radiation countermeasures reflect plant research payloads in NASA's OSDR.
 - **Curiosity RAD & Perseverance MEDA Instruments:** Mars surface ambient pressure (0.6 kPa), baseline cosmic radiation (0.08 mSv/h), and atmospheric dust storm optical depth ($\tau = 0.5 \text{ to } 3.8$) utilize real in-situ surface telemetry.
-- **NASA Codex:** 11 discovered space science cards embedded directly in the mission terminal.
+- **NASA CHAPEA (Crew Health and Performance Exploration Analog):** Arcadia Planitia Base's architectural layout, 3D-printed regolith (Lavacrete) construction, 4-specialist crew division (Commander, Flight Engineer, Flight Surgeon, Chief Botanist), fresh crop vs. freeze-dried food dietary trade-offs, and speed-of-light radio delay mechanics are calibrated against NASA's 378-day *Mars Dune Alpha* analog mission at Johnson Space Center.
+- **NASA Codex:** 13 discovered space science cards embedded directly in the mission terminal.
 
 ### 2. Kid-Friendly Jargon Decoder (Ages 7–12 Accessibility)
 Complex telemetry units are decoded into relatable, plain-language concepts with a single click:
@@ -33,6 +34,7 @@ Complex telemetry units are decoded into relatable, plain-language concepts with
 - **kPa / CO₂ ppm:** Air pressure keeping blood liquid vs. invisible carbon dioxide molecules that cause headaches if not scrubbed.
 - **µS/cm (Conductivity):** Water purity tested by electrical flow—pure drinking water doesn't conduct electricity well!
 - **mSv/h (MilliSieverts/hour):** Cosmic radiation dose rate comparing normal surface background to intense solar storms.
+- **ISRU (In-Situ Resource Utilization):** Making what you need from local Martian materials—like 3D-printing habitat walls from red dirt instead of launching heavy bricks on rockets from Earth!
 
 ### 3. Compounding Real-Time Telemetry & Finite Backup Fuel ("No Free Choices")
 A background physics simulation models interconnected systems every 1500ms:
@@ -40,7 +42,7 @@ A background physics simulation models interconnected systems every 1500ms:
 - **Finite Backup RTG Fuel:** The emergency +12 kW backup generator consumes $0.25\text{ kg}$ of fuel per cycle from a finite $45\text{ kg}$ reserve, automatically cutting out when empty.
 - **Compounding CO₂ Dynamics:** If primary life support is unpowered or clogged, $\text{CO}_2$ rises steadily toward hazardous levels ($2800\text{ ppm}$) and requires functional scrubbers to restore safe equilibrium ($415\text{ ppm}$).
 - **Plumbing Failures:** Leaking pipes drain freshwater reserves unless actively repaired with seal kits.
-- **Agricultural Life-Cycle:** Hydroponic grow banks consume water to produce crew food rations.
+- **Agricultural Life-Cycle & Dietary Morale:** Hydroponic grow banks consume water to produce crew food rations; active fresh crop cultivation boosts crew health and unlocks the *CHAPEA Fresh Harvest* badge, whereas sustained reliance on freeze-dried rations causes nutritional monotony.
 
 ### 4. Junior Astronaut Waypoint Guide Arrow
 A pulsing yellow directional compass arrow (`#fde047`) orbits Cadet Nova at a 34px radius, calculating vector trajectories to the active objective hardware console whenever distance exceeds 65px.
@@ -50,7 +52,7 @@ A pulsing yellow directional compass arrow (`#fde047`) orbits Cadet Nova at a 34
   - *Standard NASA Baseline*
   - *DONKI X-Class Solar Max* (+2 kW solar, 1.65x radiation dose rate)
   - *Global Tau-4.5 Dust Storm* (-4 kW severe solar attenuation)
-- **14-Minute Radio Delay Simulator:** Demonstrates speed-of-light electromagnetic propagation delay between Earth and Mars (~14 minutes one-way, 28 minutes round-trip), reinforcing why junior astronauts must master automated onboard procedures rather than relying on real-time Mission Control decisions.
+- **14-Minute Radio Delay Simulator:** Demonstrates speed-of-light electromagnetic propagation delay between Earth and Mars (~14 minutes mid-orbit, varying from 4 to 24 minutes depending on planetary alignment, with NASA's CHAPEA testing a 22-minute worst-case isolation delay), reinforcing why junior astronauts must master automated onboard procedures rather than waiting for Mission Control.
 
 ---
 

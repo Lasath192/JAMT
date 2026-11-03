@@ -23,8 +23,13 @@ window.addEventListener('keydown', (e) => {
         if (typeof triggerNearestObjectInteraction === 'function') triggerNearestObjectInteraction();
     }
     
+    if (k === 'q') {
+        if (typeof toggleNearestPropDetails === 'function') toggleNearestPropDetails();
+    }
+
     if (k === 'escape') {
         if (typeof closeAllModals === 'function') closeAllModals();
+        if (typeof closePropDetailsModal === 'function') closePropDetailsModal();
     }
 });
 
@@ -63,6 +68,11 @@ function initTouchControls() {
                 if (typeof triggerNearestObjectInteraction === 'function') triggerNearestObjectInteraction();
             }
         });
+    }
+
+    const btnCloseCard = document.getElementById('btn-close-prop-card');
+    if (btnCloseCard) {
+        btnCloseCard.addEventListener('click', closePropDetailsModal);
     }
 }
 
@@ -110,6 +120,122 @@ function initCanvasPointer() {
     });
 }
 
+// --- HABITAT SOLID COLLISION DETECTOR ---
+// Prevents walking through regolith walls, central master consoles, and perimeter machinery.
+function checkSolidCollision(px, py, radius = 13) {
+    // 1. Solid Regolith Habitat Walls
+    if (typeof HABITAT_WALLS !== 'undefined') {
+        for (let i = 0; i < HABITAT_WALLS.length; i++) {
+            const w = HABITAT_WALLS[i];
+            if (px + radius > w.x && px - radius < w.x + w.w &&
+                py + radius > w.y && py - radius < w.y + w.h) {
+                return true;
+            }
+        }
+    }
+
+    // 2. Central Master Consoles (Solid Desk & Plinth Foundations)
+    if (typeof OBJECTS !== 'undefined') {
+        for (let i = 0; i < OBJECTS.length; i++) {
+            const obj = OBJECTS[i];
+            let cw = 26;
+            let ch = 18;
+            if (obj.id === 'mars_rover') { cw = 40; ch = 28; }
+            else if (obj.id === 'solar_array_eva') { cw = 26; ch = 26; }
+            else if (obj.id === 'storage_locker') { cw = 26; ch = 18; }
+
+            if (px + radius > obj.x - cw / 2 && px - radius < obj.x + cw / 2 &&
+                py + radius > obj.y - ch / 2 && py - radius < obj.y + ch / 2) {
+                return true;
+            }
+        }
+    }
+
+    // 3. Perimeter Machinery & Cubicle Hardware Props
+    if (typeof HABITAT_PROPS !== 'undefined') {
+        for (let i = 0; i < HABITAT_PROPS.length; i++) {
+            const p = HABITAT_PROPS[i];
+            if (px + radius > p.x - p.w / 2 && px - radius < p.x + p.w / 2 &&
+                py + radius > p.y - p.h / 2 && py - radius < p.y + p.h / 2) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+// Backward-compatible alias for existing callers
+function checkWallCollision(px, py, radius = 13) {
+    return checkSolidCollision(px, py, radius);
+}
+
+// --- NASA HARDWARE PROP DETAILS CARD (Q KEY INSPECTOR) ---
+window.activePropInspectionTarget = null;
+
+function toggleNearestPropDetails() {
+    const card = document.getElementById('hud-prop-card');
+    if (card && !card.classList.contains('hidden')) {
+        closePropDetailsModal();
+        return;
+    }
+
+    if (typeof HABITAT_PROPS === 'undefined' || !state || !state.player) return;
+
+    let nearestProp = null;
+    let minDist = 48;
+    for (let i = 0; i < HABITAT_PROPS.length; i++) {
+        const p = HABITAT_PROPS[i];
+        const d = Math.hypot(state.player.x - p.x, state.player.y - p.y);
+        if (d < minDist) {
+            minDist = d;
+            nearestProp = p;
+        }
+    }
+
+    if (nearestProp) {
+        showPropDetailsCard(nearestProp);
+    }
+}
+window.toggleNearestPropDetails = toggleNearestPropDetails;
+
+function showPropDetailsCard(prop) {
+    const card = document.getElementById('hud-prop-card');
+    if (!card) return;
+
+    window.activePropInspectionTarget = prop;
+
+    const refEl = document.getElementById('prop-card-ref');
+    const statEl = document.getElementById('prop-card-status');
+    const titleEl = document.getElementById('prop-card-title');
+    const descEl = document.getElementById('prop-card-desc');
+
+    if (refEl) refEl.textContent = prop.refCode || 'NASA-STD-SPEC';
+    if (statEl) {
+        statEl.textContent = '● ' + (prop.status || 'NOMINAL').toUpperCase();
+        if ((prop.status || '').toLowerCase().includes('optimal') || (prop.status || '').toLowerCase().includes('nominal')) {
+            statEl.className = 'text-[10px] font-mono-tech text-emerald-400 font-bold';
+        } else {
+            statEl.className = 'text-[10px] font-mono-tech text-amber-400 font-bold';
+        }
+    }
+    if (titleEl) {
+        titleEl.innerHTML = `<i class="fa-solid fa-microchip text-sky-400 text-xs"></i> <span>${prop.name}</span>`;
+    }
+    if (descEl) descEl.textContent = prop.info || 'NASA standard pressurized habitat life-support subsystem.';
+
+    card.classList.remove('hidden');
+    if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+}
+window.showPropDetailsCard = showPropDetailsCard;
+
+function closePropDetailsModal() {
+    const card = document.getElementById('hud-prop-card');
+    if (card) card.classList.add('hidden');
+    window.activePropInspectionTarget = null;
+}
+window.closePropDetailsModal = closePropDetailsModal;
+
 // --- GAME LOGIC UPDATE ---
 function updateGame(dt) {
     if (typeof isAnyModalOpen === 'function' && isAnyModalOpen()) return;
@@ -141,11 +267,27 @@ function updateGame(dt) {
         dy /= len;
     }
 
-    // Apply movement within boundaries
-    const nextX = state.player.x + dx * state.player.speed * dt;
-    const nextY = state.player.y + dy * state.player.speed * dt;
-    state.player.x = Math.max(45, Math.min(1145, nextX));
-    state.player.y = Math.max(55, Math.min(705, nextY));
+    // Apply movement with axis-independent sliding collision against 3D-printed regolith walls
+    const moveX = dx * state.player.speed * dt;
+    const moveY = dy * state.player.speed * dt;
+
+    if (moveX !== 0) {
+        const nextX = Math.max(45, Math.min(1145, state.player.x + moveX));
+        if (!checkWallCollision(nextX, state.player.y)) {
+            state.player.x = nextX;
+        } else if (state.player.targetX !== null) {
+            state.player.targetX = null;
+        }
+    }
+
+    if (moveY !== 0) {
+        const nextY = Math.max(55, Math.min(705, state.player.y + moveY));
+        if (!checkWallCollision(state.player.x, nextY)) {
+            state.player.y = nextY;
+        } else if (state.player.targetY !== null) {
+            state.player.targetY = null;
+        }
+    }
 
     // AUTOMATED AIRLOCK EVA SUIT INTERLOCK RULE:
     // Crossing outer EVA hatch (x <= 282) equips & pressurizes suit.
@@ -191,17 +333,26 @@ function updateGame(dt) {
     const titleEl = document.getElementById('interact-title');
     const subEl = document.getElementById('interact-sub');
 
+    // Floating interaction prompt: Visible in both 2D and 3D mode for maximum clarity
     if (promptEl && titleEl && subEl) {
         if (nearestObj) {
             promptEl.classList.remove('hidden');
             titleEl.textContent = nearestObj.name;
-            subEl.textContent = 'Click or Press [E] to operate';
+            subEl.textContent = 'Click or Press [E] to interact';
         } else if (nearestNPC) {
             promptEl.classList.remove('hidden');
             titleEl.textContent = `Talk to ${nearestNPC.name} (${nearestNPC.role})`;
-            subEl.textContent = 'Click or Press [E] for Crew Story Dialogue';
+            subEl.textContent = 'Click or Press [E] for Crew Dialogue';
         } else {
             promptEl.classList.add('hidden');
+        }
+    }
+
+    // Auto-close prop details card if player walks away
+    if (window.activePropInspectionTarget && state && state.player) {
+        const d = Math.hypot(state.player.x - window.activePropInspectionTarget.x, state.player.y - window.activePropInspectionTarget.y);
+        if (d > 55) {
+            closePropDetailsModal();
         }
     }
 }
@@ -213,14 +364,21 @@ function gameLoop(now) {
     const dt = Math.min(0.05, (now - lastTime) / 1000);
     lastTime = now;
     updateGame(dt);
-    if (typeof renderGame === 'function') renderGame(now);
+    if (window.currentViewMode === '3d' && typeof renderGame3D === 'function') {
+        renderGame3D(now);
+    } else if (typeof renderGame === 'function') {
+        renderGame(now);
+    }
     requestAnimationFrame(gameLoop);
 }
 
 // --- BOOTSTRAP INITIALIZATION ---
 function initGame() {
+    window.currentViewMode = '3d';
     initTouchControls();
     initCanvasPointer();
+    if (typeof initThreeScene === 'function') initThreeScene();
+    if (typeof onThreeResize === 'function') onThreeResize();
     if (typeof resizeCanvas === 'function') resizeCanvas();
     if (typeof loadChapter === 'function') loadChapter(0, true);
     requestAnimationFrame(gameLoop);

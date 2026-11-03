@@ -110,3 +110,48 @@ canvas {
     }
 }
 
+
+/* Modern Streamlined UI/UX Enhancements */
+#active-objective-pill {
+    backdrop-filter: blur(16px);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#active-objective-pill:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.25);
+}
+#active-objective-pill:active {
+    transform: translateY(0px) scale(0.99);
+}
+
+#pill-checklist-collapsed,
+#pill-trainer-collapsed {
+    backdrop-filter: blur(16px);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#pill-checklist-collapsed:hover,
+#pill-trainer-collapsed:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(56, 189, 248, 0.25);
+}
+#pill-checklist-collapsed:active,
+#pill-trainer-collapsed:active {
+    transform: translateY(0px) scale(0.98);
+}
+
+#panel-checklist,
+#panel-trainer {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+
+#cadet-meter-power,
+#cadet-meter-life,
+#cadet-meter-rad {
+    transition: all 0.15s ease;
+}
+#cadet-meter-power:hover,
+#cadet-meter-life:hover,
+#cadet-meter-rad:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.08);
+}
