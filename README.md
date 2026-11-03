@@ -104,19 +104,33 @@ A pulsing yellow directional compass arrow (`#fde047`) orbits Cadet Nova at a 34
 
 ---
 
-## 🛠️ Technology Stack
+## 🛠️ Technology Stack & Modular Architecture
 
-- **Graphics Engine:** Custom 2.5D pseudo-isometric volumetric canvas engine with dynamic depth sorting, drop shadows, and procedural Martian dust atmospheric effects.
-- **Audio Architecture:** Procedural Web Audio API sound synthesizer (`SoundFX`) producing real-time retro telemetry beeps, airlock pressure cycling, low-frequency habitat hum, and alarm sirens—without external audio files.
-- **Styling & UI:** Tailwind CSS with HUD sci-fi glassmorphism and FontAwesome vector iconography.
-- **Portability:** 100% self-contained in `index.html` (runs in any modern desktop, tablet, or mobile browser without installation, build tools, or web servers).
+The project is architected for both modular production development and zero-dependency offline portability:
+
+- **Modular Architecture:**
+  - `index.html`: Modern modular HTML shell loading decoupled styles and scripts.
+  - `css/styles.css`: HUD glassmorphism (`.hud-panel`, `.hud-panel-amber`), responsive canvas styles, animations.
+  - `js/soundfx.js`: Procedural Web Audio API sound synthesizer (environmental wind, habitat hum, retro SFX).
+  - `js/nasa_data.js`: NASA Open Data citations (DONKI, OSDR, Curiosity MEDA), badges, jargon decoder, weather modes.
+  - `js/chapters.js`: 6 campaign chapters, rooms, interactive consoles, and crew narrative dialogue scripts.
+  - `js/simulation.js`: Real-time compounding telemetry loop, finite backup RTG fuel burn, power balancing, task synchronizer.
+  - `js/render.js`: High-performance 2.5D pseudo-isometric canvas renderer, SVG character portraits, floor decals, waypoint compass.
+  - `js/ui.js`: Interactive story dialogue sequences, equipment console modals, power breakers, codex, and event listeners.
+  - `js/game.js`: Input controller (WASD, mobile touch D-pad, click-to-walk), collision physics, and game loop.
+  - `astra_1_the_red_frontier.html`: 100% standalone single-file fallback for zero-install offline competition submissions.
+
+- **Backend Servers (Node.js & Python):**
+  - `server.js`: Node.js HTTP server with built-in REST API endpoints (`/api/nasa/donki`, `/api/telemetry`, `/api/health`).
+  - `server.py`: Python 3 HTTP server with optional live NASA API proxy and authentic space weather telemetry fallback.
+  - `package.json`: NPM scripts for development and syntax verification (`npm start`, `npm run check`).
 
 ---
 
 ## 🚀 Live Demo & Local Execution
 
-### Run Locally:
-Simply open `index.html` in any web browser:
+### Option 1: Direct Browser (Zero-Install)
+Simply double-click `index.html` or `astra_1_the_red_frontier.html` in any web browser:
 ```bash
 # On Windows PowerShell:
 Start-Process index.html
@@ -126,6 +140,21 @@ open index.html
 
 # On Linux:
 xdg-open index.html
+```
+
+### Option 2: Run with Node.js
+```bash
+# Start local mission server on http://localhost:3000
+npm start
+
+# Verify all scripts
+npm run check
+```
+
+### Option 3: Run with Python 3
+```bash
+# Start local mission server on http://localhost:8000
+python server.py
 ```
 
 ### Deploy to GitHub Pages:

@@ -1,0 +1,24 @@
+{
+  "name": "jamt-astra-1",
+  "version": "2.0.0",
+  "description": "ASTRA-1: The Red Frontier - Junior Astronaut Mission Trainer | 2026 NASA Space Apps Challenge",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "check": "node --check js/soundfx.js && node --check js/nasa_data.js && node --check js/chapters.js && node --check js/simulation.js && node --check js/render.js && node --check js/ui.js && node --check js/game.js && node --check server.js",
+    "test": "npm run check"
+  },
+  "keywords": [
+    "nasa-space-apps",
+    "nasa-space-apps-2026",
+    "mars-habitat",
+    "junior-astronaut",
+    "space-weather",
+    "eclss",
+    "stem-education",
+    "game"
+  ],
+  "author": "Cadet Nova & Team",
+  "license": "MIT"
+}
