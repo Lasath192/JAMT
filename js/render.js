@@ -489,6 +489,7 @@ function getConsoleIllustrationSVG(objId) {
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 const camera = { x: 560, y: 380, zoom: 1 };
+window.camera = camera;
 
 function resizeCanvas() {
     canvas.width = canvas.parentElement.clientWidth;
@@ -496,14 +497,30 @@ function resizeCanvas() {
     const scaleX = canvas.width / 1220;
     const scaleY = canvas.height / 780;
     camera.zoom = Math.max(0.58, Math.min(1.12, Math.min(scaleX, scaleY) * 0.96));
+    window.camera = camera;
 }
 window.addEventListener('resize', resizeCanvas);
+resizeCanvas(); // Ensure initial scale is accurate immediately
 
 // --- AAA VISUAL VFX STATE & BUFFERS ---
 const footprints = [];
 let lastFootprintTime = 0;
 const floatingTexts = [];
+const clickMarkers = [];
 let cameraShake = 0;
+
+function spawnClickMarker(x, y, color = '#38bdf8') {
+    clickMarkers.push({
+        x,
+        y,
+        color,
+        radius: 4,
+        maxRadius: 24,
+        born: performance.now()
+    });
+    if (clickMarkers.length > 8) clickMarkers.shift();
+}
+window.spawnClickMarker = spawnClickMarker;
 
 function spawnFloatingText(text, x, y, color = '#fde047') {
     floatingTexts.push({
@@ -1528,15 +1545,6 @@ function renderGame(now) {
         ctx.fillRect(fp.x + 2, fp.y, 3, 4);
     }
 
-    // 7. Target marker
-    if (state.player.targetX !== null) {
-        ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(state.player.targetX, state.player.targetY, 10 + Math.sin(now * 0.01) * 3, 0, Math.PI * 2);
-        ctx.stroke();
-    }
-
     // 8. Cadet Nova
     drawAstronaut(state.player.x, state.player.y, state.player.inSuit, now);
 
@@ -1576,6 +1584,66 @@ function renderGame(now) {
             ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
             ctx.fill();
         }
+    }
+
+    // 10b. Active Click-to-Walk Waypoint & Dotted Path Guide
+    if (state.player && state.player.targetX !== null && state.player.targetY !== null) {
+        const pulse = (now * 0.007) % 1;
+        const tx = state.player.targetX;
+        const ty = state.player.targetY;
+        const markerColor = state.player.targetAction
+            ? (state.player.targetAction.type === 'object' ? '#38bdf8' : '#22c55e')
+            : '#38bdf8';
+
+        ctx.save();
+        // Dotted movement guide line from Cadet Nova to destination
+        ctx.setLineDash([5, 4]);
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(state.player.x, state.player.y);
+        ctx.lineTo(tx, ty);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Pulsing waypoint circle
+        ctx.strokeStyle = markerColor;
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = 1 - pulse * 0.7;
+        ctx.beginPath();
+        ctx.arc(tx, ty, 6 + pulse * 14, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Crosshair reticle
+        ctx.globalAlpha = 0.9;
+        ctx.beginPath();
+        ctx.arc(tx, ty, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = markerColor;
+        ctx.fill();
+        ctx.moveTo(tx - 6, ty); ctx.lineTo(tx + 6, ty);
+        ctx.moveTo(tx, ty - 6); ctx.lineTo(tx, ty + 6);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    // 10c. Transient Click Ripples
+    for (let i = clickMarkers.length - 1; i >= 0; i--) {
+        const m = clickMarkers[i];
+        const age = (nowMs - m.born) / 1000;
+        if (age > 0.55) {
+            clickMarkers.splice(i, 1);
+            continue;
+        }
+        const progress = age / 0.55;
+        const r = m.radius + progress * (m.maxRadius - m.radius);
+        ctx.save();
+        ctx.strokeStyle = m.color;
+        ctx.globalAlpha = (1 - progress) * 0.85;
+        ctx.lineWidth = 2 * (1 - progress);
+        ctx.beginPath();
+        ctx.arc(m.x, m.y, r, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
     }
 
     ctx.restore();

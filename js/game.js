@@ -66,48 +66,144 @@ function initTouchControls() {
     }
 }
 
+// Helper: Convert screen pointer coordinates to world game coordinates with exact scaling & camera zoom
+function getPointerWorldPos(canvas, e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const canvasX = (e.clientX - rect.left) * scaleX;
+    const canvasY = (e.clientY - rect.top) * scaleY;
+
+    const cam = (window.camera && typeof window.camera.zoom === 'number')
+        ? window.camera
+        : { x: 560, y: 380, zoom: 1 };
+
+    const worldX = (canvasX - canvas.width / 2) / cam.zoom + cam.x;
+    const worldY = (canvasY - canvas.height / 2) / cam.zoom + cam.y;
+    return { worldX, worldY };
+}
+
 // Canvas Click-to-Walk / Pointer Interaction
 function initCanvasPointer() {
     const canvas = document.getElementById('game-canvas');
     if (!canvas) return;
 
-    canvas.addEventListener('pointerdown', (e) => {
+    let isPointerDragging = false;
+
+    function handlePointer(e, isInitialClick = false) {
         if (typeof isAnyModalOpen === 'function' && isAnyModalOpen()) return;
-        const rect = canvas.getBoundingClientRect();
-        const sx = e.clientX - rect.left;
-        const sy = e.clientY - rect.top;
-        const cam = window.camera || { x: 560, y: 380, zoom: 1 };
-        const worldX = (sx - canvas.width / 2) / cam.zoom + cam.x;
-        const worldY = (sy - canvas.height / 2) / cam.zoom + cam.y;
+        const { worldX, worldY } = getPointerWorldPos(canvas, e);
+        const clampedX = Math.max(45, Math.min(1145, worldX));
+        const clampedY = Math.max(55, Math.min(705, worldY));
 
-        // Check if player clicked directly on an interactive console
-        if (typeof OBJECTS !== 'undefined') {
-            for (const obj of OBJECTS) {
-                if (Math.hypot(worldX - obj.x, worldY - obj.y) <= obj.radius) {
-                    if (Math.hypot(state.player.x - obj.x, state.player.y - obj.y) <= obj.radius + 35) {
-                        if (typeof triggerNearestObjectInteraction === 'function') triggerNearestObjectInteraction();
-                        return;
+        if (isInitialClick) {
+            let clickedObj = null;
+            if (typeof OBJECTS !== 'undefined') {
+                for (const obj of OBJECTS) {
+                    if (Math.hypot(worldX - obj.x, worldY - obj.y) <= obj.radius + 18) {
+                        clickedObj = obj;
+                        break;
                     }
                 }
             }
-        }
 
-        // Check if player clicked directly on a crew NPC
-        if (typeof CREW_NPCS !== 'undefined') {
-            for (const npc of CREW_NPCS) {
-                if (Math.hypot(worldX - npc.x, worldY - npc.y) <= 36) {
-                    if (Math.hypot(state.player.x - npc.x, state.player.y - npc.y) <= 75) {
-                        if (typeof triggerNearestObjectInteraction === 'function') triggerNearestObjectInteraction();
-                        return;
+            let clickedNPC = null;
+            if (!clickedObj && typeof CREW_NPCS !== 'undefined') {
+                for (const npc of CREW_NPCS) {
+                    if (Math.hypot(worldX - npc.x, worldY - npc.y) <= 38) {
+                        clickedNPC = npc;
+                        break;
                     }
                 }
             }
+
+            if (clickedObj) {
+                if (Math.hypot(state.player.x - clickedObj.x, state.player.y - clickedObj.y) <= clickedObj.radius + 40) {
+                    state.player.targetX = null;
+                    state.player.targetY = null;
+                    state.player.targetAction = null;
+                    if (typeof unlockFact === 'function') unlockFact(clickedObj.factId);
+                    if (typeof openObjectModal === 'function') openObjectModal(clickedObj);
+                    if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+                    return;
+                } else {
+                    state.player.targetX = clickedObj.x;
+                    state.player.targetY = clickedObj.y;
+                    state.player.targetAction = { type: 'object', target: clickedObj };
+                    if (typeof spawnClickMarker === 'function') spawnClickMarker(clickedObj.x, clickedObj.y, '#38bdf8');
+                    if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+                    return;
+                }
+            }
+
+            if (clickedNPC) {
+                if (Math.hypot(state.player.x - clickedNPC.x, state.player.y - clickedNPC.y) <= 65) {
+                    state.player.targetX = null;
+                    state.player.targetY = null;
+                    state.player.targetAction = null;
+                    if (clickedNPC.dialogues && typeof startDialogueSequence === 'function') {
+                        startDialogueSequence(clickedNPC.dialogues, state.chapterIdx);
+                    }
+                    if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+                    return;
+                } else {
+                    state.player.targetX = clickedNPC.x;
+                    state.player.targetY = clickedNPC.y;
+                    state.player.targetAction = { type: 'npc', target: clickedNPC };
+                    if (typeof spawnClickMarker === 'function') spawnClickMarker(clickedNPC.x, clickedNPC.y, '#22c55e');
+                    if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+                    return;
+                }
+            }
+
+            // Normal ground waypoint click
+            if (typeof spawnClickMarker === 'function') spawnClickMarker(clampedX, clampedY, '#38bdf8');
+            if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
         }
 
-        // Otherwise walk to clicked point
-        state.player.targetX = Math.max(45, Math.min(1145, worldX));
-        state.player.targetY = Math.max(55, Math.min(705, worldY));
+        state.player.targetX = clampedX;
+        state.player.targetY = clampedY;
+        state.player.targetAction = null;
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+        isPointerDragging = true;
+        handlePointer(e, true);
     });
+
+    window.addEventListener('pointermove', (e) => {
+        if (isPointerDragging) {
+            handlePointer(e, false);
+        } else {
+            // Hover cursor check
+            if (typeof isAnyModalOpen === 'function' && isAnyModalOpen()) {
+                canvas.style.cursor = 'default';
+                return;
+            }
+            const { worldX, worldY } = getPointerWorldPos(canvas, e);
+            let hover = false;
+            if (typeof OBJECTS !== 'undefined') {
+                for (const obj of OBJECTS) {
+                    if (Math.hypot(worldX - obj.x, worldY - obj.y) <= obj.radius + 15) {
+                        hover = true;
+                        break;
+                    }
+                }
+            }
+            if (!hover && typeof CREW_NPCS !== 'undefined') {
+                for (const npc of CREW_NPCS) {
+                    if (Math.hypot(worldX - npc.x, worldY - npc.y) <= 35) {
+                        hover = true;
+                        break;
+                    }
+                }
+            }
+            canvas.style.cursor = hover ? 'pointer' : 'crosshair';
+        }
+    });
+
+    window.addEventListener('pointerup', () => { isPointerDragging = false; });
+    window.addEventListener('pointercancel', () => { isPointerDragging = false; });
 }
 
 // --- GAME LOGIC UPDATE ---
@@ -127,15 +223,49 @@ function updateGame(dt) {
         const tx = state.player.targetX - state.player.x;
         const ty = state.player.targetY - state.player.y;
         const dist = Math.hypot(tx, ty);
-        if (dist > 6) {
+
+        // Check if approaching an intentional target action (console or crew)
+        if (state.player.targetAction) {
+            const act = state.player.targetAction;
+            if (act.type === 'object') {
+                const objDist = Math.hypot(state.player.x - act.target.x, state.player.y - act.target.y);
+                if (objDist <= act.target.radius + 36) {
+                    state.player.targetX = null;
+                    state.player.targetY = null;
+                    state.player.targetAction = null;
+                    if (typeof unlockFact === 'function') unlockFact(act.target.factId);
+                    if (typeof openObjectModal === 'function') openObjectModal(act.target);
+                    if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+                    return;
+                }
+            } else if (act.type === 'npc') {
+                const npcDist = Math.hypot(state.player.x - act.target.x, state.player.y - act.target.y);
+                if (npcDist <= 65) {
+                    state.player.targetX = null;
+                    state.player.targetY = null;
+                    state.player.targetAction = null;
+                    if (act.target.dialogues && typeof startDialogueSequence === 'function') {
+                        startDialogueSequence(act.target.dialogues, state.chapterIdx);
+                    }
+                    if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+                    return;
+                }
+            }
+        }
+
+        if (dist > 5) {
             dx = tx / dist;
             dy = ty / dist;
-            if (Math.abs(dx) > 0.2) state.player.facing = dx > 0 ? 'right' : 'left';
+            if (Math.abs(dx) > 0.15) state.player.facing = dx > 0 ? 'right' : 'left';
         } else {
             state.player.targetX = null;
             state.player.targetY = null;
+            state.player.targetAction = null;
         }
     } else if (dx !== 0 || dy !== 0) {
+        state.player.targetX = null;
+        state.player.targetY = null;
+        state.player.targetAction = null;
         const len = Math.hypot(dx, dy);
         dx /= len;
         dy /= len;
