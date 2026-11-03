@@ -407,9 +407,15 @@
                         <h3 id="console-title" class="text-sm sm:text-base font-bold font-display text-white">Power System Telemetry</h3>
                     </div>
                 </div>
-                <span id="console-status-badge" class="text-[11px] font-mono-tech font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                    Under Investigation
-                </span>
+                <div class="flex items-center gap-2">
+                    <span id="console-status-badge" class="text-[11px] font-mono-tech font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                        Under Investigation
+                    </span>
+                    <button id="btn-close-console-top" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 border border-slate-700 cursor-pointer shadow-sm" title="Back to Habitat [ESC]">
+                        <i class="fa-solid fa-xmark"></i>
+                        <span>Back [ESC]</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Modal Body -->
@@ -459,17 +465,20 @@
     </div>
 
     <!-- POWER DISTRIBUTION & LOAD SHEDDING MODAL -->
-    <div id="modal-power" class="hidden fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
-        <div class="hud-panel w-full max-w-lg rounded-2xl border border-amber-500/40 overflow-hidden shadow-2xl flex flex-col">
-            <div class="bg-slate-900/95 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+    <div id="modal-power" class="hidden fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+        <div class="hud-panel w-full max-w-lg rounded-2xl border border-amber-500/40 overflow-hidden shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[88vh] my-auto">
+            <div class="bg-slate-900/95 px-4 py-2.5 border-b border-slate-800 flex items-center justify-between shrink-0">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-bolt text-amber-400"></i>
                     <h3 class="text-sm sm:text-base font-bold font-display text-white">Habitat Electrical Load Distribution</h3>
                 </div>
-                <button id="btn-close-power-top" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+                <button id="btn-close-power-top" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 border border-slate-700 cursor-pointer shadow-sm" title="Back to Habitat [ESC]">
+                    <i class="fa-solid fa-xmark"></i>
+                    <span>Back [ESC]</span>
+                </button>
             </div>
 
-            <div class="p-4 space-y-4 text-xs sm:text-sm">
+            <div class="p-3 sm:p-4 overflow-y-auto flex-1 min-h-0 space-y-3 sm:space-y-4 text-xs sm:text-sm">
                 <!-- Telemetry Summary like Page 15 of PDF -->
                 <div class="grid grid-cols-2 gap-3 bg-black/80 p-3.5 rounded-xl border border-slate-800 font-mono-tech">
                     <div>
@@ -501,29 +510,36 @@
 
                 <div class="bg-amber-950/30 border border-amber-500/30 rounded-xl p-2.5 text-xs text-amber-200/90">
                     <i class="fa-solid fa-circle-info text-amber-400 mr-1"></i>
-                    <strong>Engineering Dilemma:</strong> Shedding non-essential loads preserves battery charge during solar deficits, while shutting down Life Support causes dangerous $CO_2$ buildup!
+                    <strong>Engineering Dilemma:</strong> Shedding non-essential loads preserves battery charge during solar deficits, while shutting down Life Support causes dangerous CO₂ buildup!
                 </div>
             </div>
 
-            <div class="bg-slate-900/95 px-4 py-2.5 border-t border-slate-800 flex justify-end">
-                <button id="btn-close-power" class="btn-tech bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-1.5 rounded-lg text-xs">
-                    Confirm Load Configuration
+            <div class="bg-slate-900/95 px-4 py-2.5 border-t border-slate-800 flex items-center justify-between shrink-0">
+                <button id="btn-back-power" class="btn-tech bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-semibold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 border border-slate-700 cursor-pointer">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Back to Habitat</span>
+                </button>
+                <button id="btn-close-power" class="btn-tech bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-1.5 rounded-lg text-xs shadow cursor-pointer">
+                    Confirm & Close [ESC]
                 </button>
             </div>
         </div>
     </div>
 
     <!-- CODEX: SPACE FACTS & MISSION BADGES MODAL -->
-    <div id="modal-codex" class="hidden fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
-        <div class="hud-panel w-full max-w-2xl rounded-2xl border border-sky-500/40 overflow-hidden shadow-2xl flex flex-col max-h-[88vh]">
-            <div class="bg-slate-900/95 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+    <div id="modal-codex" class="hidden fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+        <div class="hud-panel w-full max-w-2xl rounded-2xl border border-sky-500/40 overflow-hidden shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[88vh] my-auto">
+            <div class="bg-slate-900/95 px-4 py-2.5 border-b border-slate-800 flex items-center justify-between shrink-0">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-medal text-amber-400"></i>
                     <h3 class="text-sm sm:text-base font-bold font-display text-white">Mission Badges & NASA Science Log</h3>
                 </div>
-                <button id="btn-close-codex" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+                <button id="btn-close-codex" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 border border-slate-700 cursor-pointer shadow-sm" title="Back to Habitat [ESC]">
+                    <i class="fa-solid fa-xmark"></i>
+                    <span>Back [ESC]</span>
+                </button>
             </div>
-            <div class="p-4 overflow-y-auto space-y-4">
+            <div class="p-4 overflow-y-auto flex-1 min-h-0 space-y-4">
                 <div>
                     <h4 class="text-xs font-mono-tech uppercase text-sky-400 mb-2">Earned Astronaut Badges</h4>
                     <div id="codex-badges" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5"></div>
@@ -532,6 +548,11 @@
                     <h4 class="text-xs font-mono-tech uppercase text-sky-400 mb-2">Discovered Space Fact Cards (<span id="fact-count">0</span>/11)</h4>
                     <div id="codex-facts" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs"></div>
                 </div>
+            </div>
+            <div class="bg-slate-900/95 px-4 py-2.5 border-t border-slate-800 flex justify-end shrink-0">
+                <button id="btn-close-codex-bottom" class="btn-tech bg-sky-600 hover:bg-sky-500 text-white font-bold px-4 py-1.5 rounded-lg text-xs shadow cursor-pointer">
+                    Back to Habitat [ESC]
+                </button>
             </div>
         </div>
     </div>
@@ -2675,9 +2696,15 @@
             document.getElementById('modal-console').classList.remove('hidden');
         }
 
-        document.getElementById('btn-close-console').addEventListener('click', () => {
+        const closeConsoleModal = () => {
             sfx.beep();
             document.getElementById('modal-console').classList.add('hidden');
+        };
+        document.getElementById('btn-close-console').addEventListener('click', closeConsoleModal);
+        const btnCloseConsoleTop = document.getElementById('btn-close-console-top');
+        if (btnCloseConsoleTop) btnCloseConsoleTop.addEventListener('click', closeConsoleModal);
+        document.getElementById('modal-console').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('modal-console')) closeConsoleModal();
         });
 
         // --- POWER DISTRIBUTION & LOAD SHEDDING MODAL ---
@@ -2932,21 +2959,31 @@
             sfx.beep();
             openPowerModal();
         });
-        document.getElementById('btn-close-power').addEventListener('click', () => {
+        const closePowerModal = () => {
             sfx.beep();
             document.getElementById('modal-power').classList.add('hidden');
+        };
+        document.getElementById('btn-close-power').addEventListener('click', closePowerModal);
+        document.getElementById('btn-close-power-top').addEventListener('click', closePowerModal);
+        const btnBackPower = document.getElementById('btn-back-power');
+        if (btnBackPower) btnBackPower.addEventListener('click', closePowerModal);
+        document.getElementById('modal-power').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('modal-power')) closePowerModal();
         });
-        document.getElementById('btn-close-power-top').addEventListener('click', () => {
+
+        const closeCodexModal = () => {
             sfx.beep();
-            document.getElementById('modal-power').classList.add('hidden');
-        });
+            document.getElementById('modal-codex').classList.add('hidden');
+        };
         document.getElementById('btn-codex').addEventListener('click', () => {
             sfx.beep();
             openCodexModal();
         });
-        document.getElementById('btn-close-codex').addEventListener('click', () => {
-            sfx.beep();
-            document.getElementById('modal-codex').classList.add('hidden');
+        document.getElementById('btn-close-codex').addEventListener('click', closeCodexModal);
+        const btnCloseCodexBottom = document.getElementById('btn-close-codex-bottom');
+        if (btnCloseCodexBottom) btnCloseCodexBottom.addEventListener('click', closeCodexModal);
+        document.getElementById('modal-codex').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('modal-codex')) closeCodexModal();
         });
         document.getElementById('btn-music').addEventListener('click', () => {
             sfx.startAmbientEngine();
