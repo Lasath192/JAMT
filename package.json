@@ -8,7 +8,7 @@
     "dev": "node server.js",
     "build": "node build_standalone.js",
     "check": "node --check js/soundfx.js && node --check js/nasa_data.js && node --check js/chapters.js && node --check js/simulation.js && node --check js/render.js && node --check js/ui.js && node --check js/game.js && node --check server.js",
-    "test": "npm run check"
+    "test": "npm run check && node test/test_tasks.js"
   },
   "keywords": [
     "nasa-space-apps",
