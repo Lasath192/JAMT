@@ -68,6 +68,49 @@ body {
 .animate-float {
     animation: float-slow 3s infinite ease-in-out;
 }
+/* Modal Viewport Safety & Guaranteed Sticky Header / Footer */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: rgba(4, 7, 16, 0.88);
+    backdrop-filter: blur(14px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 1rem 0.5rem;
+}
+@media (min-height: 740px) {
+    .modal-overlay {
+        justify-content: center;
+    }
+}
+.modal-card {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 2.5rem);
+    margin: auto 0;
+    position: relative;
+    border-radius: 1rem;
+    overflow: hidden;
+}
+.modal-header-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    flex-shrink: 0;
+}
+.modal-footer-sticky {
+    position: sticky;
+    bottom: 0;
+    z-index: 30;
+    flex-shrink: 0;
+}
+
 /* Custom scrollbar for modals */
 ::-webkit-scrollbar {
     width: 6px;

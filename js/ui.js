@@ -1,3 +1,42 @@
+
+// --- ROLLING TELEMETRY SPARKLINES ---
+const sparklineHistory = {
+    battery: [68, 68, 67, 68, 69, 70, 71, 71, 72, 71, 70, 71, 72, 73, 72, 71],
+    co2: [450, 445, 440, 435, 430, 428, 425, 424, 422, 420, 420, 418, 420, 419, 420, 420]
+};
+
+function drawSparkline(canvasId, data, strokeColor, fillColor) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    if (!data || data.length < 2) return;
+    const min = Math.min(...data);
+    const max = Math.max(...data);
+    const range = (max - min) || 1;
+
+    ctx.beginPath();
+    for (let i = 0; i < data.length; i++) {
+        const x = (i / (data.length - 1)) * (w - 4) + 2;
+        const norm = (data[i] - min) / range;
+        const y = h - 2 - norm * (h - 4);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = 1.3;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    ctx.lineTo(w - 2, h);
+    ctx.lineTo(2, h);
+    ctx.closePath();
+    ctx.fillStyle = fillColor;
+    ctx.fill();
+}
 /**
  * ASTRA-1: The Red Frontier - UI, Modals, Dialogues & Telemetry HUD Engine
  * 2026 NASA Space Apps Challenge
@@ -226,6 +265,7 @@ function openObjectModal(obj) {
             () => {
                 addItem('Multi-Tool');
                 addItem('HV Fuse');
+                if (typeof spawnFloatingText === 'function') spawnFloatingText('MULTI-TOOL & HV FUSE ACQUIRED', state.player.x, state.player.y - 20, '#fde047');
                 completeTask('ch1_tool');
                 setAria('Multi-Tool and HV Fuse verified in your pouch! Next, check the Power Room and Life-Support Room.');
                 openObjectModal(obj);
@@ -241,6 +281,7 @@ function openObjectModal(obj) {
             () => {
                 addItem('LiOH Filter');
                 addItem('Pipe Seal Kit');
+                if (typeof spawnFloatingText === 'function') spawnFloatingText('LiOH FILTER & SEAL KIT ACQUIRED', state.player.x, state.player.y - 20, '#2dd4bf');
                 completeTask('ch3_part');
                 setAria('LiOH Filter and Pipe Seal Kit verified in your pouch! Head to Life Support and Water Recycling.');
                 openObjectModal(obj);
@@ -288,6 +329,7 @@ function openObjectModal(obj) {
                 () => {
                     state.faults.hvJunctionBroken = false;
                     state.solarOutputKW = 22;
+                    if (typeof spawnFloatingText === 'function') spawnFloatingText('+4 kW EFFICIENCY RESTORED', state.player.x, state.player.y - 20, '#38bdf8');
                     completeTask('ch2_repair');
                     awardBadge('power_saver');
                     setAria('HV Junction repaired! Array efficiency restored to 22 kW and Power Saver badge earned!');
@@ -326,6 +368,7 @@ function openObjectModal(obj) {
                 () => {
                     state.faults.co2FilterClogged = false;
                     state.co2PPM = 440;
+                    if (typeof spawnFloatingText === 'function') spawnFloatingText('CO₂ SCRUBBER NOMINAL • 420 ppm', state.player.x, state.player.y - 20, '#2dd4bf');
                     completeTask('ch3_co2');
                     awardBadge('air_guardian');
                     setAria('Fresh LiOH CO₂ filter installed! Cabin CO₂ is dropping back to 420 ppm. Air Guardian badge unlocked!');
@@ -370,6 +413,7 @@ function openObjectModal(obj) {
                     state.faults.waterPipeLeaking = false;
                     state.waterConductivity = 40;
                     state.waterLitres = Math.min(500, state.waterLitres + 35);
+                    if (typeof spawnFloatingText === 'function') spawnFloatingText('PIPE SEALED • 40 µS/cm NOMINAL', state.player.x, state.player.y - 20, '#38bdf8');
                     completeTask('ch3_water');
                     awardBadge('water_wizard');
                     setAria('Water leak sealed and filtration verified at 40 µS/cm! Water Wizard badge earned!');
@@ -415,6 +459,7 @@ function openObjectModal(obj) {
                 () => {
                     state.faults.irrigationPumpBroken = false;
                     state.foodCrewDays += 9;
+                    if (typeof spawnFloatingText === 'function') spawnFloatingText('+9 DAYS FOOD RESERVES RESTORED', state.player.x, state.player.y - 20, '#4ade80');
                     completeTask('ch4_pump');
                     setAria('Irrigation pump repaired and nutrients calibrated! Make sure Greenhouse LEDs are switched ON to complete Chapter 4.');
                     updateUI();
@@ -504,6 +549,7 @@ function openObjectModal(obj) {
                 state.faults.radiationAlertActive = false;
                 state.faults.shelterProtocolActive = true;
                 state.radiationMSvH = 0.05;
+                if (typeof spawnFloatingText === 'function') spawnFloatingText('RADIATION SHELTER ACTIVE', state.player.x, state.player.y - 20, '#c084fc');
                 completeTask('ch5_shelter');
                 awardBadge('storm_survivor');
                 setAria('Radiation Shelter protocol active! Water-wall shielding reduced crew exposure to 0.05 mSv/h. Storm Survivor badge earned!');
@@ -541,6 +587,7 @@ function openObjectModal(obj) {
                 () => {
                     state.faults.externalConduitDamaged = false;
                     state.solarOutputKW = 28;
+                    if (typeof spawnFloatingText === 'function') spawnFloatingText('EXTERNAL CONDUIT RESTORED • 28 kW', state.player.x, state.player.y - 20, '#38bdf8');
                     completeTask('ch6_solar');
                     if (getPowerStats().net >= 0 && !state.faults.waterPipeLeaking) {
                         completeTask('ch6_systems');
@@ -565,6 +612,7 @@ function openObjectModal(obj) {
             'Boosts habitat battery state of charge during low-power emergencies',
             () => {
                 state.batteryKWh = Math.min(100, state.batteryKWh + 15);
+                if (typeof spawnFloatingText === 'function') spawnFloatingText('+15 kWh EMERGENCY BOOST', state.player.x, state.player.y - 20, '#fbbf24');
                 if (window.sfx && typeof sfx.success === 'function') sfx.success();
                 setAria('Transferred 15 kWh from the Pressurized Rover into Astra-1’s main battery bank!');
                 updateUI();
@@ -801,6 +849,16 @@ function updateUI() {
     const healthBar = document.getElementById('crew-health-bar');
     if (healthBar) healthBar.style.width = `${Math.max(0, Math.min(100, state.crewHealth))}%`;
 
+    // Rolling sparkline updates
+    if (Math.random() < 0.25) {
+        sparklineHistory.battery.push(Math.round(state.batteryKWh));
+        if (sparklineHistory.battery.length > 20) sparklineHistory.battery.shift();
+        sparklineHistory.co2.push(Math.round(state.co2PPM));
+        if (sparklineHistory.co2.length > 20) sparklineHistory.co2.shift();
+    }
+    drawSparkline('spark-battery', sparklineHistory.battery, '#38bdf8', 'rgba(56, 189, 248, 0.25)');
+    drawSparkline('spark-co2', sparklineHistory.co2, '#2dd4bf', 'rgba(45, 212, 191, 0.25)');
+
     const badgeCount = document.getElementById('badge-count');
     if (badgeCount) badgeCount.textContent = `${state.earnedBadges.length}/4`;
 
@@ -955,6 +1013,15 @@ function initUIEventListeners() {
     }
 
     // Story Briefing Begin Button
+    const btnCloseStoryTop = document.getElementById('btn-close-story-top');
+    if (btnCloseStoryTop) {
+        btnCloseStoryTop.addEventListener('click', () => {
+            if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+            const sm = document.getElementById('modal-story');
+            if (sm) sm.classList.add('hidden');
+        });
+    }
+
     const btnStartChapter = document.getElementById('btn-start-chapter');
     if (btnStartChapter) {
         btnStartChapter.addEventListener('click', () => {

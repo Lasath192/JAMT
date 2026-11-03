@@ -499,6 +499,29 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 
+// --- AAA VISUAL VFX STATE & BUFFERS ---
+const footprints = [];
+let lastFootprintTime = 0;
+const floatingTexts = [];
+let cameraShake = 0;
+
+function spawnFloatingText(text, x, y, color = '#fde047') {
+    floatingTexts.push({
+        text,
+        x,
+        y,
+        color,
+        vy: -22,
+        created: performance.now()
+    });
+}
+window.spawnFloatingText = spawnFloatingText;
+
+function triggerCameraShake(intensity = 3.5) {
+    cameraShake = Math.max(cameraShake, intensity);
+}
+window.triggerCameraShake = triggerCameraShake;
+
 // Dust particles for Chapter 5 / 6 storm effect
 const dustParticles = Array.from({ length: 65 }, () => ({
     x: Math.random() * 1200,
@@ -509,9 +532,98 @@ const dustParticles = Array.from({ length: 65 }, () => ({
 
 // --- 2.5D VOLUMETRIC SCENERY RENDERERS ---
 function drawExteriorMarsLandscape(now) {
-    ctx.fillStyle = '#090d16';
+    // 1. DYNAMIC MARTIAN DIURNAL SKY CYCLE (Copper Dawn -> Butterscotch Midday -> NASA Blue Sunset -> Starry Night)
+    const cycle = (now * 0.00003) % 1;
+    let skyTop, skyMid, skyBottom, sunX, sunY, sunColor, sunGlow, isNight = false;
+
+    if (cycle < 0.25) {
+        // Phase 1: Copper Dawn
+        const t = cycle / 0.25;
+        skyTop = '#090d16';
+        skyMid = '#431407';
+        skyBottom = '#9a3412';
+        sunX = -50 + t * 400;
+        sunY = 10 - t * 60;
+        sunColor = '#fdba74';
+        sunGlow = 'rgba(251, 146, 60, 0.4)';
+    } else if (cycle < 0.5) {
+        // Phase 2: Dusty Butterscotch Midday
+        const t = (cycle - 0.25) / 0.25;
+        skyTop = '#1c0a04';
+        skyMid = '#7c2d12';
+        skyBottom = '#c2410c';
+        sunX = 350 + t * 450;
+        sunY = -50 + Math.sin(t * Math.PI) * -20;
+        sunColor = '#fef08a';
+        sunGlow = 'rgba(254, 240, 138, 0.5)';
+    } else if (cycle < 0.75) {
+        // Phase 3: NASA Blue Sunset (fine hematite dust scattering!)
+        const t = (cycle - 0.5) / 0.25;
+        skyTop = '#050b18';
+        skyMid = '#1e1b4b';
+        skyBottom = '#581c87';
+        sunX = 800 + t * 400;
+        sunY = -60 + t * 75;
+        sunColor = '#bae6fd';
+        sunGlow = 'rgba(56, 189, 248, 0.65)';
+    } else {
+        // Phase 4: Inky Starry Night
+        isNight = true;
+        skyTop = '#020617';
+        skyMid = '#090d16';
+        skyBottom = '#1e1b4b';
+        sunX = -300;
+        sunY = 200;
+        sunColor = '#000000';
+        sunGlow = 'rgba(0,0,0,0)';
+    }
+
+    const skyGrad = ctx.createLinearGradient(0, -140, 0, 20);
+    skyGrad.addColorStop(0, skyTop);
+    skyGrad.addColorStop(0.55, skyMid);
+    skyGrad.addColorStop(1, skyBottom);
+    ctx.fillStyle = skyGrad;
     ctx.fillRect(-150, -140, 1500, 160);
 
+    // Starfield in upper atmosphere
+    const starAlpha = isNight ? 0.9 : (cycle < 0.25 || cycle > 0.65 ? 0.5 : 0.15);
+    if (starAlpha > 0.1) {
+        ctx.fillStyle = `rgba(255, 255, 255, ${starAlpha})`;
+        for (let i = 0; i < 45; i++) {
+            const sx = ((i * 137.5) % 1400) - 100;
+            const sy = -135 + ((i * 73) % 95);
+            const twinkle = 0.5 + Math.sin(now * 0.003 + i) * 0.5;
+            ctx.fillRect(sx, sy, twinkle > 0.7 ? 2 : 1.2, twinkle > 0.7 ? 2 : 1.2);
+        }
+    }
+
+    // Martian Moon Phobos rapidly orbiting West-to-East
+    const phobosX = (((now * 0.035) % 1600) - 200);
+    const phobosY = -110 + Math.sin(phobosX * 0.002) * 20;
+    ctx.save();
+    ctx.fillStyle = '#64748b';
+    ctx.beginPath();
+    ctx.ellipse(phobosX, phobosY, 8, 6, 0.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#334155';
+    ctx.beginPath(); ctx.arc(phobosX - 2, phobosY - 1, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(phobosX + 3, phobosY + 1.5, 1.8, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    // The Sun with atmospheric scattering halo
+    if (!isNight && sunX > -100 && sunX < 1400) {
+        const sHalo = ctx.createRadialGradient(sunX, sunY, 3, sunX, sunY, 55);
+        sHalo.addColorStop(0, sunColor);
+        sHalo.addColorStop(0.35, sunGlow);
+        sHalo.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = sHalo;
+        ctx.beginPath(); ctx.arc(sunX, sunY, 55, 0, Math.PI * 2); ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(sunX, sunY, 8, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Earth & Moon in Mars Horizon Sky
     ctx.fillStyle = '#2563eb';
     ctx.beginPath(); ctx.arc(160, -65, 18, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#22c55e';
@@ -520,8 +632,15 @@ function drawExteriorMarsLandscape(now) {
     ctx.strokeStyle = 'rgba(147, 197, 253, 0.45)';
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(160, -65, 20, 0, Math.PI * 2); ctx.stroke();
+    // Moon
+    ctx.fillStyle = '#e2e8f0';
+    ctx.beginPath(); ctx.arc(188, -75, 4, 0, Math.PI * 2); ctx.fill();
 
-    ctx.fillStyle = '#7c2d12';
+    // Distant Martian Mountain Range (Arcadia Planitia)
+    const mtnGrad = ctx.createLinearGradient(0, -40, 0, 20);
+    mtnGrad.addColorStop(0, '#5c1d0c');
+    mtnGrad.addColorStop(1, '#9a3412');
+    ctx.fillStyle = mtnGrad;
     ctx.beginPath();
     ctx.moveTo(-150, 20);
     ctx.lineTo(60, -28);
@@ -532,6 +651,32 @@ function drawExteriorMarsLandscape(now) {
     ctx.lineTo(1350, 20);
     ctx.closePath();
     ctx.fill();
+
+    // 2 Whirling Martian Dust Devils drifting across the background plains
+    for (let d = 0; d < 2; d++) {
+        const ddSpeed = d === 0 ? 0.025 : 0.018;
+        const ddBaseX = ((now * ddSpeed + d * 550) % 1300) - 50;
+        const ddBaseY = -10;
+        const sway = Math.sin(now * 0.006 + d * 3) * 6;
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(234, 88, 12, 0.28)';
+        ctx.beginPath();
+        ctx.moveTo(ddBaseX - 3, ddBaseY);
+        ctx.lineTo(ddBaseX + 3, ddBaseY);
+        ctx.lineTo(ddBaseX + 18 + sway, ddBaseY - 45);
+        ctx.lineTo(ddBaseX - 18 + sway, ddBaseY - 45);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = 'rgba(251, 146, 60, 0.45)';
+        for (let p = 0; p < 4; p++) {
+            const py = ddBaseY - (p * 11) - ((now * 0.05 + p * 8) % 12);
+            const px = ddBaseX + Math.sin(now * 0.012 + p) * (4 + p * 3) + sway * (p / 4);
+            ctx.fillRect(px, py, 2.5, 2.5);
+        }
+        ctx.restore();
+    }
 }
 
 function drawRoomFloorPattern(r) {
@@ -631,6 +776,11 @@ function drawRoomDetails(now) {
             ctx.strokeStyle = '#e2e8f0';
             ctx.lineWidth = 1.5;
             ctx.stroke();
+
+            // Solar array highlight shimmer tracking the sun angle
+            const sunShimmerX = px + 12 + Math.sin(now * 0.001 + col) * 28;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+            ctx.fillRect(Math.max(px + 4, Math.min(px + 48, sunShimmerX)), py + 2, 5, 21);
         }
     }
 
@@ -704,17 +854,39 @@ function drawRoomDetails(now) {
     ctx.fillStyle = state.faults.hvJunctionBroken ? '#ef4444' : '#22c55e';
     ctx.beginPath(); ctx.arc(598, 102, 5, 0, Math.PI * 2); ctx.fill();
 
-    if (state.faults.hvJunctionBroken && Math.sin(now * 0.03) > 0.1) {
-        ctx.strokeStyle = '#fde047';
-        ctx.lineWidth = 2.5;
+    // Rotating Turbine Blades inside Power Generator
+    ctx.save();
+    ctx.translate(608, 92);
+    ctx.rotate(now * 0.008);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 2.2;
+    for (let b = 0; b < 4; b++) {
+        ctx.rotate(Math.PI / 2);
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(12, 0); ctx.stroke();
+    }
+    ctx.restore();
+
+    // Crackling Multi-Point Plasma Lightning Arcs & Embers on Broken HV Junction
+    if (state.faults.hvJunctionBroken) {
+        ctx.save();
+        ctx.strokeStyle = Math.random() > 0.35 ? '#38bdf8' : '#fde047';
+        ctx.lineWidth = 2.2 + Math.random() * 1.5;
         ctx.beginPath();
         ctx.moveTo(492, 95);
-        ctx.lineTo(506, 108);
-        ctx.lineTo(496, 118);
+        ctx.lineTo(496 + Math.random() * 10, 102 + Math.random() * 8);
+        ctx.lineTo(502 + Math.random() * 10, 114 + Math.random() * 8);
         ctx.lineTo(512, 126);
         ctx.stroke();
+
+        // Rising smoke embers
+        ctx.fillStyle = '#fb923c';
+        const emberY = 120 - ((now * 0.05) % 24);
+        const emberX = 502 + Math.sin(now * 0.02) * 5;
+        ctx.fillRect(emberX, emberY, 2.5, 2.5);
+        ctx.restore();
     }
 
+    // Life Support Scrubber Units with Rotating Ventilation Fans
     for (let t = 0; t < 2; t++) {
         const tx = 676 + t * 140, ty = 72;
         const cylGrad = ctx.createLinearGradient(tx, ty, tx + 44, ty);
@@ -726,6 +898,18 @@ function drawRoomDetails(now) {
         ctx.strokeStyle = '#14b8a6'; ctx.lineWidth = 2; ctx.stroke();
         ctx.fillStyle = state.co2PPM > 1000 ? '#ef4444' : '#2dd4bf';
         ctx.fillRect(tx + 10, ty + 14, 24, 10);
+
+        // Rotating Ventilation Fan in Scrubber
+        ctx.save();
+        ctx.translate(tx + 22, ty + 44);
+        ctx.rotate(now * 0.014 * (t === 0 ? 1 : -1));
+        ctx.strokeStyle = '#5eead4';
+        ctx.lineWidth = 2;
+        for (let f = 0; f < 3; f++) {
+            ctx.rotate((Math.PI * 2) / 3);
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(10, 0); ctx.stroke();
+        }
+        ctx.restore();
     }
 
     for (let w = 0; w < 3; w++) {
@@ -740,7 +924,24 @@ function drawRoomDetails(now) {
     ctx.fillStyle = '#64748b';
     ctx.fillRect(440, 595, 190, 10);
 
+    // Expanding Water Puddle with Shimmering Concentric Ripple Rings
     if (state.faults.waterPipeLeaking) {
+        ctx.save();
+        const puddleGrad = ctx.createRadialGradient(490, 602, 4, 490, 602, 34);
+        puddleGrad.addColorStop(0, 'rgba(56, 189, 248, 0.7)');
+        puddleGrad.addColorStop(0.65, 'rgba(14, 116, 144, 0.45)');
+        puddleGrad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+        ctx.fillStyle = puddleGrad;
+        ctx.beginPath(); ctx.ellipse(490, 602, 34, 14, 0, 0, Math.PI * 2); ctx.fill();
+
+        for (let r = 0; r < 3; r++) {
+            const ripR = ((now * 0.012 + r * 9) % 28);
+            const ripAlpha = Math.max(0, 1 - ripR / 28);
+            ctx.strokeStyle = `rgba(186, 230, 253, ${ripAlpha * 0.75})`;
+            ctx.lineWidth = 1.2;
+            ctx.beginPath(); ctx.ellipse(490, 602, ripR, ripR * 0.42, 0, 0, Math.PI * 2); ctx.stroke();
+        }
+
         ctx.fillStyle = '#38bdf8';
         for (let i = 0; i < 7; i++) {
             const angle = (now * 0.009 + i) % (Math.PI * 2);
@@ -750,6 +951,7 @@ function drawRoomDetails(now) {
             ctx.arc(rx, ry, 3.5, 0, Math.PI * 2);
             ctx.fill();
         }
+        ctx.restore();
     }
 
     const cropHealthy = !state.faults.irrigationPumpBroken && state.loads.greenhouse.on;
@@ -763,6 +965,16 @@ function drawRoomDetails(now) {
         ctx.strokeStyle = '#475569';
         ctx.lineWidth = 2;
         ctx.stroke();
+
+        // Rising Nutrient Bubbles in Hydroponic Beds
+        if (cropHealthy) {
+            ctx.fillStyle = 'rgba(134, 239, 172, 0.75)';
+            for (let b = 0; b < 4; b++) {
+                const bubbleX = bx + 10 + b * 11;
+                const bubbleY = by + 40 - ((now * 0.02 + b * 9) % 32);
+                ctx.beginPath(); ctx.arc(bubbleX, bubbleY, 1.8, 0, Math.PI * 2); ctx.fill();
+            }
+        }
 
         for (let row = 0; row < 2; row++) {
             for (let p = 0; p < 3; p++) {
@@ -786,13 +998,23 @@ function drawRoomDetails(now) {
                 }
             }
         }
+
+        // Shimmering Golden-Green Volumetric PAR Grow Light Rays
         if (state.loads.greenhouse.on) {
-            ctx.strokeStyle = 'rgba(250, 204, 21, 0.35)';
-            ctx.lineWidth = 10;
-            ctx.beginPath(); ctx.moveTo(bx + 2, by + 23); ctx.lineTo(bx + 52, by + 23); ctx.stroke();
+            ctx.save();
+            const rayAlpha = 0.2 + Math.sin(now * 0.005) * 0.08;
+            ctx.fillStyle = `rgba(250, 204, 21, ${rayAlpha})`;
+            ctx.beginPath();
+            ctx.moveTo(bx + 4, by + 6);
+            ctx.lineTo(bx + 50, by + 6);
+            ctx.lineTo(bx + 54, by + 44);
+            ctx.lineTo(bx, by + 44);
+            ctx.closePath();
+            ctx.fill();
             ctx.strokeStyle = '#fef08a';
-            ctx.lineWidth = 3;
+            ctx.lineWidth = 2.5;
             ctx.beginPath(); ctx.moveTo(bx + 2, by + 23); ctx.lineTo(bx + 52, by + 23); ctx.stroke();
+            ctx.restore();
         }
     }
 
@@ -809,10 +1031,30 @@ function drawRoomDetails(now) {
     ctx.beginPath(); ctx.roundRect(625, 285, 70, 42, 8); ctx.fill();
     ctx.strokeStyle = '#5eead4'; ctx.lineWidth = 1.5; ctx.stroke();
 
+    // Central Lab Diagnostic Table with Rotating 3D Hologram of Mars!
     ctx.fillStyle = '#1e293b';
     ctx.beginPath(); ctx.roundRect(915, 78, 52, 85, 8); ctx.fill();
     ctx.fillStyle = '#0284c7';
     ctx.beginPath(); ctx.roundRect(923, 88, 36, 65, 5); ctx.fill();
+
+    // 3D Wireframe Rotating Mars Hologram
+    ctx.save();
+    const holoX = 941, holoY = 120;
+    const hGlow = ctx.createRadialGradient(holoX, holoY, 2, holoX, holoY, 22);
+    hGlow.addColorStop(0, 'rgba(56, 189, 248, 0.45)');
+    hGlow.addColorStop(1, 'rgba(56, 189, 248, 0)');
+    ctx.fillStyle = hGlow;
+    ctx.beginPath(); ctx.arc(holoX, holoY, 22, 0, Math.PI * 2); ctx.fill();
+
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(holoX, holoY, 13, 0, Math.PI * 2); ctx.stroke();
+    const rotW = Math.abs(Math.cos(now * 0.002)) * 13;
+    ctx.beginPath(); ctx.ellipse(holoX, holoY, Math.max(1, rotW), 13, 0.3, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(holoX, holoY - 5, 11, 4, 0.3, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(holoX, holoY + 5, 11, 4, 0.3, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+
     ctx.fillStyle = '#1e293b';
     ctx.beginPath(); ctx.roundRect(1105, 85, 45, 75, 6); ctx.fill();
     ctx.fillStyle = state.faults.commsAntennaOffline ? '#ef4444' : '#38bdf8';
@@ -1067,11 +1309,21 @@ function renderGame(now) {
 
     ctx.save();
     ctx.translate(canvas.width / 2, canvas.height / 2);
+
+    // Subtle camera shake on storm gusts, airlock equalizing, or emergency alarms
+    if (cameraShake > 0.05) {
+        const sx = (Math.random() - 0.5) * cameraShake * 2.2;
+        const sy = (Math.random() - 0.5) * cameraShake * 2.2;
+        ctx.translate(sx, sy);
+        cameraShake *= 0.88;
+    }
+
     ctx.scale(camera.zoom, camera.zoom);
     ctx.translate(-camera.x, -camera.y);
 
     const pwr = getPowerStats();
     const lowPowerDim = pwr.net < 0 || state.batteryKWh < 30;
+    const emergencyActive = pwr.net < 0 || state.co2PPM > 1000 || state.faults.radiationAlertActive;
 
     // 0. Exterior Martian landscape
     drawExteriorMarsLandscape(now);
@@ -1121,6 +1373,17 @@ function renderGame(now) {
             ctx.fillStyle = lowPowerDim ? '#ef4444' : r.borderColor;
             ctx.fillRect(r.x + 12, r.y + 19, r.w - 24, 2.5);
 
+            // Red alert emergency klaxon sweep along bulkhead
+            if (emergencyActive) {
+                const sweepX = (now * 0.16) % r.w;
+                const sGrad = ctx.createLinearGradient(r.x + sweepX - 35, 0, r.x + sweepX + 35, 0);
+                sGrad.addColorStop(0, 'rgba(239, 68, 68, 0)');
+                sGrad.addColorStop(0.5, 'rgba(239, 68, 68, 0.85)');
+                sGrad.addColorStop(1, 'rgba(239, 68, 68, 0)');
+                ctx.fillStyle = sGrad;
+                ctx.fillRect(r.x + 12, r.y + 18, r.w - 24, 3.5);
+            }
+
             drawRoomFloorPattern(r);
 
             ctx.strokeStyle = 'rgba(0, 0, 0, 0.55)';
@@ -1167,27 +1430,45 @@ function renderGame(now) {
         ctx.fillRect(d.x + d.w - 4, d.y + d.h - 4, 4, 4);
     }
 
-    // 3. Room details & machinery
+    // 3. Room details & living machinery
     drawRoomDetails(now);
 
-    // 4. Interactive consoles
+    // 4. Interactive consoles with Volumetric Light Cones (Alert Strobe vs Nominal)
     const nearest = (typeof getNearestObject === 'function') ? getNearestObject() : null;
     for (const obj of OBJECTS) {
         const isNear = nearest && nearest.id === obj.id;
         const pulse = Math.sin(now * 0.006) * 4;
 
-        const glowGrad = ctx.createRadialGradient(obj.x, obj.y, 4, obj.x, obj.y, obj.radius + 8);
-        glowGrad.addColorStop(0, isNear ? 'rgba(250, 204, 21, 0.45)' : 'rgba(56, 189, 248, 0.22)');
-        glowGrad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+        const hasFault = (
+            (obj.id === 'power_console' && (state.faults.hvJunctionBroken || pwr.net < 0)) ||
+            (obj.id === 'co2_scrubber' && (state.faults.co2FilterClogged || state.co2PPM > 900)) ||
+            (obj.id === 'water_recycler' && (state.faults.waterPipeLeaking || state.waterConductivity > 60)) ||
+            (obj.id === 'greenhouse_console' && state.faults.irrigationPumpBroken) ||
+            (obj.id === 'lab_console' && state.faults.commsAntennaOffline) ||
+            (obj.id === 'shelter_console' && state.faults.radiationAlertActive) ||
+            (obj.id === 'solar_array_eva' && state.faults.externalConduitDamaged)
+        );
+
+        // Volumetric floor light cone
+        const glowGrad = ctx.createRadialGradient(obj.x, obj.y, 4, obj.x, obj.y, obj.radius + 14);
+        if (hasFault) {
+            const alertPulse = Math.sin(now * 0.014) * 0.2;
+            glowGrad.addColorStop(0, `rgba(239, 68, 68, ${0.55 + alertPulse})`);
+            glowGrad.addColorStop(0.6, `rgba(245, 158, 11, ${0.25 + alertPulse})`);
+            glowGrad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+        } else {
+            glowGrad.addColorStop(0, isNear ? 'rgba(250, 204, 21, 0.48)' : 'rgba(56, 189, 248, 0.24)');
+            glowGrad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+        }
         ctx.fillStyle = glowGrad;
         ctx.beginPath();
-        ctx.arc(obj.x, obj.y, obj.radius + 8, 0, Math.PI * 2);
+        ctx.arc(obj.x, obj.y, obj.radius + 14, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.beginPath();
         ctx.arc(obj.x, obj.y, obj.radius - 6 + (isNear ? pulse : 0), 0, Math.PI * 2);
         ctx.lineWidth = isNear ? 2.5 : 1.2;
-        ctx.strokeStyle = isNear ? '#fde047' : obj.color;
+        ctx.strokeStyle = hasFault ? '#ef4444' : (isNear ? '#fde047' : obj.color);
         ctx.stroke();
 
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
@@ -1204,15 +1485,15 @@ function renderGame(now) {
         ctx.roundRect(obj.x - 18, obj.y - 20, 36, 36, 8);
         ctx.fill();
         ctx.lineWidth = 2;
-        ctx.strokeStyle = isNear ? '#fde047' : obj.color;
+        ctx.strokeStyle = hasFault ? '#ef4444' : (isNear ? '#fde047' : obj.color);
         ctx.stroke();
 
-        ctx.fillStyle = isNear ? '#fde047' : obj.color;
+        ctx.fillStyle = hasFault ? '#ef4444' : (isNear ? '#fde047' : obj.color);
         ctx.beginPath();
         ctx.roundRect(obj.x - 14, obj.y - 16, 28, 6, 2);
         ctx.fill();
 
-        ctx.fillStyle = isNear ? '#fde047' : obj.color;
+        ctx.fillStyle = hasFault ? '#ef4444' : (isNear ? '#fde047' : obj.color);
         ctx.font = '900 16px "Font Awesome 6 Free"';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -1223,7 +1504,7 @@ function renderGame(now) {
         ctx.roundRect(obj.x - 54, obj.y + 20, 108, 15, 4);
         ctx.fill();
         ctx.font = '600 9.5px "JetBrains Mono", monospace';
-        ctx.fillStyle = isNear ? '#fde047' : '#f8fafc';
+        ctx.fillStyle = hasFault ? '#fca5a5' : (isNear ? '#fde047' : '#f8fafc');
         ctx.fillText(obj.name.split('&')[0].trim(), obj.x, obj.y + 28);
     }
 
@@ -1232,7 +1513,22 @@ function renderGame(now) {
         drawCrewNPC(npc, now);
     }
 
-    // 6. Target marker
+    // 6. Fading Bootprints under Cadet Nova
+    const nowMs = performance.now();
+    for (let i = footprints.length - 1; i >= 0; i--) {
+        const fp = footprints[i];
+        const age = (nowMs - fp.created) / 1000;
+        if (age > 5.5) {
+            footprints.splice(i, 1);
+            continue;
+        }
+        const alpha = (1 - age / 5.5) * (fp.isOutdoor ? 0.55 : 0.35);
+        ctx.fillStyle = fp.isOutdoor ? `rgba(194, 65, 12, ${alpha})` : `rgba(100, 116, 139, ${alpha})`;
+        ctx.fillRect(fp.x - 4, fp.y, 3, 4);
+        ctx.fillRect(fp.x + 2, fp.y, 3, 4);
+    }
+
+    // 7. Target marker
     if (state.player.targetX !== null) {
         ctx.strokeStyle = '#38bdf8';
         ctx.lineWidth = 2;
@@ -1241,10 +1537,32 @@ function renderGame(now) {
         ctx.stroke();
     }
 
-    // 7. Cadet Nova
+    // 8. Cadet Nova
     drawAstronaut(state.player.x, state.player.y, state.player.inSuit, now);
 
-    // 8. Dust storm overlay
+    // 9. Floating Action Popups (drifting upward and fading out)
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const ft = floatingTexts[i];
+        const age = (nowMs - ft.created) / 1000;
+        if (age > 2.0) {
+            floatingTexts.splice(i, 1);
+            continue;
+        }
+        const alpha = Math.max(0, 1 - age / 2.0);
+        const curY = ft.y + ft.vy * age;
+
+        ctx.save();
+        ctx.font = 'bold 11px "Orbitron", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = 'rgba(0, 0, 0, ' + (alpha * 0.85) + ')';
+        ctx.fillText(ft.text, ft.x + 1, curY + 1);
+        ctx.fillStyle = ft.color;
+        ctx.globalAlpha = alpha;
+        ctx.fillText(ft.text, ft.x, curY);
+        ctx.restore();
+    }
+
+    // 10. Dust storm overlay
     if (state.faults.dustStormActive) {
         ctx.fillStyle = 'rgba(194, 65, 12, 0.24)';
         ctx.fillRect(0, 0, 1200, 760);
@@ -1259,6 +1577,99 @@ function renderGame(now) {
             ctx.fill();
         }
     }
+
+    ctx.restore();
+
+    // 11. Tactical Radar Minimap (Rendered in Screen-Space HUD on top of canvas!)
+    drawTacticalMinimap(now);
+}
+
+// --- TACTICAL SCI-FI RADAR MINIMAP (SCREEN-SPACE HUD) ---
+function drawTacticalMinimap(now) {
+    if (typeof ROOMS === 'undefined' || !state.player) return;
+    const mmW = 150;
+    const mmH = 95;
+    const mmX = canvas.width - mmW - 14;
+    const mmY = canvas.height - mmH - 14;
+
+    ctx.save();
+    // Glassmorphic background
+    ctx.fillStyle = 'rgba(6, 10, 20, 0.84)';
+    ctx.beginPath(); ctx.roundRect(mmX, mmY, mmW, mmH, 8); ctx.fill();
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Title Header
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = 'bold 8.5px "JetBrains Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(`RADAR • SOL ${String(state.sol).padStart(2, '0')}`, mmX + 8, mmY + 11);
+
+    const scaleX = (mmW - 16) / 1200;
+    const scaleY = (mmH - 20) / 720;
+    const toMmX = (wx) => mmX + 8 + wx * scaleX;
+    const toMmY = (wy) => mmY + 15 + wy * scaleY;
+
+    // Draw Room Outlines
+    for (const r of ROOMS) {
+        const rx = toMmX(r.x);
+        const ry = toMmY(r.y);
+        const rw = r.w * scaleX;
+        const rh = r.h * scaleY;
+
+        ctx.fillStyle = r.isOutdoor ? 'rgba(194, 65, 12, 0.25)' : 'rgba(30, 41, 59, 0.45)';
+        ctx.fillRect(rx, ry, rw, rh);
+        ctx.strokeStyle = r.borderColor;
+        ctx.lineWidth = 0.8;
+        ctx.strokeRect(rx, ry, rw, rh);
+    }
+
+    // Sweeping Radar Beam
+    const sweepAngle = (now * 0.003) % (Math.PI * 2);
+    const radarCx = mmX + mmW / 2;
+    const radarCy = mmY + 15 + (mmH - 20) / 2;
+    ctx.strokeStyle = 'rgba(34, 197, 94, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(radarCx, radarCy);
+    ctx.lineTo(radarCx + Math.cos(sweepAngle) * 55, radarCy + Math.sin(sweepAngle) * 35);
+    ctx.stroke();
+
+    // Blinking Fault Target Rings
+    const pwr = getPowerStats();
+    const faultsList = [
+        { active: state.faults.hvJunctionBroken || pwr.net < 0, x: 490, y: 100 },
+        { active: state.faults.co2FilterClogged || state.co2PPM > 900, x: 730, y: 100 },
+        { active: state.faults.waterPipeLeaking, x: 490, y: 580 },
+        { active: state.faults.irrigationPumpBroken, x: 740, y: 580 },
+        { active: state.faults.commsAntennaOffline, x: 1000, y: 100 }
+    ];
+    faultsList.forEach(f => {
+        if (f.active) {
+            const fx = toMmX(f.x);
+            const fy = toMmY(f.y);
+            const pulse = (now * 0.008) % 1;
+            ctx.strokeStyle = `rgba(239, 68, 68, ${1 - pulse})`;
+            ctx.lineWidth = 1.4;
+            ctx.beginPath(); ctx.arc(fx, fy, 2.5 + pulse * 5, 0, Math.PI * 2); ctx.stroke();
+        }
+    });
+
+    // Crew NPCs (green dots)
+    for (const npc of CREW_NPCS) {
+        ctx.fillStyle = '#22c55e';
+        ctx.beginPath(); ctx.arc(toMmX(npc.x), toMmY(npc.y), 1.8, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Cadet Nova dot (pulsing cyan)
+    const px = toMmX(state.player.x);
+    const py = toMmY(state.player.y);
+    ctx.fillStyle = '#38bdf8';
+    ctx.beginPath(); ctx.arc(px, py, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(px, py, 3.5 + Math.sin(now * 0.01) * 1.5, 0, Math.PI * 2); ctx.stroke();
 
     ctx.restore();
 }
