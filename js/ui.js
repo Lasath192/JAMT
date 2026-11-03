@@ -10,16 +10,18 @@ function isAnyModalOpen() {
     const codexModal = document.getElementById('modal-codex');
     const storyModal = document.getElementById('modal-story');
     const dialogueModal = document.getElementById('modal-dialogue');
+    const victoryModal = document.getElementById('modal-victory');
 
     return (consoleModal && !consoleModal.classList.contains('hidden')) ||
            (powerModal && !powerModal.classList.contains('hidden')) ||
            (codexModal && !codexModal.classList.contains('hidden')) ||
            (storyModal && !storyModal.classList.contains('hidden')) ||
-           (dialogueModal && !dialogueModal.classList.contains('hidden'));
+           (dialogueModal && !dialogueModal.classList.contains('hidden')) ||
+           (victoryModal && !victoryModal.classList.contains('hidden'));
 }
 
 function closeAllModals() {
-    ['modal-console', 'modal-power', 'modal-codex', 'modal-dialogue', 'modal-story'].forEach(id => {
+    ['modal-console', 'modal-power', 'modal-codex', 'modal-dialogue', 'modal-story', 'modal-victory'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     });
@@ -1102,6 +1104,57 @@ function initUIEventListeners() {
             if (!isAnyModalOpen()) triggerNearestObjectInteraction();
         });
     }
+
+    // Sol 30 Victory Modal & Certificate Controls
+    const cadetInput = document.getElementById('cert-cadet-name');
+    if (cadetInput) {
+        cadetInput.addEventListener('input', (e) => {
+            const certDisplayName = document.getElementById('cert-display-name');
+            if (certDisplayName) {
+                certDisplayName.textContent = (e.target.value.trim() || 'Cadet Nova').toUpperCase();
+            }
+        });
+    }
+
+    const btnPrintCert = document.getElementById('btn-print-certificate');
+    if (btnPrintCert) {
+        btnPrintCert.addEventListener('click', () => {
+            if (window.sfx && typeof sfx.chime === 'function') sfx.chime();
+            window.print();
+        });
+    }
+
+    const btnReplayMutator = document.getElementById('btn-replay-mutator');
+    if (btnReplayMutator) {
+        btnReplayMutator.addEventListener('click', () => {
+            if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+            closeAllModals();
+            if (typeof WEATHER_MODES !== 'undefined' && WEATHER_MODES.length > 0) {
+                weatherModeIdx = (weatherModeIdx + 1) % WEATHER_MODES.length;
+                const mode = WEATHER_MODES[weatherModeIdx];
+                state.weatherMutator = mode.id;
+                const label = document.getElementById('weather-mutator-label');
+                if (label) label.textContent = mode.label;
+                setAria(`REPLAY COMMENCING: Weather Mutator active — ${mode.desc}`);
+            }
+            loadChapter(0, true);
+        });
+    }
+
+    const closeVictoryModal = () => {
+        if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+        const vm = document.getElementById('modal-victory');
+        if (vm) vm.classList.add('hidden');
+    };
+    const btnCloseVictory = document.getElementById('btn-close-victory');
+    if (btnCloseVictory) btnCloseVictory.addEventListener('click', closeVictoryModal);
+
+    const modalVictory = document.getElementById('modal-victory');
+    if (modalVictory) {
+        modalVictory.addEventListener('click', (e) => {
+            if (e.target === modalVictory) closeVictoryModal();
+        });
+    }
 }
 
 // Automatically bind UI events if DOM is ready, or on DOMContentLoaded
@@ -1110,3 +1163,4 @@ if (document.readyState === 'loading') {
 } else {
     initUIEventListeners();
 }
+

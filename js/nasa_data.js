@@ -71,3 +71,4 @@ const WEATHER_MODES = [
     { id: 'solar_max', label: 'DONKI Solar Max', solarDelta: 2, radMult: 1.65, desc: "DONKI X-Class Solar Max active! Coronal Mass Ejection proton flux detected. Solar arrays produce +2 kW, but surface radiation spikes by 1.65x!" },
     { id: 'dust_storm', label: 'Tau-4.5 Dust Storm', solarDelta: -4, radMult: 1.0, desc: "Global Tau-4.5 Dust Storm active! Fine airborne hematite dust blocks sunlight. Solar array output reduced by -4 kW!" }
 ];
+

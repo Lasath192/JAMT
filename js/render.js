@@ -310,20 +310,144 @@ function getChapterSceneSVG(chapterIdx) {
             <circle cx="376" cy="148" r="14" fill="#0f172a" stroke="#94a3b8" stroke-width="4"/>
         </svg>`;
     } else {
-        return `
-        <svg viewBox="0 0 600 180" class="w-full h-full" preserveAspectRatio="xMidYMid slice">
-            <rect width="600" height="180" fill="#040711"/>
-            <circle cx="95" cy="38" r="20" fill="#2563eb"/>
-            <circle cx="505" cy="36" r="28" fill="#ea580c"/>
-            <path d="M175,72 A125,68 0 0,1 425,72 Z" fill="rgba(56,189,248,0.28)" stroke="#bae6fd" stroke-width="2.5"/>
-            <circle cx="255" cy="52" r="22" fill="#15803d"/>
-            <circle cx="300" cy="44" r="28" fill="#16a34a"/>
-            <circle cx="345" cy="52" r="22" fill="#15803d"/>
-            <rect x="175" y="72" width="250" height="34" rx="4" fill="#7c2d12" stroke="#cbd5e1" stroke-width="2"/>
-            <rect x="175" y="106" width="250" height="34" rx="4" fill="#9a3412" stroke="#cbd5e1" stroke-width="2"/>
-            <rect x="175" y="140" width="250" height="34" rx="4" fill="#431407" stroke="#cbd5e1" stroke-width="2"/>
-        </svg>`;
+        return getSol30TouchdownSVG();
     }
+}
+
+// --- SOL 30 TOUCHDOWN & RESUPPLY LANDER SVG SCENE ---
+function getSol30TouchdownSVG() {
+    return `
+    <svg viewBox="0 0 600 200" class="w-full h-full" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="tdSky" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#020617"/>
+                <stop offset="35%" stop-color="#0f172a"/>
+                <stop offset="65%" stop-color="#431407"/>
+                <stop offset="85%" stop-color="#9a3412"/>
+                <stop offset="100%" stop-color="#ea580c"/>
+            </linearGradient>
+            <radialGradient id="tdEarth" cx="40%" cy="35%" r="65%">
+                <stop offset="0%" stop-color="#bae6fd"/>
+                <stop offset="30%" stop-color="#38bdf8"/>
+                <stop offset="70%" stop-color="#1d4ed8"/>
+                <stop offset="100%" stop-color="#0f172a"/>
+            </radialGradient>
+            <radialGradient id="tdRetroPlume" cx="50%" cy="10%" r="90%">
+                <stop offset="0%" stop-color="#ffffff"/>
+                <stop offset="25%" stop-color="#67e8f9"/>
+                <stop offset="55%" stop-color="#f59e0b"/>
+                <stop offset="85%" stop-color="#ea580c"/>
+                <stop offset="100%" stop-color="rgba(154,52,18,0)"/>
+            </radialGradient>
+            <radialGradient id="tdDust" cx="50%" cy="60%" r="50%">
+                <stop offset="0%" stop-color="rgba(251,146,60,0.6)"/>
+                <stop offset="60%" stop-color="rgba(194,65,12,0.3)"/>
+                <stop offset="100%" stop-color="rgba(67,20,7,0)"/>
+            </radialGradient>
+            <linearGradient id="tdLanderHull" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#ffffff"/>
+                <stop offset="45%" stop-color="#cbd5e1"/>
+                <stop offset="70%" stop-color="#64748b"/>
+                <stop offset="100%" stop-color="#1e293b"/>
+            </linearGradient>
+            <linearGradient id="tdGoldFoil" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#fef08a"/>
+                <stop offset="50%" stop-color="#eab308"/>
+                <stop offset="100%" stop-color="#854d0e"/>
+            </linearGradient>
+        </defs>
+
+        <!-- Sky & Stars -->
+        <rect width="600" height="200" fill="url(#tdSky)"/>
+        <g fill="#ffffff">
+            <circle cx="35" cy="18" r="1" opacity="0.8"/><circle cx="75" cy="42" r="1.5" opacity="0.9"/>
+            <circle cx="120" cy="15" r="0.8" opacity="0.6"/><circle cx="165" cy="35" r="1.2" opacity="0.7"/>
+            <circle cx="210" cy="20" r="1" opacity="0.8"/><circle cx="280" cy="12" r="1.4" opacity="0.9"/>
+            <circle cx="340" cy="28" r="0.8" opacity="0.7"/><circle cx="490" cy="16" r="1.2" opacity="0.8"/>
+            <circle cx="530" cy="38" r="1" opacity="0.9"/><circle cx="575" cy="22" r="1.5" opacity="0.85"/>
+        </g>
+
+        <!-- Earth & Moon in Mars Horizon Sky -->
+        <circle cx="85" cy="40" r="14" fill="url(#tdEarth)"/>
+        <path d="M78,35 Q85,32 92,38 Q88,46 76,43 Z" fill="#22c55e" opacity="0.75"/>
+        <circle cx="108" cy="34" r="3" fill="#e2e8f0"/>
+
+        <!-- Distant Martian Mountains & Craters (Arcadia Planitia) -->
+        <path d="M0,135 Q140,105 280,128 T600,118 L600,200 L0,200 Z" fill="#5c1d0c" opacity="0.85"/>
+        <path d="M0,150 Q180,128 360,146 T600,138 L600,200 L0,200 Z" fill="#7c2d12"/>
+        <path d="M0,165 Q220,152 440,160 T600,155 L600,200 L0,200 Z" fill="#9a3412"/>
+
+        <!-- Astra-1 Habitat Complex (Left & Center-Left) -->
+        <!-- Greenhouse Dome -->
+        <path d="M120,168 A38,32 0 0,1 196,168 Z" fill="rgba(34,197,94,0.35)" stroke="#4ade80" stroke-width="2"/>
+        <line x1="120" y1="168" x2="196" y2="168" stroke="#1e293b" stroke-width="3"/>
+        <circle cx="145" cy="158" r="8" fill="#16a34a"/><circle cx="170" cy="156" r="9" fill="#22c55e"/>
+
+        <!-- Pressurized Living Module & Airlock -->
+        <rect x="185" y="145" width="85" height="25" rx="8" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>
+        <rect x="200" y="150" width="16" height="8" rx="2" fill="#0284c7"/>
+        <rect x="225" y="150" width="16" height="8" rx="2" fill="#0284c7"/>
+        <rect x="250" y="150" width="12" height="18" fill="#334155"/>
+        <!-- Comms Tower -->
+        <line x1="210" y1="145" x2="210" y2="115" stroke="#94a3b8" stroke-width="2"/>
+        <path d="M202,120 A12,12 0 0,1 218,120" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+
+        <!-- Surface Details & Flag of Exploration -->
+        <line x1="285" y1="172" x2="285" y2="148" stroke="#cbd5e1" stroke-width="2"/>
+        <rect x="285" y="148" width="18" height="10" fill="#dc2626"/>
+        <rect x="285" y="148" width="8" height="6" fill="#1d4ed8"/>
+        <circle cx="289" cy="151" r="1.5" fill="#ffffff"/>
+
+        <!-- Waving Cadet Nova & Crew (3 Figures) -->
+        <g transform="translate(298, 155)">
+            <!-- Astronaut 1 (Cadet Nova waving) -->
+            <ellipse cx="6" cy="14" rx="4" ry="6" fill="#f8fafc" stroke="#0284c7" stroke-width="1"/>
+            <circle cx="6" cy="6" r="3.5" fill="#f8fafc" stroke="#0284c7" stroke-width="1"/>
+            <path d="M5,5 Q6,4 7,5" stroke="#38bdf8" stroke-width="1.5"/>
+            <line x1="10" y1="9" x2="14" y2="4" stroke="#f8fafc" stroke-width="1.5"/>
+            <!-- Astronaut 2 -->
+            <ellipse cx="18" cy="15" rx="3.5" ry="5.5" fill="#f8fafc"/>
+            <circle cx="18" cy="7" r="3" fill="#f8fafc"/>
+            <!-- Astronaut 3 -->
+            <ellipse cx="28" cy="15" rx="3.5" ry="5.5" fill="#f8fafc"/>
+            <circle cx="28" cy="7" r="3" fill="#f8fafc"/>
+        </g>
+
+        <!-- Astra-2 Heavy Resupply Lander Touchdown (Center-Right) -->
+        <g transform="translate(420, 22)">
+            <!-- Fiery Retro-Rocket Exhaust Plumes -->
+            <polygon points="12,110 -8,168 32,168" fill="url(#tdRetroPlume)"/>
+            <polygon points="68,110 48,168 88,168" fill="url(#tdRetroPlume)"/>
+            <!-- Inner Blue Plasma Jets -->
+            <polygon points="12,110 4,145 20,145" fill="#a5f3fc"/>
+            <polygon points="68,110 60,145 76,145" fill="#a5f3fc"/>
+
+            <!-- Billowing Regolith Dust Cloud on Surface -->
+            <ellipse cx="40" cy="162" rx="90" ry="24" fill="url(#tdDust)"/>
+
+            <!-- Lander Body -->
+            <polygon points="40,10 68,48 12,48" fill="url(#tdLanderHull)" stroke="#e2e8f0" stroke-width="1.5"/>
+            <rect x="8" y="48" width="64" height="42" rx="4" fill="url(#tdGoldFoil)" stroke="#78350f" stroke-width="1.5"/>
+            <rect x="14" y="54" width="16" height="30" rx="3" fill="#b45309" opacity="0.6"/>
+            <rect x="50" y="54" width="16" height="30" rx="3" fill="#b45309" opacity="0.6"/>
+            <rect x="4" y="90" width="72" height="12" rx="2" fill="#334155" stroke="#64748b" stroke-width="1"/>
+            <polygon points="6,102 18,102 22,114 2,114" fill="#0f172a" stroke="#94a3b8" stroke-width="1"/>
+            <polygon points="62,102 74,102 78,114 58,114" fill="#0f172a" stroke="#94a3b8" stroke-width="1"/>
+
+            <!-- Deployed Quad Landing Legs & Footpads -->
+            <line x1="8" y1="78" x2="-22" y2="152" stroke="#cbd5e1" stroke-width="3"/>
+            <line x1="-2" y1="92" x2="-22" y2="152" stroke="#94a3b8" stroke-width="2"/>
+            <ellipse cx="-22" cy="153" rx="10" ry="3.5" fill="#475569" stroke="#94a3b8" stroke-width="1"/>
+
+            <line x1="72" y1="78" x2="102" y2="152" stroke="#cbd5e1" stroke-width="3"/>
+            <line x1="82" y1="92" x2="102" y2="152" stroke="#94a3b8" stroke-width="2"/>
+            <ellipse cx="102" cy="153" rx="10" ry="3.5" fill="#475569" stroke="#94a3b8" stroke-width="1"/>
+
+            <!-- Mission Decal -->
+            <rect x="28" y="58" width="24" height="10" rx="2" fill="#0284c7"/>
+            <text x="40" y="65" font-family="'Orbitron', sans-serif" font-size="5" font-weight="bold" fill="#ffffff" text-anchor="middle">ASTRA-2</text>
+        </g>
+    </svg>`;
 }
 
 function getConsoleIllustrationSVG(objId) {
@@ -1138,3 +1262,4 @@ function renderGame(now) {
 
     ctx.restore();
 }
+

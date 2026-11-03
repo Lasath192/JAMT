@@ -191,18 +191,160 @@ function openStoryBriefing(ch) {
     document.getElementById('modal-story').classList.remove('hidden');
 }
 
+// --- SOL 30 MULTI-TIER MISSION OUTCOME CALCULATOR ---
+function calculateMissionLegacy() {
+    const bat = state.batteryKWh;
+    const water = state.waterLitres;
+    const food = state.foodCrewDays;
+    const health = state.crewHealth;
+
+    if (bat >= 50 && water >= 350 && food >= 24) {
+        return {
+            tier: "COMMANDER TIER",
+            title: "Thriving Martian Biosphere",
+            badgeClass: "bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/20",
+            icon: "fa-award",
+            headline: "Exceptional Outpost Stewardship • 100% Objectives Achieved",
+            summary: "Cadet Nova, your engineering leadership has preserved Astra-1 in peak operational condition! The arriving Astra-2 relief crew steps into a vibrant, self-sustaining biosphere with brimming water cisterns, abundant dwarf wheat harvests, and fully charged battery banks. Houston Flight Directors have cited Astra-1 as the gold standard for future crewed Mars expeditions.",
+            rating: "5.0 / 5.0 (Commander Distinction)"
+        };
+    } else if (bat >= 25 && health >= 75) {
+        return {
+            tier: "PIONEER TIER",
+            title: "Resilient Outpost Handover",
+            badgeClass: "bg-sky-400 text-slate-950 shadow-lg shadow-sky-400/20",
+            icon: "fa-shield-halved",
+            headline: "Sturdy Expedition Handover • Crew Safe Across 30 Sols",
+            summary: "Cadet Nova, your disciplined balance of habitat breakers and life-support scrubbers safely delivered all 5 astronauts through storms, radiation spikes, and hardware failures. While reserves will require rationing during the first week of handover, your proactive maintenance kept life support intact.",
+            rating: "4.2 / 5.0 (Pioneer Commendation)"
+        };
+    } else {
+        return {
+            tier: "SURVIVOR TIER",
+            title: "Emergency Extraction & Resupply",
+            badgeClass: "bg-orange-500 text-slate-950 shadow-lg shadow-orange-500/20",
+            icon: "fa-triangle-exclamation",
+            headline: "Critical Red-Frontier Survival • Handover Complete",
+            summary: "Cadet Nova, the harsh Martian frontier pushed Astra-1 to its absolute threshold. Depleted battery reserves and tight water margins forced harsh rationing. Yet through grit and adherence to emergency checklists, you kept all five crew members alive until the Astra-2 lander touched down. A testament to why every watt and litre counts on Mars!",
+            rating: "3.5 / 5.0 (Survivor Citation)"
+        };
+    }
+}
+
 function showVictoryModal() {
-    document.getElementById('story-sol-tag').textContent = `MISSION ACCOMPLISHED • SOL 30 / 30 COMPLETE`;
-    document.getElementById('story-title').textContent = `ASTRA-1 SECURED FOR THE NEXT CREW!`;
-    document.getElementById('story-body').textContent =
-        `Congratulations, Cadet Nova! Across 30 Martian sols, you diagnosed electrical faults, balanced kW loads against kWh battery reserves, maintained breathable O₂/CO₂ atmosphere, purified recycled water below 50 µS/cm, sustained hydroponic crops, and protected the five-person crew through a Martian dust storm and solar particle event.`;
-    document.getElementById('story-science').textContent =
-        `You mastered the three core astronaut questions: What do I check? What action do I take? And how does it affect the interconnected habitat systems?`;
-    document.getElementById('story-dilemma').textContent =
-        `Final Status — Battery: ${Math.round(state.batteryKWh)} kWh | Potable Water: ${Math.round(state.waterLitres)} L (${state.waterConductivity} µS/cm) | Crew Health: ${Math.round(state.crewHealth)}% | Badges Earned: ${state.earnedBadges.length}/4.`;
-    const btn = document.getElementById('btn-start-chapter');
-    btn.textContent = "Continue Free Exploration / Replay";
-    document.getElementById('modal-story').classList.remove('hidden');
+    if (typeof closeAllModals === 'function') closeAllModals();
+    const legacy = calculateMissionLegacy();
+    const pwr = getPowerStats();
+
+    // 1. Render Sol 30 Touchdown SVG Scene
+    const victoryIllustration = document.getElementById('victory-illustration');
+    const svgScene = (typeof getSol30TouchdownSVG === 'function') ? getSol30TouchdownSVG() : '';
+    if (victoryIllustration) {
+        victoryIllustration.innerHTML = svgScene;
+    }
+    const storyIllustration = document.getElementById('story-illustration');
+    if (storyIllustration) {
+        storyIllustration.innerHTML = svgScene;
+    }
+
+    // 2. Set Tier and Narrative in Victory Modal
+    const victoryTitle = document.getElementById('victory-title');
+    if (victoryTitle) victoryTitle.textContent = `${legacy.tier}: ${legacy.title.toUpperCase()}`;
+
+    const tierBadge = document.getElementById('victory-tier-badge');
+    if (tierBadge) {
+        tierBadge.textContent = legacy.tier;
+        tierBadge.className = `px-3 py-1 rounded-full text-xs font-black font-display uppercase tracking-wider ${legacy.badgeClass}`;
+    }
+
+    const headline = document.getElementById('victory-headline');
+    if (headline) headline.textContent = legacy.headline;
+
+    const headlineIcon = document.getElementById('victory-headline-icon');
+    if (headlineIcon) headlineIcon.className = `fa-solid ${legacy.icon}`;
+
+    const summary = document.getElementById('victory-summary');
+    if (summary) summary.textContent = legacy.summary;
+
+    // 3. Populate 4 Real-World NASA Trade-Off Report Cards
+    const rptPwrStat = document.getElementById('rpt-pwr-stat');
+    if (rptPwrStat) rptPwrStat.textContent = pwr.net >= 0 ? `+${pwr.net} kW Surplus` : `${pwr.net} kW Deficit`;
+    const rptPwrDetail = document.getElementById('rpt-pwr-detail');
+    if (rptPwrDetail) rptPwrDetail.textContent = `Battery: ${Math.round(state.batteryKWh)}% (${Math.round(state.batteryKWh)} kWh) | Solar: ${state.solarOutputKW} kW | Backup Fuel: ${state.backupFuelKg.toFixed(1)} kg`;
+
+    const rptRadStat = document.getElementById('rpt-rad-stat');
+    if (rptRadStat) rptRadStat.textContent = state.faults.shelterProtocolActive ? '0.05 mSv/h (Shielded)' : `${state.radiationMSvH.toFixed(2)} mSv/h`;
+    const rptRadDetail = document.getElementById('rpt-rad-detail');
+    if (rptRadDetail) rptRadDetail.textContent = `DONKI SPE Event mitigated by water-wall shielding. Crew Health: ${Math.round(state.crewHealth)}% OK`;
+
+    const rptWaterStat = document.getElementById('rpt-water-stat');
+    if (rptWaterStat) rptWaterStat.textContent = `${state.waterConductivity} µS/cm (${state.waterConductivity <= 60 ? 'Potable' : 'Sub-Optimal'})`;
+    const rptWaterDetail = document.getElementById('rpt-water-detail');
+    if (rptWaterDetail) rptWaterDetail.textContent = `Reserve: ${Math.round(state.waterLitres)} Litres potable H₂O recovered from greywater loop`;
+
+    const rptFoodStat = document.getElementById('rpt-food-stat');
+    if (rptFoodStat) rptFoodStat.textContent = `${Math.round(state.foodCrewDays)} Crew-Days`;
+    const rptFoodDetail = document.getElementById('rpt-food-detail');
+    if (rptFoodDetail) rptFoodDetail.textContent = `Hydroponic dwarf wheat & microgreens sustained via 5 kW grow LEDs and automated dosing`;
+
+    // Badges Showcase
+    const rptBadgeCount = document.getElementById('rpt-badge-count');
+    if (rptBadgeCount) rptBadgeCount.textContent = `${state.earnedBadges.length} / 4 Badges Earned`;
+    const rptBadgesList = document.getElementById('rpt-badges-list');
+    if (rptBadgesList && typeof BADGES !== 'undefined') {
+        rptBadgesList.innerHTML = '';
+        BADGES.forEach(b => {
+            const earned = state.earnedBadges.includes(b.id);
+            const card = document.createElement('div');
+            card.className = `p-2 rounded-lg border text-center ${earned ? 'bg-amber-500/15 border-amber-400/50 text-white' : 'bg-slate-900/60 border-slate-800 text-slate-500'}`;
+            card.innerHTML = `
+                <div class="w-6 h-6 mx-auto mb-1 rounded-full flex items-center justify-center text-[10px] ${earned ? 'bg-amber-400 text-slate-950 font-bold' : 'bg-slate-800 text-slate-600'}">
+                    <i class="fa-solid ${b.icon}"></i>
+                </div>
+                <div class="font-bold text-[10px] font-display truncate">${b.name}</div>
+            `;
+            rptBadgesList.appendChild(card);
+        });
+    }
+
+    // 4. Update Printable Certificate Display Elements
+    const certDisplayName = document.getElementById('cert-display-name');
+    const cadetInput = document.getElementById('cert-cadet-name');
+    if (certDisplayName && cadetInput) {
+        certDisplayName.textContent = (cadetInput.value || 'Cadet Nova').toUpperCase();
+    }
+    const certDisplayTier = document.getElementById('cert-display-tier');
+    if (certDisplayTier) {
+        certDisplayTier.textContent = `★ ${legacy.tier}: ${legacy.title.toUpperCase()} ★`;
+    }
+    const certPwr = document.getElementById('cert-pwr');
+    if (certPwr) certPwr.textContent = `${Math.round(state.batteryKWh)} kWh (${pwr.net >= 0 ? '+' : ''}${pwr.net} kW Net)`;
+    const certWater = document.getElementById('cert-water');
+    if (certWater) certWater.textContent = `${Math.round(state.waterLitres)} L (${state.waterConductivity} µS/cm)`;
+    const certAtmo = document.getElementById('cert-atmo');
+    if (certAtmo) certAtmo.textContent = `${Math.round(state.co2PPM)} ppm CO₂ | 101.3 kPa`;
+    const certRad = document.getElementById('cert-rad');
+    if (certRad) certRad.textContent = state.faults.shelterProtocolActive ? 'Shielded (0.05 mSv/h)' : `${state.radiationMSvH.toFixed(2)} mSv/h`;
+
+    // 5. Open Modal
+    const victoryModal = document.getElementById('modal-victory');
+    if (victoryModal) {
+        victoryModal.classList.remove('hidden');
+    } else {
+        const storyModal = document.getElementById('modal-story');
+        if (storyModal) {
+            document.getElementById('story-sol-tag').textContent = `MISSION ACCOMPLISHED • SOL 30 / 30 COMPLETE`;
+            document.getElementById('story-title').textContent = `${legacy.tier}: ${legacy.title.toUpperCase()}`;
+            document.getElementById('story-body').textContent = legacy.summary;
+            document.getElementById('story-science').textContent = `Final Status — Battery: ${Math.round(state.batteryKWh)} kWh | Potable Water: ${Math.round(state.waterLitres)} L (${state.waterConductivity} µS/cm) | Crew Health: ${Math.round(state.crewHealth)}% | Badges Earned: ${state.earnedBadges.length}/4.`;
+            document.getElementById('story-dilemma').textContent = legacy.headline;
+            const btn = document.getElementById('btn-start-chapter');
+            if (btn) btn.textContent = "Continue Free Exploration / Replay";
+            storyModal.classList.remove('hidden');
+        }
+    }
+
+    if (window.sfx && typeof sfx.success === 'function') sfx.success();
 }
 
 // --- STATE-TO-TASK SYNCHRONIZATION ENGINE ---
@@ -323,3 +465,4 @@ setInterval(() => {
         updateUI();
     }
 }, 1500);
+

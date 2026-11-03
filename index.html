@@ -508,6 +508,177 @@
         </div>
     </div>
 
+
+    <!-- UPGRADE 6: SOL 30 MISSION DEBRIEF & HANDOVER VICTORY MODAL -->
+    <div id="modal-victory" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+        <div class="hud-panel w-full max-w-2xl rounded-2xl border border-amber-400/60 overflow-hidden shadow-2xl flex flex-col max-h-[94vh]">
+            <!-- Header with Sol 30 Tag & Tier Badge -->
+            <div class="bg-gradient-to-r from-amber-950/90 via-slate-900 to-indigo-950/90 px-5 py-3 border-b border-amber-500/40 flex items-center justify-between">
+                <div>
+                    <div class="text-[10px] font-mono-tech uppercase tracking-widest text-amber-400 flex items-center gap-2">
+                        <i class="fa-solid fa-flag-checkered text-amber-400"></i>
+                        <span>SOL 30 MISSION COMPLETE • ASTRA-2 RELIEF HANDOVER</span>
+                    </div>
+                    <h2 id="victory-title" class="text-lg sm:text-2xl font-black font-display text-white">COMMANDER DISTINCTION</h2>
+                </div>
+                <div id="victory-tier-badge" class="px-3 py-1 rounded-full text-xs font-black font-display uppercase tracking-wider bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/20">
+                    COMMANDER TIER
+                </div>
+            </div>
+
+            <!-- Touchdown Scene SVG Banner -->
+            <div id="victory-illustration" class="w-full h-40 sm:h-52 bg-slate-950 border-b border-slate-800 relative overflow-hidden shrink-0">
+                <!-- Sol 30 Lander Touchdown Scene SVG -->
+            </div>
+
+            <!-- Scrollable Content Body -->
+            <div class="p-4 sm:p-5 overflow-y-auto space-y-4 text-xs sm:text-sm text-slate-200">
+                <!-- Narrative Outcome -->
+                <div id="victory-narrative-box" class="bg-slate-900/80 border border-amber-500/30 rounded-xl p-3.5 space-y-1">
+                    <div class="font-bold text-amber-300 font-display text-sm flex items-center gap-2">
+                        <i id="victory-headline-icon" class="fa-solid fa-award"></i>
+                        <span id="victory-headline">Exceptional Outpost Stewardship</span>
+                    </div>
+                    <p id="victory-summary" class="text-xs text-slate-300 leading-relaxed"></p>
+                </div>
+
+                <!-- Real-World NASA Trade-Off Report Card (4 Cards Grid) -->
+                <div>
+                    <div class="text-[11px] font-mono-tech uppercase text-sky-400 font-bold mb-2 flex items-center gap-1.5">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                        <span>NASA Systems Engineering & Science Trade-Off Report Card</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <!-- Card 1: Power & Kilopower -->
+                        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 space-y-1">
+                            <div class="flex items-center justify-between text-[11px] font-mono-tech">
+                                <span class="text-amber-400 font-bold"><i class="fa-solid fa-bolt mr-1"></i>Power & Energy</span>
+                                <span id="rpt-pwr-stat" class="text-emerald-400 font-bold">100% OK</span>
+                            </div>
+                            <div id="rpt-pwr-detail" class="text-[11px] text-slate-300"></div>
+                            <div class="text-[9px] text-slate-500 italic">Mirrors NASA Glenn Kilopower/FSP load-shedding architecture.</div>
+                        </div>
+
+                        <!-- Card 2: Radiation & DONKI -->
+                        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 space-y-1">
+                            <div class="flex items-center justify-between text-[11px] font-mono-tech">
+                                <span class="text-purple-400 font-bold"><i class="fa-solid fa-shield-halved mr-1"></i>Radiation Shielding</span>
+                                <span id="rpt-rad-stat" class="text-emerald-400 font-bold">Safe Dose</span>
+                            </div>
+                            <div id="rpt-rad-detail" class="text-[11px] text-slate-300"></div>
+                            <div class="text-[9px] text-slate-500 italic">Grounded in NASA DONKI Coronal Mass Ejection archived events.</div>
+                        </div>
+
+                        <!-- Card 3: Water Recovery Purity -->
+                        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 space-y-1">
+                            <div class="flex items-center justify-between text-[11px] font-mono-tech">
+                                <span class="text-blue-400 font-bold"><i class="fa-solid fa-droplet mr-1"></i>Closed-Loop Water</span>
+                                <span id="rpt-water-stat" class="text-emerald-400 font-bold">Potable</span>
+                            </div>
+                            <div id="rpt-water-detail" class="text-[11px] text-slate-300"></div>
+                            <div class="text-[9px] text-slate-500 italic">Conductivity threshold verified below 60 µS/cm NASA standard.</div>
+                        </div>
+
+                        <!-- Card 4: Bioregenerative Greenhouse & OSDR -->
+                        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 space-y-1">
+                            <div class="flex items-center justify-between text-[11px] font-mono-tech">
+                                <span class="text-lime-400 font-bold"><i class="fa-solid fa-seedling mr-1"></i>Hydroponic Food</span>
+                                <span id="rpt-food-stat" class="text-emerald-400 font-bold">Crop Reserves</span>
+                            </div>
+                            <div id="rpt-food-detail" class="text-[11px] text-slate-300"></div>
+                            <div class="text-[9px] text-slate-500 italic">Modeled on NASA Open Science Data Repository (OSDR) plant assays.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Earned Badges Showcase -->
+                <div>
+                    <div class="text-[11px] font-mono-tech uppercase text-amber-400 font-bold mb-1.5 flex items-center justify-between">
+                        <span>Earned Mission Specialist Badges</span>
+                        <span id="rpt-badge-count" class="text-slate-400 text-[10px]">4 / 4 Badges</span>
+                    </div>
+                    <div id="rpt-badges-list" class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <!-- Badges dynamically rendered here -->
+                    </div>
+                </div>
+
+                <!-- Printable Certificate Name Input & Actions -->
+                <div class="bg-gradient-to-r from-amber-950/40 to-slate-900 p-3.5 rounded-xl border border-amber-500/40 space-y-2.5">
+                    <div class="text-xs font-bold text-white font-display flex items-center gap-2">
+                        <i class="fa-solid fa-certificate text-amber-400"></i>
+                        <span>Official 2026 NASA Junior Astronaut Certificate</span>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <input id="cert-cadet-name" type="text" value="Cadet Nova" placeholder="Enter Your Real Name"
+                            class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 font-display">
+                        <button id="btn-print-certificate" class="btn-tech bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-1.5 rounded-lg text-xs font-display flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/20">
+                            <i class="fa-solid fa-print"></i>
+                            <span>Print / Save Certificate</span>
+                        </button>
+                    </div>
+                    <div class="text-[10px] text-slate-400 font-mono-tech">
+                        Enter your name above to personalize and print your official NASA Junior Astronaut award.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Actions -->
+            <div class="bg-slate-900/95 px-5 py-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                <button id="btn-replay-mutator" class="btn-tech bg-sky-600 hover:bg-sky-500 text-white font-bold px-4 py-2 rounded-xl text-xs font-display flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>Play Again with Space Weather Mutator</span>
+                </button>
+                <button id="btn-close-victory" class="btn-tech bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2 rounded-xl text-xs font-display">
+                    Free Habitat Exploration [ESC]
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRINTABLE OFFICIAL CERTIFICATE (Styled for @media print) -->
+    <div id="printable-certificate" class="hidden">
+        <div style="border: 4px solid #b45309; padding: 24px; text-align: center; font-family: 'Orbitron', 'Inter', sans-serif; background: #ffffff; color: #0f172a; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <div style="font-size: 11px; letter-spacing: 3px; font-weight: bold; color: #b45309; margin-bottom: 6px;">2026 NASA SPACE APPS CHALLENGE • JUNIOR ASTRONAUT MISSION TRAINER</div>
+                <h1 style="font-size: 26px; font-weight: 900; margin: 0; color: #0f172a; letter-spacing: 2px;">CERTIFICATE OF MARTIAN EXPEDITION HANDOVER</h1>
+                <div style="font-size: 12px; color: #475569; margin-top: 4px;">Outpost ASTRA-1 • Arcadia Planitia, Mars (18.38°N, 77.58°E) • Sols 01 - 30</div>
+            </div>
+
+            <div style="margin: 20px 0;">
+                <p style="font-size: 13px; color: #334155; margin: 0;">This official NASA Space Apps Challenge credential certifies that</p>
+                <div id="cert-display-name" style="font-size: 28px; font-weight: 800; color: #c2410c; margin: 10px 0; border-bottom: 2px solid #fdba74; display: inline-block; padding: 0 30px;">CADET NOVA</div>
+                <p style="font-size: 13px; color: #334155; max-width: 650px; margin: 0 auto; line-height: 1.5;">
+                    has demonstrated outstanding scientific rigor in ECLSS life-support engineering, continuous power budgeting, DONKI space radiation shielding, and bioregenerative closed-loop hydroponics, achieving:
+                </p>
+                <div id="cert-display-tier" style="margin-top: 10px; font-size: 18px; font-weight: 800; color: #b45309; letter-spacing: 1px;">
+                    ★ COMMANDER TIER: THRIVING MARTIAN BIOSPHERE ★
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-around; border-top: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; padding: 12px 0; font-family: 'JetBrains Mono', monospace; font-size: 11px;">
+                <div><strong>MISSION TELEMETRY:</strong> <span id="cert-pwr">100% Net Surplus</span></div>
+                <div><strong>WATER QUALITY:</strong> <span id="cert-water">42 µS/cm Potable</span></div>
+                <div><strong>ATMOSPHERE:</strong> <span id="cert-atmo">420 ppm CO₂ Nominal</span></div>
+                <div><strong>SPE SHIELDING:</strong> <span id="cert-rad">Safe / Shielded</span></div>
+            </div>
+
+            <div style="display: flex; justify-content: space-around; align-items: flex-end; margin-top: 25px; padding: 0 40px; font-size: 11px; color: #475569;">
+                <div style="text-align: center;">
+                    <div style="font-weight: bold; border-top: 1px solid #0f172a; padding-top: 4px; width: 180px;">Dr. Sarah Lin</div>
+                    <div style="font-size: 10px;">Commander, Mars Outpost Astra-1</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-weight: bold; color: #b45309; font-size: 14px; margin-bottom: 2px;">★ NASA SPACE APPS 2026 ★</div>
+                    <div style="font-size: 9px; letter-spacing: 1px;">OFFICIAL MISSION SIMULATION</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-weight: bold; border-top: 1px solid #0f172a; padding-top: 4px; width: 180px;">Flight Operations Director</div>
+                    <div style="font-size: 10px;">NASA Space Apps Challenge</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modular Mission Engine Scripts (2026 NASA Space Apps Challenge) -->
     <script src="js/soundfx.js"></script>
     <script src="js/nasa_data.js"></script>
