@@ -229,13 +229,18 @@ function openObjectModal(obj) {
 
         // Mission 1: The First Breath
         addActionBtn(
-            'Verify Cabin Pressure & Seal Checklist',
-            'Electronic Orion-style telemetry verification',
+            state.player.inSuit ? '✓ Airlock Pressure Verified & EVA Suit Pressurized' : 'Verify Cabin Pressure & Don EVA Suit',
+            'Electronic Orion-style telemetry verification and 30 kPa suit pressurization',
             () => {
+                state.player.inSuit = true;
                 completeTask('ch1_airlock');
-                setAria('Airlock pressure verified at 101.3 kPa! Now head to Central Storage to pick up your Diagnostic Multi-Tool and HV Fuse.');
+                if (typeof spawnFloatingText === 'function') spawnFloatingText('EVA SUIT DONNED & PRESSURIZED', state.player.x, state.player.y - 20, '#38bdf8');
+                if (typeof sfx !== 'undefined' && sfx.pickup) sfx.pickup();
+                setAria('Airlock pressure verified at 101.3 kPa and EVA Suit pressurized! Next, grab your tools from Central Storage.');
+                if (typeof updateUI === 'function') updateUI();
                 openObjectModal(obj);
-            }
+            },
+            state.player.inSuit ? 'bg-emerald-700/80 hover:bg-emerald-600 text-emerald-100' : 'bg-sky-600 hover:bg-sky-500 text-white'
         );
 
         // Mission 3: Commissioning Perseverance & Ingenuity
@@ -275,11 +280,14 @@ function openObjectModal(obj) {
             () => {
                 state.player.inSuit = !state.player.inSuit;
                 if (typeof sfx !== 'undefined' && sfx.pickup) sfx.pickup();
+                if (typeof spawnFloatingText === 'function') {
+                    spawnFloatingText(state.player.inSuit ? 'EVA SUIT DONNED' : 'SHIRTSLEEVE IVA', state.player.x, state.player.y - 20, state.player.inSuit ? '#38bdf8' : '#4ade80');
+                }
                 syncTasksWithState();
                 if (typeof updateUI === 'function') updateUI();
                 openObjectModal(obj);
             },
-            'bg-slate-700 hover:bg-slate-600 text-white'
+            state.player.inSuit ? 'bg-amber-600 hover:bg-amber-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-white'
         );
 
     } else if (obj.id === 'storage_locker') {

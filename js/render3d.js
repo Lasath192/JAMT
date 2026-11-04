@@ -5,7 +5,7 @@
 
 let scene3D, camera3D, renderer3D, threeContainer;
 let nova3D, crew3DMeshes = {}, object3DMeshes = {}, roomLights = {};
-let roomFloorDecals = {}, doorwayBadges = [], roomMachineryAnimations = [], techReferenceSprites = [];
+let roomFloorDecals = {}, doorwayBadges = [], roomMachineryAnimations = [], techReferenceSprites = [], habitatDoor3DMeshes = [];
 let isThreeInitialized = false;
 let raycaster3D, mouse3D;
 let emergencyLight3D;
@@ -126,6 +126,13 @@ function onThreePointerDown(e) {
                 if (dist <= targetObj.radius + 45) {
                     if (typeof triggerNearestObjectInteraction === 'function') triggerNearestObjectInteraction();
                     return;
+                } else {
+                    state.player.targetX = targetObj.x;
+                    state.player.targetY = targetObj.y;
+                    state.player.targetAction = { type: 'object', target: targetObj };
+                    if (typeof spawnClickMarker === 'function') spawnClickMarker(targetObj.x, targetObj.y, '#38bdf8');
+                    if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+                    return;
                 }
             }
         }
@@ -146,16 +153,54 @@ function onThreePointerDown(e) {
         }
     }
 
-    // 2. Check if clicked ground for walking
-    const groundHits = raycaster3D.intersectObjects(scene3D.children, false);
+    // 1c. Check if clicked on crew NPC
+    if (typeof CREW_NPCS !== 'undefined' && crew3DMeshes) {
+        const crewMeshes = Object.values(crew3DMeshes).map(c => c.mesh);
+        const crewHits = raycaster3D.intersectObjects(crewMeshes, true);
+        if (crewHits.length > 0) {
+            let hitNpcObj = crewHits[0].object;
+            while (hitNpcObj.parent && !hitNpcObj.userData.npcId) {
+                hitNpcObj = hitNpcObj.parent;
+            }
+            if (hitNpcObj.userData.npcId) {
+                const npcId = hitNpcObj.userData.npcId;
+                const targetNpc = CREW_NPCS.find(n => n.id === npcId);
+                if (targetNpc) {
+                    const dist = Math.hypot(state.player.x - targetNpc.x, state.player.y - targetNpc.y);
+                    if (dist <= 65) {
+                        state.player.targetX = null;
+                        state.player.targetY = null;
+                        state.player.targetAction = null;
+                        if (targetNpc.dialogues && typeof startDialogueSequence === 'function') {
+                            startDialogueSequence(targetNpc.dialogues, state.chapterIdx);
+                        }
+                        if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+                        return;
+                    } else {
+                        state.player.targetX = targetNpc.x;
+                        state.player.targetY = targetNpc.y;
+                        state.player.targetAction = { type: 'npc', target: targetNpc };
+                        if (typeof spawnClickMarker === 'function') spawnClickMarker(targetNpc.x, targetNpc.y, '#22c55e');
+                        if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    // 2. Check if clicked ground for walking (with doorway threshold support)
+    const groundHits = raycaster3D.intersectObjects(scene3D.children, true);
     for (const gh of groundHits) {
         if (gh.object.userData.isGround) {
             const worldX = from3DX(gh.point.x);
             const worldY = from3DZ(gh.point.z);
-            const insideWall = (typeof checkWallCollision === 'function') ? checkWallCollision(worldX, worldY, 14) : false;
+            const insideWall = (typeof checkWallCollision === 'function') ? checkWallCollision(worldX, worldY, 10) : false;
             if (!insideWall) {
                 state.player.targetX = Math.max(45, Math.min(1145, worldX));
                 state.player.targetY = Math.max(55, Math.min(705, worldY));
+                state.player.targetAction = null;
+                if (typeof spawnClickMarker === 'function') spawnClickMarker(state.player.targetX, state.player.targetY, '#38bdf8');
                 if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
             }
             break;
@@ -517,8 +562,12 @@ function build3DHabitatArchitecture() {
         });
     }
 
-    // 3. 3D High-Tech Illuminated Doorway Portals & Glowing Overhead Signs
+    // 3. 3D High-Tech Illuminated Doorway Portals & Animated Sliding Pressure Hatches
     if (typeof HABITAT_DOORWAYS !== 'undefined') {
+        habitatDoor3DMeshes = [];
+        const hazardTex = createHazardStripeTexture();
+        const hazardMat = new THREE.MeshStandardMaterial({ map: hazardTex, roughness: 0.4, metalness: 0.2 });
+
         HABITAT_DOORWAYS.forEach(door => {
             const group = new THREE.Group();
             const cx = to3DX(door.x);
@@ -540,6 +589,18 @@ function build3DHabitatArchitecture() {
 
             const archHeight = 36;
             const isHorizontalDoor = (door.w > door.h);
+            const hatchGroup = new THREE.Group();
+            const hatchMat = new THREE.MeshStandardMaterial({
+                color: 0x334155,
+                roughness: 0.45,
+                metalness: 0.8
+            });
+            const ledMat = new THREE.MeshStandardMaterial({
+                color: 0xf59e0b,
+                emissive: 0xf59e0b,
+                emissiveIntensity: 0.9,
+                roughness: 0.2
+            });
 
             if (isHorizontalDoor) {
                 const doorSpan = door.w;
@@ -562,11 +623,26 @@ function build3DHabitatArchitecture() {
                 neon.position.set(0, archHeight - 4, 0);
                 group.add(neon);
 
-                // Floor Threshold
+                // Floor Threshold (allows direct click walking through doorway)
                 const threshold = new THREE.Mesh(new THREE.PlaneGeometry(doorSpan, 12), neonMat);
                 threshold.rotation.x = -Math.PI / 2;
                 threshold.position.set(0, 0.3, 0);
+                threshold.userData.isGround = true;
                 group.add(threshold);
+
+                // Sliding Pressure Door Hatch
+                const hatch = new THREE.Mesh(new THREE.BoxGeometry(doorSpan - 6, archHeight - 4, 3.2), hatchMat);
+                hatch.position.set(0, (archHeight - 4) / 2 + 1, 0);
+                hatch.castShadow = true;
+                hatchGroup.add(hatch);
+
+                const hazStripeMesh = new THREE.Mesh(new THREE.BoxGeometry(doorSpan - 12, 4.5, 3.6), hazardMat);
+                hazStripeMesh.position.set(0, (archHeight - 4) / 2 + 1, 0);
+                hatchGroup.add(hazStripeMesh);
+
+                const ledLight = new THREE.Mesh(new THREE.SphereGeometry(1.4, 8, 8), ledMat);
+                ledLight.position.set(0, (archHeight - 4) / 2 + 7, 1.8);
+                hatchGroup.add(ledLight);
             } else {
                 const doorSpan = door.h;
                 // Top & Bottom Jambs
@@ -588,12 +664,38 @@ function build3DHabitatArchitecture() {
                 neon.position.set(0, archHeight - 4, 0);
                 group.add(neon);
 
-                // Floor Threshold
+                // Floor Threshold (allows direct click walking through doorway)
                 const threshold = new THREE.Mesh(new THREE.PlaneGeometry(12, doorSpan), neonMat);
                 threshold.rotation.x = -Math.PI / 2;
                 threshold.position.set(0, 0.3, 0);
+                threshold.userData.isGround = true;
                 group.add(threshold);
+
+                // Sliding Pressure Door Hatch
+                const hatch = new THREE.Mesh(new THREE.BoxGeometry(3.2, archHeight - 4, doorSpan - 6), hatchMat);
+                hatch.position.set(0, (archHeight - 4) / 2 + 1, 0);
+                hatch.castShadow = true;
+                hatchGroup.add(hatch);
+
+                const hazStripeMesh = new THREE.Mesh(new THREE.BoxGeometry(3.6, 4.5, doorSpan - 12), hazardMat);
+                hazStripeMesh.position.set(0, (archHeight - 4) / 2 + 1, 0);
+                hatchGroup.add(hazStripeMesh);
+
+                const ledLight = new THREE.Mesh(new THREE.SphereGeometry(1.4, 8, 8), ledMat);
+                ledLight.position.set(1.8, (archHeight - 4) / 2 + 7, 0);
+                hatchGroup.add(ledLight);
             }
+
+            group.add(hatchGroup);
+            habitatDoor3DMeshes.push({
+                id: door.id,
+                x: door.x,
+                y: door.y,
+                hatchGroup: hatchGroup,
+                ledMat: ledMat,
+                closedY: 0,
+                openY: archHeight + 10
+            });
 
             // Portal Soft Down-Light
             const portalLight = new THREE.PointLight(door.color, 0.65, 80);
@@ -601,8 +703,6 @@ function build3DHabitatArchitecture() {
             group.add(portalLight);
 
             scene3D.add(group);
-
-            // Clean architectural doorway portal (no floating text clutter)
         });
     }
 }
@@ -1631,16 +1731,18 @@ function build3DCadetNova() {
     const initZ = state && state.player ? to3DZ(state.player.y) : 0;
     nova3D.position.set(initX, 0, initZ);
 
-    const suitOrange = new THREE.MeshStandardMaterial({ color: 0xea580c, roughness: 0.45, metalness: 0.25 });
+    // Dynamic Switchable Materials
+    const suitMat = new THREE.MeshStandardMaterial({ color: 0xea580c, roughness: 0.45, metalness: 0.25 });
+    const pantsMat = new THREE.MeshStandardMaterial({ color: 0xea580c, roughness: 0.45, metalness: 0.25 });
+    const gloveMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.6 });
     const bootMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.8 });
-    const gloveMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6 });
 
     // Legs
     const legGeo = new THREE.CylinderGeometry(2.2, 2.5, 12, 10);
 
     const leftLegGroup = new THREE.Group();
     leftLegGroup.position.set(-4, 11, 0);
-    const lLegMesh = new THREE.Mesh(legGeo, suitOrange);
+    const lLegMesh = new THREE.Mesh(legGeo, pantsMat);
     lLegMesh.position.y = -5;
     lLegMesh.castShadow = true;
     leftLegGroup.add(lLegMesh);
@@ -1653,7 +1755,7 @@ function build3DCadetNova() {
 
     const rightLegGroup = new THREE.Group();
     rightLegGroup.position.set(4, 11, 0);
-    const rLegMesh = new THREE.Mesh(legGeo, suitOrange);
+    const rLegMesh = new THREE.Mesh(legGeo, pantsMat);
     rLegMesh.position.y = -5;
     rLegMesh.castShadow = true;
     rightLegGroup.add(rLegMesh);
@@ -1666,7 +1768,7 @@ function build3DCadetNova() {
 
     // Torso
     const torsoGeo = new THREE.BoxGeometry(13, 15, 9);
-    const torso = new THREE.Mesh(torsoGeo, suitOrange);
+    const torso = new THREE.Mesh(torsoGeo, suitMat);
     torso.position.y = 19;
     torso.castShadow = true;
     nova3D.add(torso);
@@ -1686,7 +1788,7 @@ function build3DCadetNova() {
 
     const leftArmGroup = new THREE.Group();
     leftArmGroup.position.set(-8, 23, 0);
-    const lArmMesh = new THREE.Mesh(armGeo, suitOrange);
+    const lArmMesh = new THREE.Mesh(armGeo, suitMat);
     lArmMesh.position.y = -5;
     lArmMesh.castShadow = true;
     leftArmGroup.add(lArmMesh);
@@ -1699,7 +1801,7 @@ function build3DCadetNova() {
 
     const rightArmGroup = new THREE.Group();
     rightArmGroup.position.set(8, 23, 0);
-    const rArmMesh = new THREE.Mesh(armGeo, suitOrange);
+    const rArmMesh = new THREE.Mesh(armGeo, suitMat);
     rArmMesh.position.y = -5;
     rArmMesh.castShadow = true;
     rightArmGroup.add(rArmMesh);
@@ -1710,19 +1812,31 @@ function build3DCadetNova() {
     nova3D.add(rightArmGroup);
     nova3D.userData.rightArm = rightArmGroup;
 
+    // --- 1. EVA GEAR (Full Spacesuit Helmet, Gold Visor, PLSS Life-Support Backpack & O2 Cylinders) ---
+    const evaGear = new THREE.Group();
+
     // Backpack (PLSS)
     const packGeo = new THREE.BoxGeometry(11, 14, 5.5);
     const packMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.35, metalness: 0.3 });
     const backpack = new THREE.Mesh(packGeo, packMat);
     backpack.position.set(0, 19, -6.5);
     backpack.castShadow = true;
-    nova3D.add(backpack);
+    evaGear.add(backpack);
+
+    // Dual O2 Cylinders on PLSS Backpack
+    const o2Mat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.3, metalness: 0.5 });
+    const lO2 = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 12, 10), o2Mat);
+    lO2.position.set(-3.5, 19, -9.6);
+    evaGear.add(lO2);
+    const rO2 = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 12, 10), o2Mat);
+    rO2.position.set(3.5, 19, -9.6);
+    evaGear.add(rO2);
 
     const antGeo = new THREE.CylinderGeometry(0.5, 0.5, 14, 6);
     const antMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8 });
     const antenna = new THREE.Mesh(antGeo, antMat);
     antenna.position.set(-3.5, 27, -7);
-    nova3D.add(antenna);
+    evaGear.add(antenna);
 
     // Helmet & Gold Metallic Visor
     const helmGeo = new THREE.SphereGeometry(6.5, 24, 24);
@@ -1730,7 +1844,7 @@ function build3DCadetNova() {
     const helmet = new THREE.Mesh(helmGeo, helmMat);
     helmet.position.y = 31;
     helmet.castShadow = true;
-    nova3D.add(helmet);
+    evaGear.add(helmet);
 
     const visorGeo = new THREE.SphereGeometry(5.2, 20, 20);
     const visorMat = new THREE.MeshStandardMaterial({
@@ -1743,7 +1857,70 @@ function build3DCadetNova() {
     const visor = new THREE.Mesh(visorGeo, visorMat);
     visor.position.set(0, 31, 3);
     visor.scale.set(1.05, 0.82, 0.65);
-    nova3D.add(visor);
+    evaGear.add(visor);
+    nova3D.add(evaGear);
+
+    // --- 2. IVA GEAR (Shirtsleeve Flight Uniform: Cadet Head, Hair, Comms Headset & Mic) ---
+    const ivaGear = new THREE.Group();
+
+    // Cadet Head
+    const headGeo = new THREE.SphereGeometry(5.4, 16, 16);
+    const headMat = new THREE.MeshStandardMaterial({ color: 0xfed7aa, roughness: 0.75 });
+    const head = new THREE.Mesh(headGeo, headMat);
+    head.position.y = 30.5;
+    head.castShadow = true;
+    ivaGear.add(head);
+
+    // Cadet Hair with Volumetric Bangs
+    const hairGeo = new THREE.SphereGeometry(5.65, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.58);
+    const hairMat = new THREE.MeshStandardMaterial({ color: 0x7c2d12, roughness: 0.9 });
+    const hair = new THREE.Mesh(hairGeo, hairMat);
+    hair.position.y = 31.2;
+    hair.castShadow = true;
+    ivaGear.add(hair);
+
+    const bangGeo = new THREE.BoxGeometry(4.5, 2.5, 2.5);
+    const bang = new THREE.Mesh(bangGeo, hairMat);
+    bang.position.set(1.5, 32.5, 4.2);
+    ivaGear.add(bang);
+
+    // Comms Headset
+    const headsetMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.4, metalness: 0.8 });
+    const bandGeo = new THREE.TorusGeometry(5.4, 0.45, 8, 16, Math.PI);
+    const band = new THREE.Mesh(bandGeo, headsetMat);
+    band.rotation.x = -Math.PI / 2;
+    band.position.set(0, 32.5, 0);
+    ivaGear.add(band);
+
+    const earcupGeo = new THREE.CylinderGeometry(1.5, 1.5, 1.2, 8);
+    const lCup = new THREE.Mesh(earcupGeo, headsetMat);
+    lCup.rotation.z = Math.PI / 2;
+    lCup.position.set(-5.6, 30.5, 0);
+    ivaGear.add(lCup);
+    const rCup = new THREE.Mesh(earcupGeo, headsetMat);
+    rCup.rotation.z = Math.PI / 2;
+    rCup.position.set(5.6, 30.5, 0);
+    ivaGear.add(rCup);
+
+    const micBoomGeo = new THREE.CylinderGeometry(0.3, 0.3, 6, 6);
+    const micBoom = new THREE.Mesh(micBoomGeo, headsetMat);
+    micBoom.rotation.x = Math.PI / 3;
+    micBoom.position.set(-4.8, 28.5, 3.5);
+    ivaGear.add(micBoom);
+
+    const micTipMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x38bdf8, emissiveIntensity: 0.9 });
+    const micTip = new THREE.Mesh(new THREE.SphereGeometry(0.6, 8, 8), micTipMat);
+    micTip.position.set(-4.8, 26.5, 5.8);
+    ivaGear.add(micTip);
+    nova3D.add(ivaGear);
+
+    // Store references for dynamic suit swapping in render loop
+    nova3D.userData.evaGear = evaGear;
+    nova3D.userData.ivaGear = ivaGear;
+    nova3D.userData.suitMat = suitMat;
+    nova3D.userData.pantsMat = pantsMat;
+    nova3D.userData.gloveMat = gloveMat;
+    nova3D.userData.chestScreenMat = chestScreenMat;
 
     // Spotlight
     const chestLight = new THREE.SpotLight(0xffffff, 1.2, 180, Math.PI / 5, 0.35);
@@ -1825,6 +2002,33 @@ function renderGame3D(now) {
                 10,
                 nova3D.position.z + forwardZ * 80
             );
+        }
+
+        // Dynamic EVA Suit vs Shirtsleeve IVA Flight Uniform Sync
+        const wearSuit = (state && state.player && (state.player.inSuit || state.player.x <= 285));
+        const ud = nova3D.userData;
+        if (ud && ud.evaGear && ud.ivaGear) {
+            ud.evaGear.visible = !!wearSuit;
+            ud.ivaGear.visible = !wearSuit;
+        }
+        if (ud && ud.suitMat && ud.pantsMat) {
+            if (wearSuit) {
+                ud.suitMat.color.setHex(0xea580c);
+                ud.pantsMat.color.setHex(0xea580c);
+                if (ud.gloveMat) ud.gloveMat.color.setHex(0xf8fafc);
+                if (ud.chestScreenMat) {
+                    ud.chestScreenMat.color.setHex(0x38bdf8);
+                    ud.chestScreenMat.emissive.setHex(0x0284c7);
+                }
+            } else {
+                ud.suitMat.color.setHex(0x0284c7);
+                ud.pantsMat.color.setHex(0x0f172a);
+                if (ud.gloveMat) ud.gloveMat.color.setHex(0xfed7aa);
+                if (ud.chestScreenMat) {
+                    ud.chestScreenMat.color.setHex(0x4ade80);
+                    ud.chestScreenMat.emissive.setHex(0x15803d);
+                }
+            }
         }
     }
 
@@ -1923,6 +2127,26 @@ function renderGame3D(now) {
                 if (spr.visible) {
                     const base = spr.userData.baseY || 28;
                     spr.position.y = base + Math.sin(now * 0.003 + i) * 0.8;
+                }
+            }
+        }
+    }
+
+        // Dynamic Pressure Door Hatch Proximity Sliding & LED Interlocks
+    if (habitatDoor3DMeshes && habitatDoor3DMeshes.length > 0 && state && state.player) {
+        const px = state.player.x;
+        const py = state.player.y;
+        for (let i = 0; i < habitatDoor3DMeshes.length; i++) {
+            const d = habitatDoor3DMeshes[i];
+            const dist = Math.hypot(px - d.x, py - d.y);
+            const isOpen = (dist <= 65);
+            const targetY = isOpen ? d.openY : d.closedY;
+            d.hatchGroup.position.y += (targetY - d.hatchGroup.position.y) * 0.18;
+            if (d.ledMat) {
+                const targetCol = isOpen ? 0x22c55e : 0xf59e0b;
+                if (d.ledMat.color.getHex() !== targetCol) {
+                    d.ledMat.color.setHex(targetCol);
+                    d.ledMat.emissive.setHex(targetCol);
                 }
             }
         }

@@ -313,14 +313,14 @@ const HABITAT_WALLS = [
     { id: 'wall_w_water', x: 415, y: 510, w: 12, h: 230 },
 
     // 2. Airlock & Pressure Barrier (EVA transit cubicle)
-    { id: 'airlock_w_upper', x: 270, y: 285, w: 12, h: 67 },
-    { id: 'airlock_w_lower', x: 270, y: 408, w: 12, h: 67 },
+    { id: 'airlock_w_upper', x: 270, y: 285, w: 12, h: 50 },
+    { id: 'airlock_w_lower', x: 270, y: 425, w: 12, h: 50 },
     { id: 'airlock_n', x: 270, y: 285, w: 150, h: 12 },
     { id: 'airlock_s', x: 270, y: 463, w: 150, h: 12 },
     { id: 'airlock_conn_north', x: 415, y: 245, w: 12, h: 45 },
     { id: 'airlock_conn_south', x: 415, y: 470, w: 12, h: 45 },
-    { id: 'airlock_e_upper', x: 415, y: 285, w: 12, h: 67 },
-    { id: 'airlock_e_lower', x: 415, y: 408, w: 12, h: 67 },
+    { id: 'airlock_e_upper', x: 415, y: 285, w: 12, h: 50 },
+    { id: 'airlock_e_lower', x: 415, y: 425, w: 12, h: 50 },
 
     // 3. Central Pressurized Spine: North Wall (Encloses Power & ECLSS)
     // Power doorway at x: 510..565
@@ -355,8 +355,8 @@ const HABITAT_WALLS = [
 
 // High-Tech Doorway Portals (Dedicated entry points connecting each cubicle to the Central Spine)
 const HABITAT_DOORWAYS = [
-    { id: 'door_airlock_eva', name: 'EVA Surface Hatch', room: 'airlock', x: 276, y: 380, w: 14, h: 55, color: 0x38bdf8, label: 'EVA Hatch' },
-    { id: 'door_airlock_iva', name: 'Airlock Pressurized Hatch', room: 'airlock', x: 421, y: 380, w: 14, h: 55, color: 0x38bdf8, label: 'Inner Seal' },
+    { id: 'door_airlock_eva', name: 'EVA Surface Hatch', room: 'airlock', x: 276, y: 380, w: 14, h: 90, color: 0x38bdf8, label: 'EVA Hatch' },
+    { id: 'door_airlock_iva', name: 'Airlock Pressurized Hatch', room: 'airlock', x: 421, y: 380, w: 14, h: 90, color: 0x38bdf8, label: 'Inner Seal' },
     { id: 'door_power', name: 'Power Grid Portal', room: 'power', x: 537, y: 251, w: 55, h: 14, color: 0xf59e0b, label: 'Power Door' },
     { id: 'door_lifesupport', name: 'Life Support Portal', room: 'lifesupport', x: 777, y: 251, w: 55, h: 14, color: 0x14b8a6, label: 'ECLSS Door' },
     { id: 'door_water', name: 'Water Recovery Portal', room: 'water', x: 537, y: 511, w: 55, h: 14, color: 0x3b82f6, label: 'Water Door' },

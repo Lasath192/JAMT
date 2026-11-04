@@ -1609,19 +1609,61 @@ function renderGame(now) {
         ctx.fillText(r.name.toUpperCase(), r.labelX, r.labelY - 3);
     }
 
-    // 2. Doors
+    // 2. High-Tech Pressure Doors & Portals (Accurately aligned with wall doorways and dynamic proximity slide)
     for (const d of DOORS) {
+        const cx = d.x;
+        const cy = d.y;
+        const halfW = d.w / 2;
+        const halfH = d.h / 2;
+        const x = cx - halfW;
+        const y = cy - halfH;
+
+        const distToDoor = (typeof state !== 'undefined' && state && state.player) ? Math.hypot(state.player.x - cx, state.player.y - cy) : 999;
+        const isOpen = (distToDoor <= 55);
+
+        // Outer doorframe
         ctx.fillStyle = '#090d16';
-        ctx.fillRect(d.x - 3, d.y - 3, d.w + 6, d.h + 6);
-        const doorGrad = ctx.createLinearGradient(d.x, d.y, d.x + d.w, d.y + d.h);
-        doorGrad.addColorStop(0, '#7dd3fc');
-        doorGrad.addColorStop(0.5, '#0284c7');
-        doorGrad.addColorStop(1, '#0369a1');
-        ctx.fillStyle = doorGrad;
-        ctx.fillRect(d.x, d.y, d.w, d.h);
-        ctx.fillStyle = '#facc15';
-        ctx.fillRect(d.x, d.y, 4, 4);
-        ctx.fillRect(d.x + d.w - 4, d.y + d.h - 4, 4, 4);
+        ctx.fillRect(x - 2, y - 2, d.w + 4, d.h + 4);
+
+        if (isOpen) {
+            // Illuminated floor threshold / open walkway
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
+            ctx.fillRect(x, y, d.w, d.h);
+
+            // Retracted door leaves at frame jambs
+            ctx.fillStyle = '#334155';
+            if (d.w > d.h) {
+                ctx.fillRect(x, y, 6, d.h);
+                ctx.fillRect(x + d.w - 6, y, 6, d.h);
+            } else {
+                ctx.fillRect(x, y, d.w, 6);
+                ctx.fillRect(x, y + d.h - 6, d.w, 6);
+            }
+            // Green/Cyan status indicator LEDs (OPEN)
+            ctx.fillStyle = '#22c55e';
+            ctx.fillRect(x + 1, y + 1, 3, 3);
+            ctx.fillRect(x + d.w - 4, y + d.h - 4, 3, 3);
+        } else {
+            // Closed pressurized hatch barrier
+            const doorGrad = ctx.createLinearGradient(x, y, x + d.w, y + d.h);
+            doorGrad.addColorStop(0, '#475569');
+            doorGrad.addColorStop(0.5, '#64748b');
+            doorGrad.addColorStop(1, '#334155');
+            ctx.fillStyle = doorGrad;
+            ctx.fillRect(x, y, d.w, d.h);
+
+            // Hazard indicator strip
+            ctx.fillStyle = '#f59e0b';
+            if (d.w > d.h) {
+                ctx.fillRect(cx - 10, y + 2, 20, d.h - 4);
+            } else {
+                ctx.fillRect(x + 2, cy - 10, d.w - 4, 20);
+            }
+            // Amber status LEDs (SEALED)
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillRect(x + 1, y + 1, 3, 3);
+            ctx.fillRect(x + d.w - 4, y + d.h - 4, 3, 3);
+        }
     }
 
     // 3. Room details & living machinery

@@ -431,7 +431,7 @@ function updateGame(dt) {
         state.player.footstepTimer = (state.player.footstepTimer || 0) + dt;
         if (state.player.footstepTimer > 0.16) {
             state.player.footstepTimer = 0;
-            const isOutdoor = (state.player.x < 282 || state.player.x > 422);
+            const isOutdoor = (state.player.x <= 285);
             footprints.push({
                 x: state.player.x,
                 y: state.player.y + 11,
@@ -445,14 +445,14 @@ function updateGame(dt) {
 
     // AUTOMATED AIRLOCK EVA SUIT INTERLOCK RULE:
     // Crossing outer EVA hatch (x <= 282) equips & pressurizes suit.
-    if (state.player.x <= 282 && !state.player.inSuit) {
+    if (state.player.x <= 285 && !state.player.inSuit) {
         state.player.inSuit = true;
         if (typeof triggerCameraShake === 'function') triggerCameraShake(2.5);
         if (window.sfx && typeof sfx.pickup === 'function') sfx.pickup();
         if (typeof unlockFact === 'function') unlockFact('airlock_pressure');
         setAria("Airlock Interlock: EVA Spacesuit automatically donned and pressurized to 30 kPa pure O₂ for Martian surface excursion (0.6 kPa exterior).");
         if (typeof updateUI === 'function') updateUI();
-    } else if (state.player.x > 422 && state.player.inSuit) {
+    } else if (state.player.x >= 415 && state.player.inSuit) {
         // Returning to Central Spine stows the EVA suit
         state.player.inSuit = false;
         if (typeof triggerCameraShake === 'function') triggerCameraShake(2.0);
@@ -462,7 +462,7 @@ function updateGame(dt) {
     }
 
     // Visual Upgrade 4: Camera Shake on Dust Storm Wind Peaks
-    if (state.faults && state.faults.dustStormActive && state.player.x < 282) {
+    if (state.faults && state.faults.dustStormActive && state.player.x <= 285) {
         if (Math.random() < 0.008 && typeof triggerCameraShake === 'function') {
             triggerCameraShake(3.0);
         }
