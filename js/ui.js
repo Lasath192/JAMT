@@ -570,17 +570,19 @@ function openObjectModal(obj) {
 
         // Mission 10: Harvest Mature Wheat & Cryo-Stash Seeds
         if (state.chapterIdx === 9 || state.cropGrowthStage >= 2) {
+            const seedsDone = (typeof isTaskDone === 'function') ? isTaskDone('ch10_greenhouse_seeds') : false;
             addActionBtn(
-                'Harvest Mature Dwarf Wheat & Cryo-Stash Generation-2 Seeds',
-                'Preserves genetically adapted seeds for return to Earth in the ERV',
+                seedsDone ? '✓ Generation-2 Seeds Cryo-Preserved in Storage Vault' : 'Harvest Mature Dwarf Wheat & Cryo-Stash Generation-2 Seeds',
+                seedsDone ? 'Genetically adapted seeds vaulted for return to Earth in ERV' : 'Preserves genetically adapted seeds for return to Earth in the ERV',
                 () => {
                     completeTask('ch10_greenhouse_seeds');
+                    if (typeof spawnFloatingText === 'function') spawnFloatingText('CRYO-SEEDS VAULTED', state.player.x, state.player.y - 20, '#4ade80');
                     awardBadge('chapea_botanist');
-                    setAria('Generation-2 seeds successfully cryo-preserved! Botanist badge confirmed.');
+                    setAria('Generation-2 seeds successfully cryo-preserved! Head to the Science Lab to complete the outpost handover.');
                     if (typeof updateUI === 'function') updateUI();
                     openObjectModal(obj);
                 },
-                'bg-emerald-600 hover:bg-emerald-500 text-white'
+                seedsDone ? 'bg-emerald-700/80 hover:bg-emerald-600 text-emerald-100' : 'bg-emerald-600 hover:bg-emerald-500 text-white'
             );
         }
 
@@ -796,27 +798,52 @@ function openObjectModal(obj) {
 
         // Mission 10: Package Cores for ERV
         if (state.chapterIdx === 9) {
+            const coresDone = (typeof isTaskDone === 'function') ? isTaskDone('ch10_package_cores') : false;
+            const seedsDone = (typeof isTaskDone === 'function') ? isTaskDone('ch10_greenhouse_seeds') : false;
+            const prereqsDone = coresDone && seedsDone;
+
             addActionBtn(
-                'Package Certified Core Canisters into Earth Return Vehicle (ERV) Container',
-                'Secures all sampled geological tubes in shock-absorbing transit harness',
+                coresDone ? '✓ Jezero Core Canisters Packaged in ERV Container' : 'Package Certified Core Canisters into Earth Return Vehicle (ERV) Container',
+                coresDone ? 'Verified and secured in transit shock harness' : 'Secures all sampled geological tubes in shock-absorbing transit harness',
                 () => {
+                    state.coresPackaged = true;
                     completeTask('ch10_package_cores');
-                    setAria('Core canisters secured into ERV return module!');
+                    if (typeof spawnFloatingText === 'function') spawnFloatingText('CORE CANISTERS PACKAGED FOR ERV', state.player.x, state.player.y - 20, '#38bdf8');
+                    setAria('Core canisters secured into ERV return module! ' + (seedsDone ? 'All pre-handover checklists complete — you can now transmit the final report!' : 'Next, deposit generation-2 cryo-seeds in the Greenhouse.'));
+                    if (typeof updateUI === 'function') updateUI();
                     openObjectModal(obj);
                 },
-                'bg-sky-600 hover:bg-sky-500 text-white'
+                coresDone ? 'bg-emerald-700/80 hover:bg-emerald-600 text-emerald-100' : 'bg-sky-600 hover:bg-sky-500 text-white'
             );
 
             // Mission 10: Transmit Final 378-Sol Report & Complete Campaign
+            // LOCKED until all other Chapter 10 tasks (cores & seeds) are completed!
+            const remaining = [];
+            if (!coresDone) remaining.push('Package Cores (Lab)');
+            if (!seedsDone) remaining.push('Cryo-Seeds (Greenhouse)');
+
             addActionBtn(
-                '★ Transmit Final 378-Sol Outpost Handover Debrief to Houston',
-                'Concludes NASA CHAPEA 378-Sol Simulation and triggers Mission Certification!',
+                prereqsDone
+                    ? '★ Transmit Final 378-Sol Outpost Handover Debrief to Houston'
+                    : `★ Transmit Handover (Locked: Complete ${remaining.join(' & ')})`,
+                prereqsDone
+                    ? 'Concludes NASA CHAPEA 378-Sol Simulation and triggers Mission Certification!'
+                    : `Prerequisite checklist incomplete! Must finish: ${remaining.join(' and ')} before handover.`,
                 () => {
+                    if (!prereqsDone) {
+                        setAria(`CANNOT TRANSMIT HANDOVER: Incomplete checklists! Must finish: ${remaining.join(' and ')} first.`);
+                        if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+                        return;
+                    }
                     completeTask('ch10_final_report');
+                    if (typeof spawnFloatingText === 'function') spawnFloatingText('378-SOL EXPEDITION COMPLETE!', state.player.x, state.player.y - 20, '#fbbf24');
                     document.getElementById('modal-console').classList.add('hidden');
                     showVictoryModal();
                 },
-                'bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold'
+                prereqsDone
+                    ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold'
+                    : 'bg-slate-800 text-slate-500 cursor-not-allowed border-slate-700',
+                !prereqsDone
             );
         } else {
             // General Medical Scan

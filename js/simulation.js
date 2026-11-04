@@ -555,6 +555,14 @@ function syncTasksWithState() {
     }
 }
 
+function isTaskDone(taskId) {
+    if (typeof CHAPTERS === 'undefined' || !state) return false;
+    const ch = CHAPTERS[state.chapterIdx];
+    if (!ch || !ch.tasks) return false;
+    const t = ch.tasks.find(item => item.id === taskId);
+    return t ? !!t.done : false;
+}
+
 function completeTask(taskId) {
     const ch = CHAPTERS[state.chapterIdx];
     if (!ch) return;
@@ -669,6 +677,7 @@ if (typeof module !== 'undefined') {
         showVictoryModal,
         syncTasksWithState,
         completeTask,
+        isTaskDone,
         unlockFact,
         awardBadge
     };
@@ -679,6 +688,7 @@ if (typeof window !== 'undefined') {
     window.loadChapter = loadChapter;
     window.applyDilemmaChoice = applyDilemmaChoice;
     window.completeTask = completeTask;
+    window.isTaskDone = isTaskDone;
     window.syncTasksWithState = syncTasksWithState;
     window.calculateMissionLegacy = calculateMissionLegacy;
     window.showVictoryModal = showVictoryModal;
