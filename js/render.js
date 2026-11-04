@@ -1103,36 +1103,77 @@ function drawRoomDetails(now) {
 }
 
 function drawCrewNPC(npc, now) {
-    const bob = Math.sin(now * 0.004 + npc.x) * 1.5;
+    const bob = Math.sin(now * 0.004 + npc.x) * 2;
 
-    ctx.fillStyle = 'rgba(0,0,0,0.45)';
-    ctx.beginPath(); ctx.ellipse(npc.x, npc.y + 15, 11, 5, 0, 0, Math.PI * 2); ctx.fill();
+    // 1. Soft 3D Ground Drop Shadow
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.22)';
+    ctx.beginPath(); ctx.ellipse(npc.x, npc.y + 17, 16, 6, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.beginPath(); ctx.ellipse(npc.x, npc.y + 16, 11, 4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
 
-    ctx.fillStyle = '#1e293b';
-    ctx.fillRect(npc.x - 6, npc.y + 6, 5, 9);
-    ctx.fillRect(npc.x + 1, npc.y + 6, 5, 9);
+    // 2. 3D Legs
+    const legGrad = ctx.createLinearGradient(npc.x - 7, npc.y, npc.x + 7, npc.y);
+    legGrad.addColorStop(0, '#0f172a');
+    legGrad.addColorStop(0.5, '#334155');
+    legGrad.addColorStop(1, '#0f172a');
+    ctx.fillStyle = legGrad;
+    ctx.beginPath(); ctx.roundRect(npc.x - 6, npc.y + 6, 5, 10, 2); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(npc.x + 1, npc.y + 6, 5, 10, 2); ctx.fill();
 
-    ctx.fillStyle = npc.suitColor;
-    ctx.beginPath(); ctx.roundRect(npc.x - 9, npc.y - 9 + bob, 18, 17, 4); ctx.fill();
+    // 3. Volumetric Shaded Torso
+    const suitGrad = ctx.createLinearGradient(npc.x - 10, npc.y, npc.x + 10, npc.y);
+    suitGrad.addColorStop(0, '#0f172a');
+    suitGrad.addColorStop(0.35, npc.suitColor);
+    suitGrad.addColorStop(1, '#0f172a');
+    ctx.fillStyle = suitGrad;
+    ctx.beginPath(); ctx.roundRect(npc.x - 9.5, npc.y - 9 + bob, 19, 17, 4.5); ctx.fill();
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Chest Collar & Insignia
     ctx.fillStyle = '#cbd5e1';
-    ctx.fillRect(npc.x - 8, npc.y + 2 + bob, 16, 3);
+    ctx.fillRect(npc.x - 7, npc.y + 2 + bob, 14, 2.5);
 
+    // 4. Head / Helmet
     if (npc.helmetOn) {
-        ctx.fillStyle = '#1e293b';
-        ctx.beginPath(); ctx.arc(npc.x, npc.y - 15 + bob, 9, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(npc.x - 5, npc.y - 18 + bob, 10, 6);
+        const helmGrad = ctx.createRadialGradient(npc.x - 3, npc.y - 17 + bob, 1, npc.x, npc.y - 15 + bob, 10);
+        helmGrad.addColorStop(0, '#ffffff');
+        helmGrad.addColorStop(0.7, '#64748b');
+        helmGrad.addColorStop(1, '#1e293b');
+        ctx.fillStyle = helmGrad;
+        ctx.beginPath(); ctx.arc(npc.x, npc.y - 15 + bob, 9.5, 0, Math.PI * 2); ctx.fill();
+
+        // Visor
+        const visorGrad = ctx.createLinearGradient(npc.x - 6, npc.y - 18 + bob, npc.x + 6, npc.y - 12 + bob);
+        visorGrad.addColorStop(0, '#7dd3fc');
+        visorGrad.addColorStop(0.5, '#0284c7');
+        visorGrad.addColorStop(1, '#0c4a6e');
+        ctx.fillStyle = visorGrad;
+        ctx.beginPath(); ctx.roundRect(npc.x - 5.5, npc.y - 18 + bob, 11, 7, 3); ctx.fill();
     } else {
-        ctx.fillStyle = npc.skinColor;
-        ctx.beginPath(); ctx.arc(npc.x, npc.y - 15 + bob, 8, 0, Math.PI * 2); ctx.fill();
+        // Face
+        const faceGrad = ctx.createRadialGradient(npc.x - 2, npc.y - 17 + bob, 1, npc.x, npc.y - 15 + bob, 8.5);
+        faceGrad.addColorStop(0, '#fff7ed');
+        faceGrad.addColorStop(0.7, npc.skinColor);
+        faceGrad.addColorStop(1, '#c2410c');
+        ctx.fillStyle = faceGrad;
+        ctx.beginPath(); ctx.arc(npc.x, npc.y - 15 + bob, 8.5, 0, Math.PI * 2); ctx.fill();
+
+        // Hair
         ctx.fillStyle = npc.hairColor;
-        ctx.beginPath(); ctx.arc(npc.x, npc.y - 18 + bob, 8.5, Math.PI, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(npc.x, npc.y - 18 + bob, 9, Math.PI * 0.9, Math.PI * 2.1); ctx.fill();
         ctx.fillRect(npc.x - 8, npc.y - 18 + bob, 4, 8);
+
+        // Eyes
         ctx.fillStyle = '#0f172a';
-        ctx.fillRect(npc.x - 3, npc.y - 15 + bob, 2, 2);
-        ctx.fillRect(npc.x + 2, npc.y - 15 + bob, 2, 2);
+        ctx.fillRect(npc.x - 3, npc.y - 15 + bob, 2, 2.5);
+        ctx.fillRect(npc.x + 2, npc.y - 15 + bob, 2, 2.5);
     }
 
+    // 5. Floating Name & Health Bar
     ctx.font = 'bold 9.5px "Inter", sans-serif';
     ctx.fillStyle = '#f8fafc';
     ctx.textAlign = 'center';
@@ -1145,6 +1186,7 @@ function drawCrewNPC(npc, now) {
     ctx.fillStyle = '#38bdf8';
     ctx.fillRect(npc.x - 17, npc.y - 28 + bob, 34 * (npc.energy / 100), 2);
 
+    // 6. Interaction Dialogue Bubble
     const distToPlayer = Math.hypot(state.player.x - npc.x, state.player.y - npc.y);
     if (distToPlayer < 95) {
         ctx.fillStyle = 'rgba(9, 13, 22, 0.94)';
@@ -1164,115 +1206,255 @@ function drawAstronaut(x, y, inSuit, now) {
     const wearSuit = inSuit || x <= 282;
     const isMoving = (typeof keys !== 'undefined') && (keys.up || keys.down || keys.left || keys.right || state.player.targetX !== null);
     const bob = isMoving ? Math.sin(now * 0.018) * 3 : 0;
-    const legSwing = isMoving ? Math.sin(now * 0.022) * 4 : 0;
+    const legSwing = isMoving ? Math.sin(now * 0.022) * 5 : 0;
+    const armSwing = isMoving ? -Math.sin(now * 0.022) * 4 : 0;
     const dir = state.player.facing === 'right' ? 1 : -1;
+
+    // 1. Dynamic Directional Ground Drop Shadow (3D ambient occlusion)
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+    ctx.beginPath();
+    ctx.ellipse(x + dir * 3, y + 20, 18, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
     ctx.beginPath();
-    ctx.ellipse(x, y + 18, 14, 6, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y + 19, 12, 4.5, 0, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
 
-    ctx.fillStyle = wearSuit ? '#e2e8f0' : '#1e293b';
-    ctx.fillRect(x - 7, y + 7 + legSwing, 6, 10);
-    ctx.fillRect(x + 1, y + 7 - legSwing, 6, 10);
-    if (wearSuit) {
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(x - 7, y + 14 + legSwing, 6, 3);
-        ctx.fillRect(x + 1, y + 14 - legSwing, 6, 3);
-    }
-
-    ctx.fillStyle = wearSuit ? '#f8fafc' : '#334155';
+    // 2. Flashlight forward illumination cone
+    ctx.save();
+    const lightCone = ctx.createRadialGradient(x + dir * 8, y + bob, 4, x + dir * 45, y + 15 + bob, 55);
+    lightCone.addColorStop(0, 'rgba(255, 255, 255, 0.22)');
+    lightCone.addColorStop(0.5, 'rgba(56, 189, 248, 0.09)');
+    lightCone.addColorStop(1, 'rgba(56, 189, 248, 0)');
+    ctx.fillStyle = lightCone;
     ctx.beginPath();
-    ctx.roundRect(x - (wearSuit ? 15 : 13), y - (wearSuit ? 13 : 10) + bob, wearSuit ? 30 : 26, wearSuit ? 22 : 19, 4);
+    ctx.moveTo(x + dir * 8, y + bob);
+    ctx.lineTo(x + dir * 65, y - 25 + bob);
+    ctx.lineTo(x + dir * 65, y + 45 + bob);
+    ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = wearSuit ? '#94a3b8' : '#475569';
-    ctx.lineWidth = 1.5;
+    ctx.restore();
+
+    // 3. Volumetric 3D Legs (Cylindrical gradient with boot rims)
+    const drawLeg = (lx, ly, swing) => {
+        const legGrad = ctx.createLinearGradient(lx - 4, ly, lx + 4, ly);
+        if (wearSuit) {
+            legGrad.addColorStop(0, '#94a3b8');
+            legGrad.addColorStop(0.35, '#f8fafc');
+            legGrad.addColorStop(1, '#64748b');
+        } else {
+            legGrad.addColorStop(0, '#0f172a');
+            legGrad.addColorStop(0.4, '#334155');
+            legGrad.addColorStop(1, '#0f172a');
+        }
+        ctx.fillStyle = legGrad;
+        ctx.beginPath();
+        ctx.roundRect(lx - 4, ly + swing, 8, 12, 3);
+        ctx.fill();
+
+        // Heavy Magnetized Exploration Boot
+        ctx.fillStyle = wearSuit ? '#334155' : '#090d16';
+        ctx.beginPath();
+        ctx.roundRect(lx - 4.5, ly + 9 + swing, 9, 4, 1.5);
+        ctx.fill();
+        ctx.fillStyle = wearSuit ? '#f59e0b' : '#38bdf8';
+        ctx.fillRect(lx - 3, ly + 11 + swing, 6, 1.5);
+    };
+
+    drawLeg(x - 5, y + 6, legSwing);
+    drawLeg(x + 5, y + 6, -legSwing);
+
+    // 4. Life-Support Backpack (PLSS) behind Torso
+    const packGrad = ctx.createLinearGradient(x - 14, y, x + 14, y);
+    packGrad.addColorStop(0, '#475569');
+    packGrad.addColorStop(0.35, '#f1f5f9');
+    packGrad.addColorStop(1, '#334155');
+    ctx.fillStyle = packGrad;
+    ctx.beginPath();
+    ctx.roundRect(x - (wearSuit ? 15 : 13), y - (wearSuit ? 14 : 11) + bob, wearSuit ? 30 : 26, wearSuit ? 23 : 19, 4.5);
+    ctx.fill();
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth = 1;
     ctx.stroke();
 
     if (wearSuit) {
-        ctx.strokeStyle = '#cbd5e1';
+        // High-Gain Antenna & Blinking Beacon
+        ctx.strokeStyle = '#94a3b8';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.moveTo(x - 10, y - 13 + bob);
-        ctx.lineTo(x - 10, y - 28 + bob);
+        ctx.moveTo(x - 11, y - 14 + bob);
+        ctx.lineTo(x - 11, y - 31 + bob);
         ctx.stroke();
-        ctx.fillStyle = Math.sin(now * 0.01) > 0 ? '#22c55e' : '#f59e0b';
+
+        ctx.fillStyle = Math.sin(now * 0.012) > 0 ? '#22c55e' : '#f59e0b';
         ctx.beginPath();
-        ctx.arc(x - 10, y - 29 + bob, 2.2, 0, Math.PI * 2);
+        ctx.arc(x - 11, y - 32 + bob, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Dual Oxygen Supply Cylinders on Backpack
+        const o2Grad = ctx.createLinearGradient(x - 13, y, x - 7, y);
+        o2Grad.addColorStop(0, '#0284c7');
+        o2Grad.addColorStop(0.5, '#7dd3fc');
+        o2Grad.addColorStop(1, '#0369a1');
+        ctx.fillStyle = o2Grad;
+        ctx.beginPath();
+        ctx.roundRect(x - 13, y - 8 + bob, 4.5, 14, 2);
+        ctx.fill();
+
+        const o2Grad2 = ctx.createLinearGradient(x + 8.5, y, x + 13, y);
+        o2Grad2.addColorStop(0, '#0284c7');
+        o2Grad2.addColorStop(0.5, '#7dd3fc');
+        o2Grad2.addColorStop(1, '#0369a1');
+        ctx.fillStyle = o2Grad2;
+        ctx.beginPath();
+        ctx.roundRect(x + 8.5, y - 8 + bob, 4.5, 14, 2);
         ctx.fill();
     }
 
-    ctx.fillStyle = wearSuit ? '#ea580c' : '#0284c7';
+    // 5. 3D Cylindrical Curved Torso
+    const torsoGrad = ctx.createLinearGradient(x - 12, y, x + 12, y);
+    if (wearSuit) {
+        torsoGrad.addColorStop(0, '#9a3412');
+        torsoGrad.addColorStop(0.35, '#fb923c');
+        torsoGrad.addColorStop(0.65, '#ea580c');
+        torsoGrad.addColorStop(1, '#7c2d12');
+    } else {
+        torsoGrad.addColorStop(0, '#0369a1');
+        torsoGrad.addColorStop(0.35, '#38bdf8');
+        torsoGrad.addColorStop(0.65, '#0284c7');
+        torsoGrad.addColorStop(1, '#0c4a6e');
+    }
+    ctx.fillStyle = torsoGrad;
     ctx.beginPath();
-    ctx.roundRect(x - 11, y - 9 + bob, 22, 20, 5);
+    ctx.roundRect(x - 11.5, y - 10 + bob, 23, 20, 5);
     ctx.fill();
+    ctx.strokeStyle = wearSuit ? '#fed7aa' : '#bae6fd';
+    ctx.lineWidth = 1;
+    ctx.stroke();
 
-    if (wearSuit) {
-        ctx.fillStyle = '#ea580c';
-        ctx.fillRect(x - 15, y - 6 + bob, 5, 11);
-        ctx.fillRect(x + 10, y - 6 + bob, 5, 11);
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillRect(x - 15, y + 3 + bob, 5, 4);
-        ctx.fillRect(x + 10, y + 3 + bob, 5, 4);
-    }
+    // Chest Telemetry Display Unit (DCM) with Glowing LED
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.roundRect(x - 7, y - 5 + bob, 14, 8, 2);
+    ctx.fill();
+    ctx.fillStyle = wearSuit ? '#38bdf8' : '#4ade80';
+    ctx.fillRect(x - 5, y - 3 + bob, 4, 3);
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillRect(x + 1, y - 3 + bob, 4, 3);
 
-    ctx.fillStyle = '#f8fafc';
-    ctx.fillRect(x - 9, y - 4 + bob, 18, 5);
-    ctx.fillStyle = wearSuit ? '#0284c7' : '#38bdf8';
-    ctx.fillRect(x - 5, y - 5 + bob, 10, 7);
-
-    if (wearSuit) {
-        ctx.fillStyle = '#94a3b8';
+    // Dynamic 3D Arms & Gloves with counter-phase swing
+    const drawArm = (ax, ay, swing) => {
+        const armGrad = ctx.createLinearGradient(ax - 3, ay, ax + 3, ay);
+        armGrad.addColorStop(0, wearSuit ? '#9a3412' : '#0369a1');
+        armGrad.addColorStop(0.4, wearSuit ? '#fb923c' : '#38bdf8');
+        armGrad.addColorStop(1, wearSuit ? '#7c2d12' : '#0c4a6e');
+        ctx.fillStyle = armGrad;
         ctx.beginPath();
-        ctx.ellipse(x, y - 7 + bob, 9.5, 3, 0, 0, Math.PI * 2);
+        ctx.roundRect(ax - 3, ay + swing, 6, 12, 2.5);
         ctx.fill();
 
-        const helmGrad = ctx.createRadialGradient(x - 3, y - 20 + bob, 2, x, y - 17 + bob, 13);
+        // Pressurized Glove
+        ctx.fillStyle = wearSuit ? '#f8fafc' : '#475569';
+        ctx.beginPath();
+        ctx.arc(ax, ay + 12 + swing, 3.2, 0, Math.PI * 2);
+        ctx.fill();
+    };
+    drawArm(x - 13.5, y - 7 + bob, armSwing);
+    drawArm(x + 13.5, y - 7 + bob, -armSwing);
+
+    // 6. Spherical 3D Helmet with Specular Metallic Visor
+    if (wearSuit) {
+        // Metallic neck seal ring
+        ctx.fillStyle = '#64748b';
+        ctx.beginPath();
+        ctx.ellipse(x, y - 8 + bob, 10, 3.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 3D Spherical Shaded Outer Helmet
+        const helmGrad = ctx.createRadialGradient(x - 4, y - 22 + bob, 2, x, y - 18 + bob, 14);
         helmGrad.addColorStop(0, '#ffffff');
-        helmGrad.addColorStop(0.75, '#e2e8f0');
-        helmGrad.addColorStop(1, '#94a3b8');
+        helmGrad.addColorStop(0.5, '#f1f5f9');
+        helmGrad.addColorStop(0.85, '#cbd5e1');
+        helmGrad.addColorStop(1, '#475569');
         ctx.fillStyle = helmGrad;
         ctx.beginPath();
-        ctx.arc(x, y - 17 + bob, 12.5, 0, Math.PI * 2);
+        ctx.arc(x, y - 18 + bob, 13.5, 0, Math.PI * 2);
         ctx.fill();
         ctx.strokeStyle = '#475569';
-        ctx.lineWidth = 1.8;
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        const visorGrad = ctx.createLinearGradient(x - 8, y - 22 + bob, x + 8, y - 12 + bob);
+        // Deep Gold Martian Visor with Reflective Horizon Arc
+        const visorGrad = ctx.createLinearGradient(x - 9, y - 24 + bob, x + 9, y - 12 + bob);
         visorGrad.addColorStop(0, '#fef08a');
-        visorGrad.addColorStop(0.45, '#f59e0b');
-        visorGrad.addColorStop(1, '#9a3412');
+        visorGrad.addColorStop(0.3, '#f59e0b');
+        visorGrad.addColorStop(0.7, '#d97706');
+        visorGrad.addColorStop(1, '#78350f');
         ctx.fillStyle = visorGrad;
         ctx.beginPath();
-        ctx.ellipse(x + dir * 2, y - 17 + bob, 8.5, 6.5, 0, 0, Math.PI * 2);
+        ctx.ellipse(x + dir * 2.5, y - 18 + bob, 9, 7, 0, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = '#78350f';
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#92400e';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        // Curved 3D Specular Visor Highlight
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.arc(x + dir * 2.5 - 2, y - 19 + bob, 5, -Math.PI * 0.75, -Math.PI * 0.25);
         ctx.stroke();
 
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(x + dir * 2 - 3, y - 20 + bob, 4, 2);
+        ctx.beginPath();
+        ctx.arc(x + dir * 2.5 - 4, y - 21 + bob, 1.2, 0, Math.PI * 2);
+        ctx.fill();
     } else {
-        ctx.fillStyle = '#fed7aa';
+        // IVA Mode: Head & Hair with Comms Headset
+        const faceGrad = ctx.createRadialGradient(x - 2, y - 18 + bob, 1, x, y - 16 + bob, 10);
+        faceGrad.addColorStop(0, '#fff7ed');
+        faceGrad.addColorStop(0.7, '#fed7aa');
+        faceGrad.addColorStop(1, '#f97316');
+        ctx.fillStyle = faceGrad;
         ctx.beginPath();
-        ctx.arc(x, y - 16 + bob, 9.5, 0, Math.PI * 2);
+        ctx.arc(x, y - 16 + bob, 10, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = '#9a3412';
+
+        // Hair with volumetric layers
+        ctx.fillStyle = '#7c2d12';
         ctx.beginPath();
-        ctx.arc(x, y - 19 + bob, 10, Math.PI, Math.PI * 2);
+        ctx.arc(x, y - 19 + bob, 10.5, Math.PI * 0.9, Math.PI * 2.1);
         ctx.fill();
+        ctx.fillRect(x - 9, y - 19 + bob, 4, 7);
+
+        // Eyes
         ctx.fillStyle = '#0f172a';
         ctx.fillRect(x + dir * 2 - 2, y - 16 + bob, 2, 2.5);
         ctx.fillRect(x + dir * 2 + 2, y - 16 + bob, 2, 2.5);
+
+        // Comms Headset boom
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(x - 10, y - 16 + bob, 4, -Math.PI / 2, Math.PI / 2);
+        ctx.lineTo(x + dir * 2 - 1, y - 13 + bob);
+        ctx.stroke();
+        ctx.fillStyle = '#22c55e';
+        ctx.beginPath();
+        ctx.arc(x + dir * 2 - 1, y - 13 + bob, 1.8, 0, Math.PI * 2);
+        ctx.fill();
     }
 
+    // 7. Floating Nameplate & Waypoint Guide
     ctx.font = 'bold 10px "JetBrains Mono", monospace';
     ctx.fillStyle = wearSuit ? '#fbbf24' : '#38bdf8';
     ctx.textAlign = 'center';
-    ctx.fillText(wearSuit ? 'CADET NOVA [EVA]' : 'CADET NOVA', x, y - 35 + bob);
+    ctx.fillText(wearSuit ? 'CADET NOVA [EVA]' : 'CADET NOVA', x, y - 37 + bob);
 
-    // UPGRADE 4: Glowing Waypoint Guide Arrow for Junior Astronauts
+    // Waypoint Guide Arrow
     const currentTasks = CHAPTERS[state.chapterIdx]?.tasks || [];
     const activeTask = currentTasks.find(t => !t.done);
     if (activeTask) {
@@ -1284,34 +1466,29 @@ function drawAstronaut(x, y, inSuit, now) {
             const dist = Math.hypot(dx, dy);
             if (dist > 65) {
                 const angle = Math.atan2(dy, dx);
-                const arrowRadius = 34;
+                const arrowRadius = 36;
                 const ax = x + Math.cos(angle) * arrowRadius;
                 const ay = y + Math.sin(angle) * arrowRadius;
-                const pulse = 1 + Math.sin(now * 0.008) * 0.2;
 
                 ctx.save();
                 ctx.translate(ax, ay);
                 ctx.rotate(angle);
-                ctx.scale(pulse, pulse);
-
                 ctx.fillStyle = '#fde047';
                 ctx.shadowColor = '#facc15';
                 ctx.shadowBlur = 10;
                 ctx.beginPath();
-                ctx.moveTo(9, 0);
-                ctx.lineTo(-6, -6);
-                ctx.lineTo(-2, 0);
-                ctx.lineTo(-6, 6);
+                ctx.moveTo(7, 0);
+                ctx.lineTo(-6, -4.5);
+                ctx.lineTo(-3, 0);
+                ctx.lineTo(-6, 4.5);
                 ctx.closePath();
                 ctx.fill();
-
                 ctx.restore();
             }
         }
     }
 }
 
-// --- MASTER 2.5D CANVAS RENDER LOOP ---
 function renderGame(now) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 

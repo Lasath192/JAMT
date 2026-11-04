@@ -10,6 +10,7 @@ const jsFiles = [
     'js/chapters.js',
     'js/simulation.js',
     'js/render.js',
+    'js/render3d.js',
     'js/ui.js',
     'js/game.js'
 ];
@@ -29,7 +30,7 @@ standaloneHtml = standaloneHtml.replace(
 
 // Replace modular <script src="js/..."></script> tags with inlined <script>bundleJs</script>
 const scriptTagsRegex = /<!-- Modular Mission Engine Scripts[\s\S]*?<\/body>/;
-const scriptReplacement = `<!-- STANDALONE INLINED JAVASCRIPT BUNDLE -->\n    <script>\n${bundleJs}\n    </script>\n</body>`;
+const scriptReplacement = `<!-- STANDALONE INLINED JAVASCRIPT BUNDLE (2026 NASA Space Apps Challenge) -->\n    <script>\n${bundleJs}\n    </script>\n</body>`;
 
 if (!scriptTagsRegex.test(standaloneHtml)) {
     console.error('ERROR: scriptTagsRegex did not match!');
@@ -39,4 +40,4 @@ if (!scriptTagsRegex.test(standaloneHtml)) {
 standaloneHtml = standaloneHtml.replace(scriptTagsRegex, scriptReplacement);
 
 fs.writeFileSync('astra_1_the_red_frontier.html', standaloneHtml, 'utf8');
-console.log('Successfully built standalone astra_1_the_red_frontier.html (Size: ' + standaloneHtml.length + ' bytes)');
+console.log('Successfully built standalone astra_1_the_red_frontier.html (Size: ' + standaloneHtml.length.toLocaleString() + ' bytes)');

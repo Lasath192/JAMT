@@ -47,6 +47,14 @@ const SPACE_FACTS = {
     nasa_curiosity_meda: {
         title: "Curiosity RAD & Perseverance MEDA Data",
         text: "Astra-1's 0.6 kPa exterior pressure, 0.08 mSv/h baseline radiation, and dust storm optical depth (Tau 0.5 to 3.8) use real Martian surface measurements from Curiosity's RAD and Perseverance's MEDA instruments."
+    },
+    chapea_habitat: {
+        title: "NASA CHAPEA & 3D-Printed Regolith Habitats",
+        text: "NASA's real Mars analog, 'Mars Dune Alpha' in Houston, was 3D-printed by ICON with Lavacrete (simulated regolith). 3D-printing habitats locally on Mars (In-Situ Resource Utilization) eliminates having to haul thousands of tons of concrete on rockets from Earth!"
+    },
+    chapea_comms: {
+        title: "Planetary Radio Delay (4 to 24 Minutes)",
+        text: "Because Earth and Mars constantly orbit the Sun at different distances (54.6 to 401 million km), radio signals take 4 to 24 minutes one-way. NASA's 378-day CHAPEA mission tests crew autonomy with a fixed 22-minute delay; Astra-1's 14 minutes reflects our mid-orbit alignment!"
     }
 };
 
@@ -54,7 +62,8 @@ const BADGES = [
     { id: 'power_saver', name: 'Power Saver', icon: 'fa-bolt', desc: 'Balanced habitat electrical loads and eliminated power deficit.' },
     { id: 'air_guardian', name: 'Air Guardian', icon: 'fa-lungs', desc: 'Restored CO₂ scrubbing and maintained safe cabin atmosphere.' },
     { id: 'water_wizard', name: 'Water Wizard', icon: 'fa-droplet', desc: 'Repaired plumbing leaks and verified <50 µS/cm potable water.' },
-    { id: 'storm_survivor', name: 'Storm Survivor', icon: 'fa-shield-halved', desc: 'Protected the crew through the Sol 17-24 Red Storm and SPE alert.' }
+    { id: 'storm_survivor', name: 'Storm Survivor', icon: 'fa-shield-halved', desc: 'Protected the crew through the Sol 17-24 Red Storm and SPE alert.' },
+    { id: 'chapea_botanist', name: 'CHAPEA Fresh Harvest', icon: 'fa-seedling', desc: 'Sustained hydroponic crops and boosted crew dietary morale, mirroring NASA CHAPEA mission findings.' }
 ];
 
 const JARGON_DECODER = {
@@ -63,7 +72,8 @@ const JARGON_DECODER = {
     battery: "JARGON DECODER: 'kWh' stands for Kilowatt-hours! It measures stored energy inside our big lithium-ion battery banks—like water stored inside a bucket. During dark Martian nights, we survive on these stored kilowatt-hours!",
     atmo: "JARGON DECODER: 'kPa' is air pressure (kilopascals) keeping your blood liquid, and 'ppm' is parts-per-million of Carbon Dioxide (CO₂)! If CO₂ goes over 1000 ppm, astronauts get headaches. We scrub it out to keep the air fresh!",
     water: "JARGON DECODER: 'L' is Litres of water, and 'µS/cm' (microSiemens) checks purity! Fresh distilled water doesn't conduct electricity well (<50 µS/cm). High numbers mean salt, dirt, or pipe rust leaked into your drinking water!",
-    env: "JARGON DECODER: 'Food (d)' is crew food rations left in days, and 'mSv/h' (milliSieverts per hour) measures cosmic radiation! Normal Mars surface radiation is ~0.08 mSv/h, but dangerous solar storms can spike it 30 times higher!"
+    env: "JARGON DECODER: 'Food (d)' is crew food rations left in days, and 'mSv/h' (milliSieverts per hour) measures cosmic radiation! Normal Mars surface radiation is ~0.08 mSv/h, but dangerous solar storms can spike it 30 times higher!",
+    isru: "JARGON DECODER: 'ISRU' means In-Situ Resource Utilization—using what you find on Mars! Like 3D-printing habitat walls from red Martian dirt instead of launching heavy bricks on rockets from Earth!"
 };
 
 const WEATHER_MODES = [
@@ -71,4 +81,3 @@ const WEATHER_MODES = [
     { id: 'solar_max', label: 'DONKI Solar Max', solarDelta: 2, radMult: 1.65, desc: "DONKI X-Class Solar Max active! Coronal Mass Ejection proton flux detected. Solar arrays produce +2 kW, but surface radiation spikes by 1.65x!" },
     { id: 'dust_storm', label: 'Tau-4.5 Dust Storm', solarDelta: -4, radMult: 1.0, desc: "Global Tau-4.5 Dust Storm active! Fine airborne hematite dust blocks sunlight. Solar array output reduced by -4 kW!" }
 ];
-

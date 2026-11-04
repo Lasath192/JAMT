@@ -1,4 +1,4 @@
-// Automated Headless End-to-End Simulation of All 6 Chapters & Sol 30 Debrief
+// Automated Headless End-to-End Simulation of All 10 CHAPEA Mission Chapters & Final Debrief
 // 2026 NASA Space Apps Challenge - Junior Astronaut Mission Trainer
 const fs = require('fs');
 const vm = require('vm');
@@ -55,7 +55,7 @@ vm.runInThisContext(fs.readFileSync('js/chapters.js', 'utf8'));
 vm.runInThisContext(fs.readFileSync('js/simulation.js', 'utf8'));
 vm.runInThisContext(fs.readFileSync('js/ui.js', 'utf8'));
 
-console.log('--- ASTRA-1 TASK & MISSION VERIFICATION AUDIT ---');
+console.log('--- ASTRA-1 TASK & MISSION VERIFICATION AUDIT (10-MISSION CHAPEA CAMPAIGN) ---');
 
 for (let chIdx = 0; chIdx < CHAPTERS.length; chIdx++) {
     loadChapter(chIdx, false);
@@ -76,41 +76,60 @@ for (let chIdx = 0; chIdx < CHAPTERS.length; chIdx++) {
         completeTask('ch1_power');
         completeTask('ch1_life');
     } else if (chIdx === 1) {
-        completeTask('ch2_diag');
+        completeTask('ch2_crop_inspect');
+        completeTask('ch2_nutrient_mix');
+        state.loads.greenhouse.on = true;
+        completeTask('ch2_greenhouse_power');
+    } else if (chIdx === 2) {
+        state.player.inSuit = true;
+        completeTask('ch3_eva_prep');
+        completeTask('ch3_rover_link');
+        completeTask('ch3_heli_inspect');
+    } else if (chIdx === 3) {
+        completeTask('ch4_power_diag');
         state.loads.lab.on = false;
         state.loads.greenhouse.on = false;
-        checkPowerTasks();
-        completeTask('ch2_repair');
+        completeTask('ch4_shed_load');
         state.faults.hvJunctionBroken = false;
-    } else if (chIdx === 2) {
-        addItem('LiOH Filter');
-        addItem('Pipe Seal Kit');
-        completeTask('ch3_part');
-        state.faults.co2FilterClogged = false;
-        completeTask('ch3_co2');
-        state.faults.waterPipeLeaking = false;
-        state.waterConductivity = 40;
-        completeTask('ch3_water');
-    } else if (chIdx === 3) {
-        completeTask('ch4_inspect');
-        state.faults.irrigationPumpBroken = false;
-        completeTask('ch4_pump');
-        state.loads.greenhouse.on = true;
-        checkPowerTasks();
-    } else if (chIdx === 4) {
-        completeTask('ch5_eva');
+        completeTask('ch4_replace_fuse');
         state.backupGenKW = 12;
-        completeTask('ch5_gen');
-        state.faults.commsAntennaOffline = false;
-        completeTask('ch5_comms');
-        state.faults.shelterProtocolActive = true;
-        completeTask('ch5_shelter');
-    } else if (chIdx === 5) {
+        completeTask('ch4_gen_backup');
+    } else if (chIdx === 4) {
+        state.player.inSuit = true;
+        completeTask('ch5_airlock_exit');
+        completeTask('ch5_secure_latch');
         state.faults.externalConduitDamaged = false;
-        state.solarOutputKW = 28;
-        completeTask('ch6_solar');
-        completeTask('ch6_systems');
-        completeTask('ch6_report');
+        completeTask('ch5_conduit_verify');
+    } else if (chIdx === 5) {
+        addItem('LiOH Filter');
+        completeTask('ch6_filter_grab');
+        state.faults.co2FilterClogged = false;
+        state.co2PPM = 440;
+        completeTask('ch6_filter_install');
+        completeTask('ch6_co2_verify');
+    } else if (chIdx === 6) {
+        completeTask('ch7_lab_terminal');
+        state.hasCoreSample = true;
+        completeTask('ch7_drill_core');
+        completeTask('ch7_seal_canister');
+    } else if (chIdx === 7) {
+        addItem('Pipe Seal Kit');
+        completeTask('ch8_pipe_seal');
+        state.faults.waterPipeLeaking = false;
+        completeTask('ch8_flush_bioreactor');
+        state.waterConductivity = 38;
+        completeTask('ch8_conductivity_check');
+    } else if (chIdx === 8) {
+        completeTask('ch9_alarm_siren');
+        completeTask('ch9_shelter_evac');
+        state.faults.shelterProtocolActive = true;
+        state.radiationMSvH = 0.04;
+        completeTask('ch9_water_shield');
+    } else if (chIdx === 9) {
+        state.hasCoreSample = true;
+        completeTask('ch10_package_cores');
+        completeTask('ch10_greenhouse_seeds');
+        completeTask('ch10_final_report');
     }
 
     syncTasksWithState();
@@ -123,18 +142,18 @@ for (let chIdx = 0; chIdx < CHAPTERS.length; chIdx++) {
     console.log(`✓ Chapter ${chIdx + 1}: ${ch.title} — all ${ch.tasks.length} tasks verified!`);
 }
 
-// Verify Sol 30 Debrief calculation
+// Verify Sol 378 Debrief calculation
 state.batteryKWh = 65;
 state.waterLitres = 400;
 state.foodCrewDays = 28;
 state.crewHealth = 95;
-state.earnedBadges = ['power_saver', 'air_guardian', 'water_wizard', 'storm_survivor'];
+state.earnedBadges = ['power_saver', 'air_guardian', 'water_wizard', 'storm_survivor', 'chapea_botanist'];
 
 const legacy = calculateMissionLegacy();
 if (!legacy.tier || !legacy.title) {
     throw new Error('Mission legacy calculation failed!');
 }
-console.log(`✓ Sol 30 Debrief: Calculated ${legacy.tier} (${legacy.title})`);
+console.log(`✓ Sol 378 Debrief: Calculated ${legacy.tier} (${legacy.title})`);
 
 showVictoryModal();
 console.log('✓ showVictoryModal() executed cleanly with all report cards & certificates');

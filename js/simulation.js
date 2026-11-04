@@ -21,8 +21,12 @@ const state = {
     temperatureC: 21.0,
     foodCrewDays: 32,
     crewHealth: 100,
+    cropGrowthStage: 0,
+    hasCoreSample: false,
+    selectedDilemmas: {},
+    gridOverloadSeconds: 0,
     inventory: [],
-    unlockedFacts: ['nasa_donki', 'nasa_osdr', 'nasa_curiosity_meda'],
+    unlockedFacts: ['nasa_donki', 'nasa_osdr', 'nasa_curiosity_meda', 'chapea_habitat', 'chapea_comms'],
     earnedBadges: [],
     loads: {
         lifesupport: { name: 'Primary Life Support (O₂ / Scrub)', kw: 8, on: true, essential: true },
@@ -41,7 +45,8 @@ const state = {
         radiationAlertActive: false,
         commsAntennaOffline: false,
         externalConduitDamaged: false,
-        shelterProtocolActive: false
+        shelterProtocolActive: false,
+        breakerTripped: false
     },
     player: {
         x: 345,
@@ -62,7 +67,7 @@ function addItem(itemName) {
     if (!state.inventory.includes(itemName)) {
         state.inventory.push(itemName);
         sfx.pickup();
-        updateUI();
+        if (typeof updateUI === 'function') updateUI();
     }
 }
 
@@ -79,6 +84,10 @@ function getPowerStats() {
     const gen = solar + state.backupGenKW;
     let load = 0;
     Object.values(state.loads).forEach(l => {
+        if (state.faults.breakerTripped && !l.essential) {
+            // Breaker trip cuts all non-essential buses immediately
+            return;
+        }
         if (l.on) load += l.kw;
     });
     // Faulty HV junction adds 2 kW parasitic loss until fixed
@@ -88,9 +97,68 @@ function getPowerStats() {
 }
 
 // --- CHAPTER INITIALIZATION & STATE TRANSITIONS ---
+function applyDilemmaChoice(chapterIdx, choiceId) {
+    const ch = CHAPTERS[chapterIdx];
+    if (!ch || !ch.dilemmaChoices) return;
+    const choice = ch.dilemmaChoices.find(c => c.id === choiceId);
+    if (!choice) return;
+
+    state.selectedDilemmas[chapterIdx] = choiceId;
+    if (typeof sfx !== 'undefined' && sfx.chime) sfx.chime();
+
+    // Execute authentic dilemma mechanical consequences
+    if (choice.effect) {
+        if (choice.effect.shedLab) {
+            state.loads.lab.on = false;
+        }
+        if (choice.effect.cropDamage) {
+            state.loads.greenhouse.on = false;
+            state.foodCrewDays = Math.max(8, state.foodCrewDays - 5);
+        }
+        if (choice.effect.boostLight) {
+            state.loads.greenhouse.on = true;
+            state.loads.greenhouse.kw = 7;
+            state.cropGrowthStage = Math.max(state.cropGrowthStage, 1);
+        }
+        if (choice.effect.gridCharge) {
+            state.batteryKWh = Math.max(12, state.batteryKWh - 12);
+        }
+        if (choice.effect.sprintEVA) {
+            state.crewHealth = Math.max(45, state.crewHealth - 5);
+        }
+        if (choice.effect.swapFilter) {
+            state.faults.co2FilterClogged = false;
+            state.loads.backupScrub.on = false;
+        }
+        if (choice.effect.backupScrub) {
+            state.loads.backupScrub.on = true;
+        }
+        if (choice.effect.precisionDrill || choice.effect.fastDrill) {
+            state.hasCoreSample = true;
+        }
+        if (choice.effect.flushWater) {
+            state.waterLitres = Math.max(50, state.waterLitres - 120);
+            state.waterConductivity = 38;
+        }
+        if (choice.effect.fullShield) {
+            state.faults.shelterProtocolActive = true;
+            state.radiationMSvH = 0.04;
+        }
+        if (choice.effect.partialShield) {
+            state.faults.shelterProtocolActive = true;
+            state.radiationMSvH = 0.45;
+        }
+    }
+
+    setAria(`Trade-Off Chosen: "${choice.label}". ${choice.outcome}`);
+    syncTasksWithState();
+    if (typeof updateUI === 'function') if (typeof updateUI === 'function') updateUI();
+}
+
 function loadChapter(idx, showBriefing = true) {
     state.chapterIdx = idx;
     const ch = CHAPTERS[idx];
+    if (!ch) return;
     state.sol = ch.solStart;
     const sel = document.getElementById('chapter-select');
     if (sel) sel.value = String(idx);
@@ -98,12 +166,12 @@ function loadChapter(idx, showBriefing = true) {
     // Reset task completion for this chapter if replaying
     ch.tasks.forEach(t => t.done = false);
 
-    // UPGRADE 1: Guarantee NASA Open Data facts unlocked for immediate inspection by judges
-    ['nasa_donki', 'nasa_osdr', 'nasa_curiosity_meda'].forEach(fId => {
+    // Guarantee NASA Open Data facts unlocked for immediate inspection by judges
+    ['nasa_donki', 'nasa_osdr', 'nasa_curiosity_meda', 'chapea_habitat', 'chapea_comms'].forEach(fId => {
         if (!state.unlockedFacts.includes(fId)) state.unlockedFacts.push(fId);
     });
 
-    // Configure authentic chapter anomalies
+    // Reset standard faults
     state.faults.hvJunctionBroken = false;
     state.faults.co2FilterClogged = false;
     state.faults.waterPipeLeaking = false;
@@ -113,67 +181,94 @@ function loadChapter(idx, showBriefing = true) {
     state.faults.commsAntennaOffline = false;
     state.faults.externalConduitDamaged = false;
     state.faults.shelterProtocolActive = false;
+    state.faults.breakerTripped = false;
+    state.gridOverloadSeconds = 0;
+    if (state.player) state.player.inSuit = false;
 
+    // Crop Growth Stage progression by Sol
+    if (state.sol < 45) {
+        state.cropGrowthStage = 0; // Sprout
+    } else if (state.sol < 180) {
+        state.cropGrowthStage = 1; // Growing
+    } else {
+        state.cropGrowthStage = 2; // Mature / Fruiting
+    }
+
+    // Configure 10 authentic NASA CHAPEA 4-Act Missions
     if (idx === 0) {
-        // Ch 1: Arrival
-        state.solarOutputKW = 20;
+        // ACT I - MISSION 1: The First Breath (Sol 01-03)
+        state.solarOutputKW = 22;
         state.backupGenKW = 0;
         state.loads.lab.on = true;
         state.loads.greenhouse.on = false;
-        state.co2PPM = 430;
+        state.co2PPM = 425;
         state.waterConductivity = 42;
         state.radiationMSvH = 0.08;
-        setAria("Welcome to Astra-1, Cadet Nova! Start at the Airlock console, grab your tools from Central Storage, and inspect the Power & Life-Support rooms.");
+        setAria("Welcome to Astra-1, Cadet Nova! Verify Airlock pressure, grab your tools from Central Storage, and inspect the Power & Life-Support consoles.");
     } else if (idx === 1) {
-        // Ch 2: Power Down (18 kW solar vs 24 kW load = 6 kW deficit)
-        state.solarOutputKW = 18;
+        // ACT I - MISSION 2: First Seeds in Red Soil (Sol 07-12)
+        state.solarOutputKW = 24;
         state.backupGenKW = 0;
-        state.batteryKWh = Math.min(state.batteryKWh, 52);
-        state.loads.lifesupport.on = true;
-        state.loads.heating.on = true;
-        state.loads.water.on = true;
-        state.loads.greenhouse.on = true;
-        state.loads.lab.on = true;
-        state.faults.hvJunctionBroken = true;
-        setAria("Alert! Solar output dropped to 18 kW while habitat load is 24 kW (6 kW deficit). Inspect the Power Room console, shed non-essential loads, and replace the blown HV Fuse!");
-        sfx.alert();
+        state.loads.greenhouse.on = false;
+        state.foodCrewDays = 28;
+        setAria("Act I Mission 2: Plant dwarf wheat and salad microgreens! Inspect crop beds in the Greenhouse, mix nutrients at Water Recycling, and activate Greenhouse LEDs.");
     } else if (idx === 2) {
-        // Ch 3: Breath of Life (CO2 rising + Water pipe leak)
+        // ACT I - MISSION 3: Commissioning Perseverance & Ingenuity (Sol 20-25)
+        state.solarOutputKW = 24;
+        state.loads.greenhouse.on = true;
+        setAria("Act I Mission 3: Don your EVA suit at the Airlock, exit to the Mars surface, and link telemetry with NASA Perseverance & Ingenuity!");
+    } else if (idx === 3) {
+        // ACT II - MISSION 4: The Rising Sky of Copper (Sol 45-50)
+        state.solarOutputKW = 14;
+        state.backupGenKW = 0;
+        state.batteryKWh = Math.min(state.batteryKWh, 48);
+        state.faults.dustStormActive = true;
+        state.faults.hvJunctionBroken = true;
+        setAria("ALERT: Massive dust storm reducing solar output to 14 kW! HV junction circuit blown. Inspect Power Console, shed non-essential loads, and start Backup Gen!");
+        if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+    } else if (idx === 4) {
+        // ACT II - MISSION 5: The Zero-Visibility EVA (Sol 72-75)
+        state.solarOutputKW = 10;
+        state.faults.dustStormActive = true;
+        state.faults.externalConduitDamaged = true;
+        setAria("ALERT: High winds rattling solar arrays outside! Don your EVA suit, exit to the surface, and secure the array wind latches before the conduit snaps!");
+        if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+    } else if (idx === 5) {
+        // ACT II - MISSION 6: ECLSS Scrubber Saturation (Sol 95-100)
         state.solarOutputKW = 22;
         state.faults.co2FilterClogged = true;
-        state.faults.waterPipeLeaking = true;
-        state.co2PPM = 1380;
-        state.waterConductivity = 185;
-        setAria("Environmental Warning! CO₂ levels are climbing past 1,380 ppm and Water Recycling reports a pipe leak spiking conductivity to 185 µS/cm. Grab spare parts in Storage!");
-        sfx.alert();
-    } else if (idx === 3) {
-        // Ch 4: Growing a Future (Greenhouse irrigation failure)
+        state.co2PPM = 1420;
+        setAria("ENVIRONMENTAL WARNING: Primary LiOH CO₂ scrubber is saturated! Exhaled carbon dioxide climbing past 1,420 ppm. Grab a replacement cartridge from Storage!");
+        if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+    } else if (idx === 6) {
+        // ACT III - MISSION 7: Jezero Delta Core Expedition (Sol 140-150)
+        state.solarOutputKW = 24;
+        state.hasCoreSample = false;
+        setAria("Act III Mission 7: Drive Perseverance to extract a pristine Jezero sediment core, then seal it into the Science Lab sample hermetic vault!");
+    } else if (idx === 7) {
+        // ACT III - MISSION 8: The Graywater Biofilm Crisis (Sol 185-190)
         state.solarOutputKW = 22;
-        state.faults.irrigationPumpBroken = true;
-        state.foodCrewDays = 21;
-        setAria("Botanist Dr. Lin reports the Greenhouse irrigation pump is cavitating and crop growth has stalled. Head to the Greenhouse (bottom-right) to repair and calibrate it!");
-    } else if (idx === 4) {
-        // Ch 5: The Red Storm (Dust storm drops solar to 8 kW + SPE radiation alert + Comms offline)
-        state.solarOutputKW = 8;
-        state.faults.dustStormActive = true;
-        state.faults.radiationAlertActive = true;
-        state.faults.commsAntennaOffline = true;
-        state.radiationMSvH = 2.45;
-        setAria("RED STORM & SOLAR PARTICLE ALERT! Solar output is down to 8 kW and surface radiation is 2.45 mSv/h. Secure the outdoor Solar Array, enable Backup Gen, fix Comms in the Lab, and activate the Radiation Shelter!");
-        sfx.alert();
-    } else if (idx === 5) {
-        // Ch 6: The Last 18 Hours (Integrated multi-system crisis)
-        state.solarOutputKW = 11;
-        state.faults.externalConduitDamaged = true;
         state.faults.waterPipeLeaking = true;
-        state.waterConductivity = 140;
-        state.radiationMSvH = 0.12;
-        setAria("Final 18 Hours before resupply! The storm damaged the external Solar Conduit on the Mars surface and water purity needs re-verification. Restore all systems and transmit the Readiness Report from the Lab!");
-        sfx.alert();
+        state.waterConductivity = 190;
+        setAria("WATER CONTAMINATION WARNING: Microbial biofilm breach in greywater loop! Conductivity spiked to 190 µS/cm. Grab the Pipe Seal Kit from Storage and flush the line!");
+        if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+    } else if (idx === 8) {
+        // ACT IV - MISSION 9: Solar Particle Event — Code Red (Sol 290-295)
+        state.solarOutputKW = 18;
+        state.faults.radiationAlertActive = true;
+        state.radiationMSvH = 3.20;
+        setAria("CODE RED: NASA DONKI alerts Coronal Mass Ejection! Radiation at 3.20 mSv/h! Sound the shelter alarm and flood the water-wall shielding!");
+        if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+    } else if (idx === 9) {
+        // ACT IV - MISSION 10: The Return Window — Handover (Sol 378)
+        state.solarOutputKW = 26;
+        state.hasCoreSample = true;
+        state.cropGrowthStage = 2;
+        setAria("SOL 378 FINAL MISSION: Outpost Handover! Package the basalt cores in the Lab, harvest and stash cryo-seeds in the Greenhouse, and transmit the final 378-Sol Debrief!");
     }
 
     syncTasksWithState();
-    updateUI();
+    if (typeof updateUI === 'function') updateUI();
 
     if (showBriefing) {
         openStoryBriefing(ch);
@@ -181,41 +276,94 @@ function loadChapter(idx, showBriefing = true) {
 }
 
 function openStoryBriefing(ch) {
-    document.getElementById('story-sol-tag').textContent = `MARS OUTPOST ASTRA-1 • ${ch.solRange.toUpperCase()}`;
-    document.getElementById('story-title').textContent = ch.title;
-    document.getElementById('story-illustration').innerHTML = getChapterSceneSVG(ch.id);
-    document.getElementById('story-body').textContent = ch.story;
-    document.getElementById('story-science').textContent = ch.science;
-    document.getElementById('story-dilemma').textContent = ch.dilemma;
-    document.getElementById('btn-start-chapter').textContent = `Begin ${ch.solRange} Operations`;
-    document.getElementById('modal-story').classList.remove('hidden');
+    const solTag = document.getElementById('story-sol-tag');
+    if (solTag) solTag.textContent = `MARS OUTPOST ASTRA-1 • ${ch.act ? ch.act + ' • ' : ''}${ch.solRange.toUpperCase()}`;
+    const titleEl = document.getElementById('story-title');
+    if (titleEl) titleEl.textContent = ch.title;
+    const illus = document.getElementById('story-illustration');
+    if (illus && typeof getChapterSceneSVG === 'function') {
+        illus.innerHTML = getChapterSceneSVG(ch.id);
+    }
+    const bodyEl = document.getElementById('story-body');
+    if (bodyEl) bodyEl.textContent = ch.story;
+    const sciEl = document.getElementById('story-science');
+    if (sciEl) sciEl.textContent = ch.science;
+    const dilEl = document.getElementById('story-dilemma');
+    if (dilEl) dilEl.textContent = ch.dilemma;
+    const btnStart = document.getElementById('btn-start-chapter');
+    if (btnStart) btnStart.textContent = `Begin ${ch.solRange} Operations`;
+
+    // Render High-Stakes Consequence Decision Point
+    const decBox = document.getElementById('story-decision-box');
+    const decOpts = document.getElementById('story-decision-options');
+    const decStatus = document.getElementById('story-decision-status');
+    if (decBox && decOpts) {
+        if (ch.dilemmaChoices && ch.dilemmaChoices.length > 0) {
+            decBox.classList.remove('hidden');
+            decOpts.innerHTML = '';
+            const currentChoice = state.selectedDilemmas[ch.id];
+            if (decStatus) {
+                decStatus.textContent = currentChoice ? 'Decision Committed' : 'Action Required';
+                decStatus.className = `text-[9px] font-mono-tech px-2 py-0.5 rounded-full font-bold ${currentChoice ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}`;
+            }
+            ch.dilemmaChoices.forEach(choice => {
+                const isSelected = currentChoice === choice.id;
+                const btn = document.createElement('button');
+                btn.className = `p-2.5 rounded-xl text-left border transition cursor-pointer ${
+                    isSelected 
+                        ? 'bg-amber-500/20 border-amber-400 text-white shadow-md shadow-amber-500/10' 
+                        : 'bg-slate-800/80 hover:bg-slate-800 border-slate-700/80 hover:border-slate-500 text-slate-300'
+                }`;
+                btn.innerHTML = `
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="font-bold text-xs ${isSelected ? 'text-amber-300' : 'text-slate-200'} font-display">${choice.label}</span>
+                        <span class="text-[10px] font-mono-tech ${isSelected ? 'text-emerald-400 font-bold' : 'text-slate-500'}">
+                            ${isSelected ? '✓ SELECTED' : 'CHOOSE'}
+                        </span>
+                    </div>
+                    <div class="text-[10px] text-slate-400 font-mono-tech leading-relaxed">${choice.outcome}</div>
+                `;
+                btn.addEventListener('click', () => {
+                    applyDilemmaChoice(ch.id, choice.id);
+                    openStoryBriefing(ch);
+                });
+                decOpts.appendChild(btn);
+            });
+        } else {
+            decBox.classList.add('hidden');
+        }
+    }
+
+    const modal = document.getElementById('modal-story');
+    if (modal) modal.classList.remove('hidden');
 }
 
-// --- SOL 30 MULTI-TIER MISSION OUTCOME CALCULATOR ---
+// --- SOL 378 MULTI-TIER MISSION OUTCOME CALCULATOR ---
 function calculateMissionLegacy() {
     const bat = state.batteryKWh;
     const water = state.waterLitres;
     const food = state.foodCrewDays;
     const health = state.crewHealth;
+    const cores = state.hasCoreSample;
 
-    if (bat >= 50 && water >= 350 && food >= 24) {
+    if (bat >= 45 && water >= 280 && food >= 18 && health >= 80 && cores) {
         return {
             tier: "COMMANDER TIER",
             title: "Thriving Martian Biosphere",
             badgeClass: "bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/20",
             icon: "fa-award",
-            headline: "Exceptional Outpost Stewardship • 100% Objectives Achieved",
-            summary: "Cadet Nova, your engineering leadership has preserved Astra-1 in peak operational condition! The arriving Astra-2 relief crew steps into a vibrant, self-sustaining biosphere with brimming water cisterns, abundant dwarf wheat harvests, and fully charged battery banks. Houston Flight Directors have cited Astra-1 as the gold standard for future crewed Mars expeditions.",
+            headline: "Exceptional Outpost Stewardship • Full 378 Sols Achieved",
+            summary: "Cadet Nova, your engineering leadership has guided Astra-1 through the full 378-day NASA CHAPEA Mars simulation! The Earth Return Vehicle receives pristine Jezero Delta core samples, thriving dwarf wheat cultivars, and fully charged battery banks. Houston Flight Directors have certified your performance as the gold standard for human Mars exploration.",
             rating: "5.0 / 5.0 (Commander Distinction)"
         };
-    } else if (bat >= 25 && health >= 75) {
+    } else if (bat >= 25 && health >= 65) {
         return {
             tier: "PIONEER TIER",
             title: "Resilient Outpost Handover",
             badgeClass: "bg-sky-400 text-slate-950 shadow-lg shadow-sky-400/20",
             icon: "fa-shield-halved",
-            headline: "Sturdy Expedition Handover • Crew Safe Across 30 Sols",
-            summary: "Cadet Nova, your disciplined balance of habitat breakers and life-support scrubbers safely delivered all 5 astronauts through storms, radiation spikes, and hardware failures. While reserves will require rationing during the first week of handover, your proactive maintenance kept life support intact.",
+            headline: "Sturdy Expedition Handover • Crew Safe Across 378 Sols",
+            summary: "Cadet Nova, your disciplined balance of habitat breakers and life-support scrubbers safely delivered all 5 astronauts through severe dust storms, SPE radiation bursts, and hardware anomalies across 378 Sols. Life support held firm, and mission handover was successfully achieved.",
             rating: "4.2 / 5.0 (Pioneer Commendation)"
         };
     } else {
@@ -225,7 +373,7 @@ function calculateMissionLegacy() {
             badgeClass: "bg-orange-500 text-slate-950 shadow-lg shadow-orange-500/20",
             icon: "fa-triangle-exclamation",
             headline: "Critical Red-Frontier Survival • Handover Complete",
-            summary: "Cadet Nova, the harsh Martian frontier pushed Astra-1 to its absolute threshold. Depleted battery reserves and tight water margins forced harsh rationing. Yet through grit and adherence to emergency checklists, you kept all five crew members alive until the Astra-2 lander touched down. A testament to why every watt and litre counts on Mars!",
+            summary: "Cadet Nova, the harsh Martian frontier pushed Astra-1 to its absolute threshold. Tight water margins and depleted power banks forced severe rationing. Yet through grit and adherence to emergency checklists, you kept all five crew members alive through Sol 378. A testament to why every watt and litre counts on Mars!",
             rating: "3.5 / 5.0 (Survivor Citation)"
         };
     }
@@ -236,7 +384,7 @@ function showVictoryModal() {
     const legacy = calculateMissionLegacy();
     const pwr = getPowerStats();
 
-    // 1. Render Sol 30 Touchdown SVG Scene
+    // 1. Render Sol 378 Touchdown SVG Scene
     const victoryIllustration = document.getElementById('victory-illustration');
     const svgScene = (typeof getSol30TouchdownSVG === 'function') ? getSol30TouchdownSVG() : '';
     if (victoryIllustration) {
@@ -273,7 +421,7 @@ function showVictoryModal() {
     if (rptPwrDetail) rptPwrDetail.textContent = `Battery: ${Math.round(state.batteryKWh)}% (${Math.round(state.batteryKWh)} kWh) | Solar: ${state.solarOutputKW} kW | Backup Fuel: ${state.backupFuelKg.toFixed(1)} kg`;
 
     const rptRadStat = document.getElementById('rpt-rad-stat');
-    if (rptRadStat) rptRadStat.textContent = state.faults.shelterProtocolActive ? '0.05 mSv/h (Shielded)' : `${state.radiationMSvH.toFixed(2)} mSv/h`;
+    if (rptRadStat) rptRadStat.textContent = state.faults.shelterProtocolActive ? '0.04 mSv/h (Shielded)' : `${state.radiationMSvH.toFixed(2)} mSv/h`;
     const rptRadDetail = document.getElementById('rpt-rad-detail');
     if (rptRadDetail) rptRadDetail.textContent = `DONKI SPE Event mitigated by water-wall shielding. Crew Health: ${Math.round(state.crewHealth)}% OK`;
 
@@ -285,11 +433,11 @@ function showVictoryModal() {
     const rptFoodStat = document.getElementById('rpt-food-stat');
     if (rptFoodStat) rptFoodStat.textContent = `${Math.round(state.foodCrewDays)} Crew-Days`;
     const rptFoodDetail = document.getElementById('rpt-food-detail');
-    if (rptFoodDetail) rptFoodDetail.textContent = `Hydroponic dwarf wheat & microgreens sustained via 5 kW grow LEDs and automated dosing`;
+    if (rptFoodDetail) rptFoodDetail.textContent = `Hydroponic dwarf wheat & microgreens sustained via grow LEDs and automated dosing`;
 
     // Badges Showcase
     const rptBadgeCount = document.getElementById('rpt-badge-count');
-    if (rptBadgeCount) rptBadgeCount.textContent = `${state.earnedBadges.length} / 4 Badges Earned`;
+    if (rptBadgeCount) rptBadgeCount.textContent = `${state.earnedBadges.length} / ${typeof BADGES !== 'undefined' ? BADGES.length : 5} Badges Earned`;
     const rptBadgesList = document.getElementById('rpt-badges-list');
     if (rptBadgesList && typeof BADGES !== 'undefined') {
         rptBadgesList.innerHTML = '';
@@ -324,27 +472,15 @@ function showVictoryModal() {
     const certAtmo = document.getElementById('cert-atmo');
     if (certAtmo) certAtmo.textContent = `${Math.round(state.co2PPM)} ppm CO₂ | 101.3 kPa`;
     const certRad = document.getElementById('cert-rad');
-    if (certRad) certRad.textContent = state.faults.shelterProtocolActive ? 'Shielded (0.05 mSv/h)' : `${state.radiationMSvH.toFixed(2)} mSv/h`;
+    if (certRad) certRad.textContent = state.faults.shelterProtocolActive ? 'Shielded (0.04 mSv/h)' : `${state.radiationMSvH.toFixed(2)} mSv/h`;
 
     // 5. Open Modal
     const victoryModal = document.getElementById('modal-victory');
     if (victoryModal) {
         victoryModal.classList.remove('hidden');
-    } else {
-        const storyModal = document.getElementById('modal-story');
-        if (storyModal) {
-            document.getElementById('story-sol-tag').textContent = `MISSION ACCOMPLISHED • SOL 30 / 30 COMPLETE`;
-            document.getElementById('story-title').textContent = `${legacy.tier}: ${legacy.title.toUpperCase()}`;
-            document.getElementById('story-body').textContent = legacy.summary;
-            document.getElementById('story-science').textContent = `Final Status — Battery: ${Math.round(state.batteryKWh)} kWh | Potable Water: ${Math.round(state.waterLitres)} L (${state.waterConductivity} µS/cm) | Crew Health: ${Math.round(state.crewHealth)}% | Badges Earned: ${state.earnedBadges.length}/4.`;
-            document.getElementById('story-dilemma').textContent = legacy.headline;
-            const btn = document.getElementById('btn-start-chapter');
-            if (btn) btn.textContent = "Continue Free Exploration / Replay";
-            storyModal.classList.remove('hidden');
-        }
     }
 
-    if (window.sfx && typeof sfx.success === 'function') sfx.success();
+    if (typeof sfx !== 'undefined' && sfx.success) sfx.success();
 }
 
 // --- STATE-TO-TASK SYNCHRONIZATION ENGINE ---
@@ -359,51 +495,74 @@ function syncTasksWithState() {
         }
     };
 
-    // Chapter 1 auto-sync
+    // Ch 0 (Mission 1) auto-sync
     if (hasItem('Multi-Tool') && hasItem('HV Fuse')) markDone('ch1_tool');
 
-    // Chapter 2 auto-sync
+    // Ch 1 (Mission 2) auto-sync
     if (state.chapterIdx === 1) {
-        if (!state.faults.hvJunctionBroken) markDone('ch2_repair');
-        if (pwr.net >= 0 && state.loads.lifesupport.on) markDone('ch2_shed');
+        if (state.loads.greenhouse.on) markDone('ch2_greenhouse_power');
     }
 
-    // Chapter 3 auto-sync
-    if (hasItem('LiOH Filter') && hasItem('Pipe Seal Kit')) markDone('ch3_part');
+    // Ch 2 (Mission 3) auto-sync
     if (state.chapterIdx === 2) {
-        if (!state.faults.co2FilterClogged || state.loads.backupScrub.on) markDone('ch3_co2');
-        if (!state.faults.waterPipeLeaking && state.waterConductivity <= 60) markDone('ch3_water');
+        if (state.player.inSuit) markDone('ch3_eva_prep');
     }
 
-    // Chapter 4 auto-sync
+    // Ch 3 (Mission 4) auto-sync
     if (state.chapterIdx === 3) {
-        if (!state.faults.irrigationPumpBroken) markDone('ch4_pump');
-        if (!state.faults.irrigationPumpBroken && state.loads.greenhouse.on) markDone('ch4_power');
+        if (!state.faults.hvJunctionBroken) markDone('ch4_replace_fuse');
+        if (state.backupGenKW > 0) markDone('ch4_gen_backup');
+        if (pwr.net >= 0) markDone('ch4_shed_load');
     }
 
-    // Chapter 5 auto-sync
+    // Ch 4 (Mission 5) auto-sync
     if (state.chapterIdx === 4) {
-        if (state.backupGenKW > 0) markDone('ch5_gen');
-        if (!state.faults.commsAntennaOffline) markDone('ch5_comms');
-        if (state.faults.shelterProtocolActive) markDone('ch5_shelter');
+        if (state.player.inSuit) markDone('ch5_airlock_exit');
+        if (!state.faults.externalConduitDamaged) markDone('ch5_conduit_verify');
     }
 
-    // Chapter 6 auto-sync
+    // Ch 5 (Mission 6) auto-sync
+    if (hasItem('LiOH Filter')) markDone('ch6_filter_grab');
     if (state.chapterIdx === 5) {
-        if (!state.faults.externalConduitDamaged) markDone('ch6_solar');
-        if (!state.faults.externalConduitDamaged && !state.faults.waterPipeLeaking && pwr.net >= 0 && state.co2PPM < 800) {
-            markDone('ch6_systems');
+        if (!state.faults.co2FilterClogged || state.loads.backupScrub.on) markDone('ch6_filter_install');
+        if (state.co2PPM <= 650) markDone('ch6_co2_verify');
+    }
+
+    // Ch 6 (Mission 7) auto-sync
+    if (state.chapterIdx === 6) {
+        if (state.hasCoreSample) {
+            markDone('ch7_drill_core');
         }
+    }
+
+    // Ch 7 (Mission 8) auto-sync
+    if (hasItem('Pipe Seal Kit')) markDone('ch8_pipe_seal');
+    if (state.chapterIdx === 7) {
+        if (!state.faults.waterPipeLeaking) markDone('ch8_flush_bioreactor');
+        if (state.waterConductivity <= 60) markDone('ch8_conductivity_check');
+    }
+
+    // Ch 8 (Mission 9) auto-sync
+    if (state.chapterIdx === 8) {
+        if (state.faults.shelterProtocolActive) {
+            markDone('ch9_water_shield');
+        }
+    }
+
+    // Ch 9 (Mission 10) auto-sync
+    if (state.chapterIdx === 9) {
+        if (state.coresPackaged) markDone('ch10_package_cores');
     }
 }
 
 function completeTask(taskId) {
     const ch = CHAPTERS[state.chapterIdx];
+    if (!ch) return;
     const t = ch.tasks.find(item => item.id === taskId);
     if (t && !t.done) {
         t.done = true;
-        sfx.success();
-        updateUI();
+        if (typeof sfx !== 'undefined' && sfx.success) sfx.success();
+        if (typeof updateUI === 'function') updateUI();
     }
 }
 
@@ -416,7 +575,7 @@ function unlockFact(factId) {
 function awardBadge(badgeId) {
     if (!state.earnedBadges.includes(badgeId)) {
         state.earnedBadges.push(badgeId);
-        sfx.success();
+        if (typeof sfx !== 'undefined' && sfx.success) sfx.success();
     }
 }
 
@@ -425,6 +584,22 @@ setInterval(() => {
     if (typeof isAnyModalOpen === 'function' && isAnyModalOpen()) return;
 
     const pwr = getPowerStats();
+
+    // High-Stakes Grid Overload Breaker Watcher
+    // If electrical deficit exceeds -6 kW for 12 continuous seconds, the main bus trips!
+    if (pwr.net < -6) {
+        state.gridOverloadSeconds += 1.5;
+        if (state.gridOverloadSeconds >= 12 && !state.faults.breakerTripped) {
+            state.faults.breakerTripped = true;
+            state.loads.lab.on = false;
+            state.loads.greenhouse.on = false;
+            state.loads.backupScrub.on = false;
+            if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+            setAria("MAIN BREAKER TRIPPED! Continuous 6 kW power deficit overloaded the primary electrical bus. Reset breakers at Power Room console!");
+        }
+    } else {
+        state.gridOverloadSeconds = Math.max(0, state.gridOverloadSeconds - 1.5);
+    }
 
     // Battery buffering
     state.batteryKWh = Math.max(5, Math.min(100, state.batteryKWh + pwr.net * 0.12));
@@ -455,14 +630,57 @@ setInterval(() => {
         state.waterLitres = Math.max(0, state.waterLitres - 1.2);
     }
 
-    // Greenhouse Crop Growth
-    if (state.loads.greenhouse.on && !state.faults.irrigationPumpBroken) {
+    // Greenhouse Crop Growth & CHAPEA Nutrition/Morale Dynamics
+    const isGreenhouseRunning = state.loads.greenhouse.on && !state.faults.irrigationPumpBroken;
+    if (isGreenhouseRunning) {
         state.foodCrewDays = Math.min(60, state.foodCrewDays + 0.08);
         state.waterLitres = Math.max(0, state.waterLitres - 0.15);
+        // Fresh salad crops provide vitamins and psychological uplift (NASA CHAPEA research)
+        if (state.crewHealth < 100) {
+            state.crewHealth = Math.min(100, state.crewHealth + 0.05);
+        }
+        // Unlock CHAPEA Fresh Harvest achievement badge in or after Chapter 4
+        if (state.chapterIdx >= 3 && !state.earnedBadges.includes('chapea_botanist')) {
+            awardBadge('chapea_botanist');
+            setAria("🌱 ACHIEVEMENT: CHAPEA Fresh Harvest unlocked! Fresh hydroponics boosted crew dietary morale.");
+        }
+    } else {
+        // If greenhouse is shut off or pump broken past Sol 5, relying solely on freeze-dried rations causes minor nutritional fatigue
+        if (state.sol > 5 && state.crewHealth > 45) {
+            state.crewHealth = Math.max(45, state.crewHealth - 0.02);
+        }
     }
 
     if (typeof updateUI === 'function') {
-        updateUI();
+        if (typeof updateUI === 'function') updateUI();
     }
 }, 1500);
 
+if (typeof module !== 'undefined') {
+    module.exports = {
+        state,
+        hasItem,
+        addItem,
+        getPowerStats,
+        loadChapter,
+        applyDilemmaChoice,
+        openStoryBriefing,
+        calculateMissionLegacy,
+        showVictoryModal,
+        syncTasksWithState,
+        completeTask,
+        unlockFact,
+        awardBadge
+    };
+}
+
+if (typeof window !== 'undefined') {
+    window.state = state;
+    window.loadChapter = loadChapter;
+    window.applyDilemmaChoice = applyDilemmaChoice;
+    window.completeTask = completeTask;
+    window.syncTasksWithState = syncTasksWithState;
+    window.calculateMissionLegacy = calculateMissionLegacy;
+    window.showVictoryModal = showVictoryModal;
+    window.getPowerStats = getPowerStats;
+}

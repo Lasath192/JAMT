@@ -227,122 +227,233 @@ function openObjectModal(obj) {
         addMetric('Outer Hatch Interlock', 'VERIFIED SEALED', 'text-emerald-300');
         desc.textContent = 'The Airlock isolates Astra-1’s 101.3 kPa breathable atmosphere from the 0.6 kPa Martian surface. Always don your pressurized EVA suit before stepping onto the Martian surface.';
 
+        // Mission 1: The First Breath
         addActionBtn(
             'Verify Cabin Pressure & Seal Checklist',
             'Electronic Orion-style telemetry verification',
             () => {
                 completeTask('ch1_airlock');
-                setAria('Airlock pressure verified at 101.3 kPa! Now head to the Central Spine Storage Locker to pick up your Diagnostic Multi-Tool and HV Fuse.');
+                setAria('Airlock pressure verified at 101.3 kPa! Now head to Central Storage to pick up your Diagnostic Multi-Tool and HV Fuse.');
                 openObjectModal(obj);
             }
         );
+
+        // Mission 3: Commissioning Perseverance & Ingenuity
+        if (state.chapterIdx === 2) {
+            addActionBtn(
+                'Don EVA Spacesuit & Depressurize for Surface Rover EVA',
+                'Prepares astronaut for outdoor surface traverse to NASA Perseverance',
+                () => {
+                    state.player.inSuit = true;
+                    completeTask('ch3_eva_prep');
+                    setAria('EVA Spacesuit pressurized! Step through the outer hatch to link with the Mars Rover.');
+                    openObjectModal(obj);
+                },
+                'bg-amber-500 hover:bg-amber-400 text-slate-950'
+            );
+        }
+
+        // Mission 5: The Zero-Visibility EVA
+        if (state.chapterIdx === 4) {
+            addActionBtn(
+                'Don Heavy Storm Suit & Cycle Hatch into Zero-Visibility Gale',
+                'Required to reach outdoor solar array latches during dust storm',
+                () => {
+                    state.player.inSuit = true;
+                    completeTask('ch5_airlock_exit');
+                    setAria('Storm suit locked and pressurized! Head outside immediately to secure the solar array latches.');
+                    openObjectModal(obj);
+                },
+                'bg-red-600 hover:bg-red-500 text-white'
+            );
+        }
+
+        // General Suit Toggle
         addActionBtn(
             state.player.inSuit ? 'Doff EVA Spacesuit (Return to Shirtsleeve IVA)' : 'Don & Pressurize EVA Spacesuit',
             state.player.inSuit ? 'Stow suit in airlock rack' : 'Required for safe outdoor Mars surface excursions',
             () => {
                 state.player.inSuit = !state.player.inSuit;
-                if (window.sfx && typeof sfx.pickup === 'function') sfx.pickup();
-                updateUI();
+                if (typeof sfx !== 'undefined' && sfx.pickup) sfx.pickup();
+                syncTasksWithState();
+                if (typeof updateUI === 'function') updateUI();
                 openObjectModal(obj);
             },
-            'bg-amber-500 hover:bg-amber-400 text-slate-950'
+            'bg-slate-700 hover:bg-slate-600 text-white'
         );
+
     } else if (obj.id === 'storage_locker') {
         badge.textContent = 'Supply Cache';
-        addMetric('Diagnostic Multi-Tool', hasItem('Multi-Tool') ? 'In Pouch (Verified)' : 'Available', 'text-amber-300');
-        addMetric('High-Voltage Fuse', hasItem('HV Fuse') ? 'In Pouch (Verified)' : 'Available', 'text-sky-300');
-        addMetric('LiOH CO₂ Filter', hasItem('LiOH Filter') ? 'In Pouch (Verified)' : 'Available', 'text-teal-300');
-        addMetric('Pipe Seal & Pump Kit', hasItem('Pipe Seal Kit') ? 'In Pouch (Verified)' : 'Available', 'text-blue-300');
-        desc.textContent = 'Maintenance store containing replacement fuses, LiOH scrubber cartridges, and plumbing seal kits for physical habitat repairs.';
+        addMetric('Diagnostic Multi-Tool', hasItem('Multi-Tool') ? 'In Pouch' : 'Available', 'text-amber-300');
+        addMetric('High-Voltage Fuse', hasItem('HV Fuse') ? 'In Pouch' : 'Available', 'text-sky-300');
+        addMetric('LiOH CO₂ Filter', hasItem('LiOH Filter') ? 'In Pouch' : 'Available', 'text-teal-300');
+        addMetric('Pipe Seal Kit', hasItem('Pipe Seal Kit') ? 'In Pouch' : 'Available', 'text-blue-300');
+        desc.textContent = 'Central storage locker containing diagnostic tools, replacement fuses, LiOH scrubber cartridges, and plumbing seal kits for habitat maintenance.';
 
-        syncTasksWithState();
-        updateUI();
-
+        // Mission 1 Tools
         const hasCh1Tools = hasItem('Multi-Tool') && hasItem('HV Fuse');
         addActionBtn(
-            hasCh1Tools ? '✓ Multi-Tool & Spare HV Fuse in Pouch (Click to Re-Verify)' : 'Collect Diagnostic Multi-Tool & Spare HV Fuse',
-            'Required for Chapter 1 & Chapter 2 electrical repairs',
+            hasCh1Tools ? '✓ Multi-Tool & Spare HV Fuse in Pouch' : 'Collect Diagnostic Multi-Tool & Spare HV Fuse',
+            'Required for initial habitat power & life-support inspection',
             () => {
                 addItem('Multi-Tool');
                 addItem('HV Fuse');
                 if (typeof spawnFloatingText === 'function') spawnFloatingText('MULTI-TOOL & HV FUSE ACQUIRED', state.player.x, state.player.y - 20, '#fde047');
                 completeTask('ch1_tool');
-                setAria('Multi-Tool and HV Fuse verified in your pouch! Next, check the Power Room and Life-Support Room.');
+                setAria('Multi-Tool and HV Fuse verified in your pouch! Next, check the Power Console and Life Support.');
                 openObjectModal(obj);
             },
-            hasCh1Tools ? 'bg-emerald-700/80 hover:bg-emerald-600 text-emerald-100' : 'bg-amber-500 hover:bg-amber-400 text-slate-950',
-            false
+            hasCh1Tools ? 'bg-emerald-700/80 hover:bg-emerald-600 text-emerald-100' : 'bg-amber-500 hover:bg-amber-400 text-slate-950'
         );
 
-        const hasCh3Parts = hasItem('LiOH Filter') && hasItem('Pipe Seal Kit');
+        // Mission 6: LiOH Filter Grab
+        const hasFilter = hasItem('LiOH Filter');
         addActionBtn(
-            hasCh3Parts ? '✓ LiOH Filter & Pipe Seal Kit in Pouch (Click to Re-Verify)' : 'Collect LiOH CO₂ Filter & Pipe Seal Kit',
-            'Required for Chapter 3 & Chapter 4 life-support & water repairs',
+            hasFilter ? '✓ Fresh LiOH CO₂ Scrubber Cartridge in Pouch' : 'Collect Fresh LiOH CO₂ Scrubber Cartridge',
+            'Required for Mission 6 ECLSS scrubber replacement',
             () => {
                 addItem('LiOH Filter');
-                addItem('Pipe Seal Kit');
-                if (typeof spawnFloatingText === 'function') spawnFloatingText('LiOH FILTER & SEAL KIT ACQUIRED', state.player.x, state.player.y - 20, '#2dd4bf');
+                if (typeof spawnFloatingText === 'function') spawnFloatingText('LiOH SCRUBBER CARTRIDGE ACQUIRED', state.player.x, state.player.y - 20, '#2dd4bf');
+                completeTask('ch6_filter_grab');
                 completeTask('ch3_part');
-                setAria('LiOH Filter and Pipe Seal Kit verified in your pouch! Head to Life Support and Water Recycling.');
+                setAria('Fresh LiOH Scrubber Cartridge collected! Head to the CO₂ Scrubber in Life Support.');
                 openObjectModal(obj);
             },
-            hasCh3Parts ? 'bg-emerald-700/80 hover:bg-emerald-600 text-emerald-100' : 'bg-sky-600 hover:bg-sky-500 text-white',
-            false
+            hasFilter ? 'bg-emerald-700/80 hover:bg-emerald-600 text-emerald-100' : 'bg-teal-600 hover:bg-teal-500 text-white'
         );
+
+        // Mission 8: Pipe Seal Kit Grab
+        const hasSealKit = hasItem('Pipe Seal Kit');
+        addActionBtn(
+            hasSealKit ? '✓ Plumbing Seal Kit & Bioreactor Filter in Pouch' : 'Collect Plumbing Seal Kit & Bioreactor Filter',
+            'Required for Mission 8 graywater pipe repair',
+            () => {
+                addItem('Pipe Seal Kit');
+                if (typeof spawnFloatingText === 'function') spawnFloatingText('PLUMBING SEAL KIT ACQUIRED', state.player.x, state.player.y - 20, '#38bdf8');
+                completeTask('ch8_pipe_seal');
+                completeTask('ch3_part');
+                setAria('Plumbing Seal Kit collected! Head to Water Recycling to patch the leaking coupling.');
+                openObjectModal(obj);
+            },
+            hasSealKit ? 'bg-emerald-700/80 hover:bg-emerald-600 text-emerald-100' : 'bg-blue-600 hover:bg-blue-500 text-white'
+        );
+
     } else if (obj.id === 'power_console') {
-        const hasFault = state.faults.hvJunctionBroken || pwr.net < 0;
-        badge.textContent = hasFault ? 'Under Investigation' : 'Bus Nominal';
+        const hasFault = state.faults.hvJunctionBroken || pwr.net < 0 || state.faults.breakerTripped;
+        badge.textContent = state.faults.breakerTripped ? 'BREAKER TRIPPED' : (hasFault ? 'Bus Under Strain' : 'Bus Nominal');
         badge.className = `text-[11px] font-mono-tech font-semibold px-2.5 py-0.5 rounded-full ${hasFault ? 'bg-red-500/20 text-red-300 border border-red-500/40' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'}`;
 
         addMetric('Solar + Gen Output', `${pwr.gen} kW`, 'text-amber-400');
-        addMetric('Current Habitat Load', `${pwr.load} kW`, 'text-white');
+        addMetric('Habitat Load Demand', `${pwr.load} kW`, 'text-white');
         addMetric('Battery State of Charge', `${Math.round(state.batteryKWh)}% (${Math.round(state.batteryKWh)} kWh)`, state.batteryKWh < 40 ? 'text-orange-400' : 'text-sky-300');
-        addMetric('Power Balance', pwr.net < 0 ? `${pwr.net} kW Deficit` : `+${pwr.net} kW Surplus`, pwr.net < 0 ? 'text-red-400' : 'text-emerald-400');
+        addMetric('Power Net Balance', pwr.net < 0 ? `${pwr.net} kW Deficit` : `+${pwr.net} kW Surplus`, pwr.net < 0 ? 'text-red-400' : 'text-emerald-400');
 
-        desc.textContent = state.faults.hvJunctionBroken
-            ? 'FAULT DETECTED: Blown High-Voltage Junction circuit is causing a 2 kW parasitic loss, and solar degradation has reduced output to 18 kW against a 24 kW load.'
-            : 'Electrical bus distributes power from external solar arrays and backup generators to habitat loads. Remember: a battery buys time; it does not create energy.';
+        desc.textContent = state.faults.breakerTripped
+            ? 'CRITICAL FAULT: Main breaker tripped due to persistent power deficit! All non-essential loads have been severed. Reset breakers below to restore habitat systems.'
+            : (state.faults.hvJunctionBroken
+                ? 'FAULT DETECTED: Blown High-Voltage Junction circuit is causing parasitic load loss. Replace fuse and manage power loads!'
+                : 'Electrical bus distributes power from external solar arrays and backup generators to habitat loads.');
 
+        // Breaker Reset if Tripped
+        if (state.faults.breakerTripped) {
+            addActionBtn(
+                '⚡ Reset Main Electrical Breaker & Restore Habitat Buses',
+                'Re-energizes Science Lab and Greenhouse circuits after load stabilization',
+                () => {
+                    state.faults.breakerTripped = false;
+                    state.loads.lab.on = true;
+                    state.loads.greenhouse.on = true;
+                    state.gridOverloadSeconds = 0;
+                    if (typeof sfx !== 'undefined' && sfx.success) sfx.success();
+                    setAria('Main breaker successfully reset! Power buses restored.');
+                    if (typeof updateUI === 'function') updateUI();
+                    openObjectModal(obj);
+                },
+                'bg-red-600 hover:bg-red-500 text-white animate-pulse'
+            );
+        }
+
+        // Mission 1: Verify Power Telemetry
         addActionBtn(
-            '1. Inspect Power System Telemetry & Fault Log',
-            'Recommended first step: verify array output and load demand',
+            'Inspect Habitat Power Telemetry & Bus Status',
+            'Electronic verification of solar input, battery buffer, and load distribution',
             () => {
                 completeTask('ch1_power');
-                completeTask('ch2_diag');
-                setAria('Telemetry verified! Open the Power Distribution Grid to shed non-essential loads, or install the HV Fuse to fix the junction.');
+                completeTask('ch4_power_diag');
+                setAria('Power telemetry verified! Array generation and load balance recorded.');
                 openObjectModal(obj);
             }
         );
+
+        // Mission 2: Switch on Greenhouse LEDs
+        if (state.chapterIdx === 1) {
+            addActionBtn(
+                state.loads.greenhouse.on ? '✓ Greenhouse LED Circuit Active (+5 kW Load)' : 'Activate Greenhouse LED Array (+5 kW Load)',
+                'Energizes PAR grow lights to begin seed germination',
+                () => {
+                    state.loads.greenhouse.on = true;
+                    completeTask('ch2_greenhouse_power');
+                    setAria('Greenhouse grow lights activated! Crop germination has begun.');
+                    if (typeof updateUI === 'function') updateUI();
+                    openObjectModal(obj);
+                },
+                'bg-emerald-600 hover:bg-emerald-500 text-white'
+            );
+        }
+
+        // Mission 4: Open Breaker Grid & Shed Loads
         addActionBtn(
-            '2. Open Power Load Distribution & Shed Non-Essential Loads',
-            'Switch off optional Lab/Greenhouse loads or enable Backup Generator',
+            'Open Power Load Breaker Grid (Shed Non-Essential Loads)',
+            'Switch off optional Lab/Greenhouse loads to survive dust storm deficit',
             () => {
                 document.getElementById('modal-console').classList.add('hidden');
                 openPowerModal();
             },
             'bg-amber-500 hover:bg-amber-400 text-slate-950'
         );
+
+        // Mission 4: Replace Blown HV Fuse
         if (state.faults.hvJunctionBroken) {
             addActionBtn(
-                '3. Replace Blown HV Junction Circuit (Requires HV Fuse)',
-                hasItem('HV Fuse') ? 'HV Fuse ready in pouch — eliminates +2 kW fault loss and restores +4 kW array efficiency' : 'Missing HV Fuse! Collect it from Central Spine Storage Locker first.',
+                'Replace Blown HV Junction Circuit (Requires HV Fuse)',
+                hasItem('HV Fuse') ? 'Ready in pouch — eliminates fault loss and restores array efficiency' : 'Requires HV Fuse from Storage Locker',
                 () => {
                     state.faults.hvJunctionBroken = false;
                     state.solarOutputKW = 22;
                     if (typeof spawnFloatingText === 'function') spawnFloatingText('+4 kW EFFICIENCY RESTORED', state.player.x, state.player.y - 20, '#38bdf8');
+                    completeTask('ch4_replace_fuse');
                     completeTask('ch2_repair');
                     awardBadge('power_saver');
-                    setAria('HV Junction repaired! Array efficiency restored to 22 kW and Power Saver badge earned!');
-                    updateUI();
+                    setAria('HV Junction repaired! Efficiency restored and Power Saver badge earned!');
+                    if (typeof updateUI === 'function') updateUI();
                     openObjectModal(obj);
                 },
                 'bg-emerald-600 hover:bg-emerald-500 text-white',
                 !hasItem('HV Fuse')
             );
         }
+
+        // Mission 4: Spin up Backup Generator
+        if (state.chapterIdx === 3 || state.backupGenKW === 0) {
+            addActionBtn(
+                state.backupGenKW > 0 ? '✓ Backup Generator Running (+10 kW)' : 'Spin Up Emergency Backup Generator (+10 kW)',
+                'Burns fuel at 0.25 kg/s to supply 10 kW emergency power during storm',
+                () => {
+                    state.backupGenKW = 10;
+                    completeTask('ch4_gen_backup');
+                    setAria('Backup Generator online! Providing 10 kW auxiliary power.');
+                    if (typeof updateUI === 'function') updateUI();
+                    openObjectModal(obj);
+                },
+                'bg-orange-500 hover:bg-orange-400 text-slate-950'
+            );
+        }
+
     } else if (obj.id === 'co2_scrubber') {
         const isHigh = state.co2PPM > 900 || state.faults.co2FilterClogged;
         badge.textContent = isHigh ? 'CO₂ Warning' : 'ECLSS Nominal';
+        badge.className = `text-[11px] font-mono-tech font-semibold px-2.5 py-0.5 rounded-full ${isHigh ? 'bg-red-500/20 text-red-300 border border-red-500/40' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'}`;
+
         addMetric('Cabin CO₂ Concentration', `${Math.round(state.co2PPM)} ppm`, isHigh ? 'text-red-400' : 'text-emerald-400');
         addMetric('Oxygen Partial Pressure', `${state.oxygenKPa.toFixed(1)} kPa`, 'text-teal-300');
         addMetric('Primary LiOH Filter', state.faults.co2FilterClogged ? 'SATURATED (FAULT)' : 'CLEAN (ACTIVE)', state.faults.co2FilterClogged ? 'text-red-400' : 'text-emerald-300');
@@ -352,33 +463,55 @@ function openObjectModal(obj) {
             ? 'Primary CO₂ scrubber cartridge is saturated! Exhaled carbon dioxide is rising rapidly. Replace the LiOH filter cassette or activate the Backup Scrubber (+3 kW power draw).'
             : 'Environmental Control and Life Support System (ECLSS) maintains breathable oxygen (21.2 kPa) and scrubs metabolically produced CO₂ below 600 ppm.';
 
+        // Mission 1: Verify Life Support
         addActionBtn(
             'Verify Atmospheric Sensors & O₂ Processor',
-            'Confirm cabin pressure (101.3 kPa) and oxygen partial pressure',
+            'Confirm cabin pressure (101.3 kPa) and oxygen partial pressure (21.2 kPa)',
             () => {
                 completeTask('ch1_life');
                 setAria('Atmospheric sensors verified! O₂ partial pressure is stable at 21.2 kPa.');
                 openObjectModal(obj);
             }
         );
+
+        // Mission 6: Replace Saturated LiOH Filter
         if (state.faults.co2FilterClogged) {
             addActionBtn(
                 'Replace Saturated LiOH Filter Cartridge (Recommended)',
-                hasItem('LiOH Filter') ? 'Installs fresh LiOH cassette — permanently restores CO₂ scrubbing without extra kW load' : 'Requires LiOH Filter from Maintenance Storage Locker',
+                hasItem('LiOH Filter') ? 'Installs fresh LiOH cassette — permanently restores CO₂ scrubbing' : 'Requires LiOH Filter from Maintenance Storage Locker',
                 () => {
                     state.faults.co2FilterClogged = false;
                     state.co2PPM = 440;
                     if (typeof spawnFloatingText === 'function') spawnFloatingText('CO₂ SCRUBBER NOMINAL • 420 ppm', state.player.x, state.player.y - 20, '#2dd4bf');
+                    completeTask('ch6_filter_install');
+                    completeTask('ch6_co2_verify');
                     completeTask('ch3_co2');
                     awardBadge('air_guardian');
                     setAria('Fresh LiOH CO₂ filter installed! Cabin CO₂ is dropping back to 420 ppm. Air Guardian badge unlocked!');
-                    updateUI();
+                    if (typeof updateUI === 'function') updateUI();
                     openObjectModal(obj);
                 },
                 'bg-emerald-600 hover:bg-emerald-500 text-white',
                 !hasItem('LiOH Filter')
             );
         }
+
+        // Mission 6: Verify CO2 Below Safe Limit
+        addActionBtn(
+            'Verify Cabin CO₂ Scrubber Recovery (< 600 ppm)',
+            'Check real-time air telemetry across all habitat compartments',
+            () => {
+                if (state.co2PPM <= 650) {
+                    completeTask('ch6_co2_verify');
+                    setAria('CO₂ verified nominal at safe levels!');
+                } else {
+                    setAria(`Current CO₂ is ${Math.round(state.co2PPM)} ppm. Replace filter or run backup scrubber to lower it!`);
+                }
+                openObjectModal(obj);
+            }
+        );
+
+        // Backup Scrubber Toggle
         addActionBtn(
             state.loads.backupScrub.on ? 'Shut Down Backup CO₂ Scrubber (Save 3 kW)' : 'Emergency: Activate Backup CO₂ Scrubber (+3 kW Load)',
             'Trade-off: Scrubs CO₂ immediately using redundant bed, but adds 3 kW electrical demand',
@@ -386,38 +519,128 @@ function openObjectModal(obj) {
                 state.loads.backupScrub.on = !state.loads.backupScrub.on;
                 if (state.loads.backupScrub.on) {
                     state.co2PPM = Math.min(state.co2PPM, 650);
-                    completeTask('ch3_co2');
+                    completeTask('ch6_filter_install');
+                    completeTask('ch6_co2_verify');
                 }
-                updateUI();
+                if (typeof updateUI === 'function') updateUI();
                 openObjectModal(obj);
             },
             'bg-amber-500 hover:bg-amber-400 text-slate-950'
         );
+
+    } else if (obj.id === 'greenhouse_console') {
+        const cropNames = ['Seedling Sprout Phase', 'Vegetative Foliage Phase', 'Mature Fruiting & Grain Harvest'];
+        badge.textContent = state.faults.irrigationPumpBroken ? 'Irrigation Fault' : cropNames[state.cropGrowthStage || 0];
+        addMetric('Food Reserves', `${Math.round(state.foodCrewDays)} Crew-Days`, 'text-lime-400');
+        addMetric('Crop Lifecycle', cropNames[state.cropGrowthStage || 0], 'text-emerald-300');
+        addMetric('Grow LED Lighting', state.loads.greenhouse.on ? 'ACTIVE (ON)' : 'OFF', state.loads.greenhouse.on ? 'text-emerald-400' : 'text-amber-400');
+        addMetric('Dome Temperature', `${state.temperatureC.toFixed(1)} °C`, 'text-sky-300');
+
+        // Irrigation Pump Fault Repair
+        if (state.faults.irrigationPumpBroken) {
+            addActionBtn(
+                'Repair Nutrient Delivery Irrigation Pump (Requires Multi-Tool)',
+                hasItem('Multi-Tool') ? 'Clears sediment blockage and restores nutrient circulation to crops' : 'Requires Multi-Tool from Maintenance Storage',
+                () => {
+                    state.faults.irrigationPumpBroken = false;
+                    state.foodCrewDays += 9;
+                    if (typeof spawnFloatingText === 'function') spawnFloatingText('+9 DAYS FOOD RESERVES RESTORED', state.player.x, state.player.y - 20, '#4ade80');
+                    completeTask('ch4_pump');
+                    setAria('Irrigation pump repaired and nutrients calibrated! Make sure Greenhouse LEDs are switched ON.');
+                    if (typeof updateUI === 'function') updateUI();
+                    openObjectModal(obj);
+                },
+                'bg-emerald-600 hover:bg-emerald-500 text-white',
+                !hasItem('Multi-Tool')
+            );
+        }
+
+        desc.textContent = 'Hydroponic crop beds grow dwarf wheat, lettuce, and microgreens to supplement packaged rations. Plants require balanced nutrients, 21 °C temperature, and PAR spectrum grow lighting.';
+
+        // Mission 2: Inspect Crop Beds
+        addActionBtn(
+            'Inspect Hydroponic Seed Trays & Root Substrate',
+            'Examine moisture retention and seed germination telemetry',
+            () => {
+                completeTask('ch2_crop_inspect');
+                setAria('Seed beds inspected! Now head to Water Recycling to formulate the mineral nutrient dosing mix.');
+                openObjectModal(obj);
+            }
+        );
+
+        // Mission 10: Harvest Mature Wheat & Cryo-Stash Seeds
+        if (state.chapterIdx === 9 || state.cropGrowthStage >= 2) {
+            addActionBtn(
+                'Harvest Mature Dwarf Wheat & Cryo-Stash Generation-2 Seeds',
+                'Preserves genetically adapted seeds for return to Earth in the ERV',
+                () => {
+                    completeTask('ch10_greenhouse_seeds');
+                    awardBadge('chapea_botanist');
+                    setAria('Generation-2 seeds successfully cryo-preserved! Botanist badge confirmed.');
+                    if (typeof updateUI === 'function') updateUI();
+                    openObjectModal(obj);
+                },
+                'bg-emerald-600 hover:bg-emerald-500 text-white'
+            );
+        }
+
+        // Toggle LEDs
+        addActionBtn(
+            state.loads.greenhouse.on ? 'Verify Greenhouse LEDs Active (5 kW)' : 'Switch ON Greenhouse LED Array (+5 kW)',
+            'Allocates power to sustain ongoing plant growth and crew psychology',
+            () => {
+                state.loads.greenhouse.on = true;
+                completeTask('ch2_greenhouse_power');
+                if (typeof updateUI === 'function') updateUI();
+                openObjectModal(obj);
+            },
+            'bg-amber-500 hover:bg-amber-400 text-slate-950'
+        );
+
     } else if (obj.id === 'water_recycler') {
         const badWater = state.faults.waterPipeLeaking || state.waterConductivity > 60;
-        badge.textContent = badWater ? 'Leak / High Conductivity' : 'Potable Verified';
+        badge.textContent = badWater ? 'Contamination Alert' : 'Potable Purity Verified';
+        badge.className = `text-[11px] font-mono-tech font-semibold px-2.5 py-0.5 rounded-full ${badWater ? 'bg-red-500/20 text-red-300 border border-red-500/40' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'}`;
+
         addMetric('Potable Water Reserve', `${Math.round(state.waterLitres)} Litres`, 'text-blue-400');
         addMetric('Water Conductivity', `${state.waterConductivity} µS/cm`, badWater ? 'text-amber-400' : 'text-emerald-400');
-        addMetric('Plumbing Manifold', state.faults.waterPipeLeaking ? 'LEAKING (-1.5 L/s)' : 'SEALED (100%)', state.faults.waterPipeLeaking ? 'text-red-400' : 'text-emerald-300');
-        addMetric('Quality Threshold', '< 60 µS/cm for Potable', 'text-slate-300');
+        addMetric('Recycling Loop', state.faults.waterPipeLeaking ? 'LEAKING (-1.2 L/min)' : 'SEALED (100%)', state.faults.waterPipeLeaking ? 'text-red-400' : 'text-emerald-300');
+        addMetric('Purity Standard', '< 60 µS/cm for Drinking', 'text-slate-300');
 
         desc.textContent = badWater
-            ? 'A cracked coupling in the greywater return line is leaking water and raising ionic conductivity to 185 µS/cm. Seal the pipe and run the multifiltration bed before crew consumption!'
-            : 'Closed-loop water recovery distills and filters humidity condensate and greywater, verifying potable quality via electrical conductivity (µS/cm).';
+            ? 'WARNING: Cracked coupling in the greywater line is leaking and raising ionic conductivity to 190 µS/cm. Seal the pipe and flush the bioreactor loop!'
+            : 'Closed-loop ECLSS water recovery distills and filters humidity condensate and hygiene greywater, verifying potable quality via electrical conductivity (<60 µS/cm).';
 
+        // Mission 2: Nutrient Mix
+        if (state.chapterIdx === 1) {
+            addActionBtn(
+                'Formulate Hydroponic N-P-K Mineral Nutrient Solution',
+                'Mixes nitrogen, phosphorus, and potassium trace minerals for greenhouse dosing',
+                () => {
+                    completeTask('ch2_nutrient_mix');
+                    setAria('Nutrient solution formulated and injected into hydroponic irrigation lines!');
+                    openObjectModal(obj);
+                },
+                'bg-emerald-600 hover:bg-emerald-500 text-white'
+            );
+        }
+
+        // Mission 8: Seal Pipe & Flush Loop
         if (state.faults.waterPipeLeaking || state.waterConductivity > 60) {
             addActionBtn(
-                'Seal Pipe Coupling & Run Multifiltration Flush',
-                hasItem('Pipe Seal Kit') ? 'Stops water leak and purifies batch to 40 µS/cm' : 'Requires Pipe Seal Kit from Maintenance Storage Locker',
+                'Seal Cracked Pipe Coupling & Flush Bioreactor Filter Loop',
+                hasItem('Pipe Seal Kit') ? 'Stops leak and purifies water batch to 38 µS/cm' : 'Requires Pipe Seal Kit from Maintenance Storage Locker',
                 () => {
                     state.faults.waterPipeLeaking = false;
-                    state.waterConductivity = 40;
-                    state.waterLitres = Math.min(500, state.waterLitres + 35);
-                    if (typeof spawnFloatingText === 'function') spawnFloatingText('PIPE SEALED • 40 µS/cm NOMINAL', state.player.x, state.player.y - 20, '#38bdf8');
+                    state.waterConductivity = 38;
+                    state.waterLitres = Math.min(500, state.waterLitres + 40);
+                    if (typeof spawnFloatingText === 'function') spawnFloatingText('PIPE SEALED • 38 µS/cm NOMINAL', state.player.x, state.player.y - 20, '#38bdf8');
+                    completeTask('ch8_flush_bioreactor');
+                    completeTask('ch8_conductivity_check');
                     completeTask('ch3_water');
                     awardBadge('water_wizard');
-                    setAria('Water leak sealed and filtration verified at 40 µS/cm! Water Wizard badge earned!');
-                    updateUI();
+                    setAria('Pipe sealed and bioreactor flushed! Water conductivity verified at 38 µS/cm.');
+                    if (typeof updateUI === 'function') updateUI();
                     openObjectModal(obj);
                 },
                 'bg-emerald-600 hover:bg-emerald-500 text-white',
@@ -425,200 +648,246 @@ function openObjectModal(obj) {
             );
         } else {
             addActionBtn(
-                'Verify Potable Water Quality Batch (< 60 µS/cm)',
+                'Verify Potable Water Purity Batch (< 60 µS/cm)',
                 'Confirm ionic purity and reserve level for crew & greenhouse',
                 () => {
-                    completeTask('ch3_water');
-                    setAria('Water batch verified at 40 µS/cm — safe for crew drinking and hydroponic irrigation!');
+                    completeTask('ch8_conductivity_check');
+                    setAria('Water batch verified safe at 38 µS/cm!');
                     openObjectModal(obj);
                 }
             );
         }
-    } else if (obj.id === 'greenhouse_console') {
-        badge.textContent = state.faults.irrigationPumpBroken ? 'Irrigation Fault' : (state.loads.greenhouse.on ? 'Crops Thriving' : 'LEDs Powered Off');
-        addMetric('Food Reserves', `${Math.round(state.foodCrewDays)} Crew-Days`, 'text-lime-400');
-        addMetric('Irrigation Pump', state.faults.irrigationPumpBroken ? 'CAVITATING (FAULT)' : 'FLOWING (2.4 L/min)', state.faults.irrigationPumpBroken ? 'text-red-400' : 'text-emerald-400');
-        addMetric('Grow LED Allocation', state.loads.greenhouse.on ? 'ON (5 kW Draw)' : 'OFF (0 kW Draw)', state.loads.greenhouse.on ? 'text-emerald-300' : 'text-amber-400');
-        addMetric('Dome Temperature', `${state.temperatureC.toFixed(1)} °C`, 'text-sky-300');
 
-        desc.textContent = 'Hydroponic crop beds grow dwarf wheat, lettuce, and cherry tomatoes to supplement packaged rations. Plants require clean water, balanced nutrients, 21 °C temperature, and 5 kW of PAR spectrum lighting.';
+    } else if (obj.id === 'mars_rover') {
+        badge.textContent = 'NASA 3D Surface Assets';
+        addMetric('Rover Telemetry', 'NASA Perseverance Linked', 'text-emerald-400');
+        addMetric('Scout Helicopter', 'Ingenuity Pre-Flight Green', 'text-teal-300');
+        addMetric('Coring Drill Assembly', state.hasCoreSample ? 'BASALT CORE SECURED' : 'STOWED (READY)', state.hasCoreSample ? 'text-amber-300' : 'text-sky-300');
+        addMetric('Emergency Power Bus', '15 kWh Available', 'text-purple-300');
 
+        desc.textContent = 'NASA Perseverance Rover and Ingenuity Mars Helicopter stationed outside the Astra-1 airlock for geological prospecting and delta exploration.';
+
+        // Mission 3: Link Rover Telemetry
         addActionBtn(
-            '1. Inspect Hydroponic Crop Health & Root Moisture',
-            'Diagnose wilting leaves and nutrient flow rate',
+            'Establish Umbilical Telemetry Link with Perseverance Rover',
+            'Synchronizes rover navigation, MMRTG thermal bus, and science instruments',
             () => {
-                completeTask('ch4_inspect');
-                setAria('Crop inspection complete: the primary irrigation pump impeller is jammed with mineral scale.');
+                completeTask('ch3_rover_link');
+                setAria('Perseverance telemetry linked! MMRTG and mobility systems operational.');
+                openObjectModal(obj);
+            },
+            'bg-sky-600 hover:bg-sky-500 text-white'
+        );
+
+        // Mission 3: Inspect Ingenuity
+        addActionBtn(
+            'Execute Rotor Pre-Flight Diagnostics on Ingenuity Helicopter',
+            'Spins coaxial carbon-fiber rotors to 2,400 RPM to verify aerodynamics in thin Martian air',
+            () => {
+                completeTask('ch3_heli_inspect');
+                setAria('Ingenuity avionics and solar panel confirmed green for reconnaissance flight!');
+                openObjectModal(obj);
+            },
+            'bg-teal-600 hover:bg-teal-500 text-white'
+        );
+
+        // Mission 7: Drill Jezero Core Sample
+        if (state.chapterIdx === 6 || !state.hasCoreSample) {
+            addActionBtn(
+                'Deploy Rotary-Percussive Coring Drill into Delta Basalt',
+                'Extracts a 6-centimeter cylindrical rock core for astrobiological analysis',
+                () => {
+                    state.hasCoreSample = true;
+                    completeTask('ch7_drill_core');
+                    setAria('Pristine basalt core extracted! Return inside to the Science Lab to hermetically seal the canister.');
+                    if (typeof updateUI === 'function') updateUI();
+                    openObjectModal(obj);
+                },
+                'bg-amber-500 hover:bg-amber-400 text-slate-950'
+            );
+        }
+
+        // Emergency Power Transfer
+        addActionBtn(
+            'Transfer 15 kWh Emergency Rover Battery to Habitat',
+            'Transfers mobile power reserve into Astra-1 main battery bank',
+            () => {
+                state.batteryKWh = Math.min(100, state.batteryKWh + 15);
+                if (typeof sfx !== 'undefined' && sfx.success) sfx.success();
+                setAria('Transferred 15 kWh from rover into Astra-1 main battery bank!');
+                if (typeof updateUI === 'function') updateUI();
+                openObjectModal(obj);
+            },
+            'bg-slate-700 hover:bg-slate-600 text-white'
+        );
+
+    } else if (obj.id === 'solar_array_eva') {
+        badge.textContent = 'Outdoor Photovoltaic Field';
+        addMetric('Current Array Output', `${state.solarOutputKW} kW`, 'text-amber-400');
+        addMetric('Atmospheric Opacity (Tau)', state.faults.dustStormActive ? 'Tau 3.8 (Severe Dust)' : 'Tau 0.5 (Clear)', 'text-orange-300');
+        addMetric('Wind Latch Status', state.faults.externalConduitDamaged ? 'VIBRATING / STRAINED' : 'LOCKED (100%)', 'text-sky-300');
+        addMetric('EVA Suit Protection', state.player.inSuit ? 'PRESSURIZED (SAFE)' : 'UNSUITED HAZARD!', state.player.inSuit ? 'text-emerald-400' : 'text-red-500');
+
+        desc.textContent = 'External solar tracking arrays supply primary power to Astra-1. Severe dust accumulation and high wind shear require physical latch maintenance.';
+
+        // Mission 5: Secure Array Latches
+        addActionBtn(
+            'Secure Heavy Mechanical Wind Latches Against Regolith Gale',
+            'Prevents catastrophic array flutter and structural damage during the storm',
+            () => {
+                completeTask('ch5_secure_latch');
+                setAria('Wind latches clamped tight! Now inspect and re-anchor the external HV conduit.');
+                openObjectModal(obj);
+            },
+            'bg-amber-500 hover:bg-amber-400 text-slate-950'
+        );
+
+        // Mission 5: Verify External Conduit
+        addActionBtn(
+            'Re-Anchor & Verify External High-Voltage Solar Conduit',
+            'Ensures all electrical lines from arrays feed reliably into the habitat bus',
+            () => {
+                state.faults.externalConduitDamaged = false;
+                state.solarOutputKW = Math.max(state.solarOutputKW, 22);
+                completeTask('ch5_conduit_verify');
+                setAria('Conduit secured and signal integrity verified! Return inside through the Airlock.');
+                if (typeof updateUI === 'function') updateUI();
+                openObjectModal(obj);
+            },
+            'bg-emerald-600 hover:bg-emerald-500 text-white'
+        );
+
+    } else if (obj.id === 'lab_console') {
+        badge.textContent = state.hasCoreSample ? 'Geological Samples Stored' : 'Spectrometer Ready';
+        addMetric('Mass Spectrometer', 'Calibrated (Argon/Methane)', 'text-teal-300');
+        addMetric('Jezero Core Canister', state.hasCoreSample ? 'SEALED IN HERMETIC VAULT' : 'PENDING EXTRACTION', state.hasCoreSample ? 'text-emerald-400' : 'text-slate-400');
+        addMetric('High-Gain Earth Uplink', state.faults.commsAntennaOffline ? 'OFFLINE' : 'LOCKED ON HOUSTON', state.faults.commsAntennaOffline ? 'text-red-400' : 'text-emerald-400');
+        addMetric('Expedition Sol', `SOL ${state.sol} / 378`, 'text-amber-300');
+
+        desc.textContent = 'Astra-1 Science Laboratory & Medical Bay. Houses analytical instruments, deep-space communication uplinks, and hermetic sample vaults for Mars sample return.';
+
+        // Mission 7: Calibrate Mass Spec
+        addActionBtn(
+            'Calibrate Laboratory Mass Spectrometer & Raman Sensor',
+            'Performs automated baseline scan for organic carbon and hydrous minerals',
+            () => {
+                completeTask('ch7_lab_terminal');
+                setAria('Mass Spectrometer calibrated! Ready to analyze sediment cores.');
                 openObjectModal(obj);
             }
         );
-        if (state.faults.irrigationPumpBroken) {
+
+        // Mission 7: Seal Sample Canister
+        if (state.hasCoreSample || state.chapterIdx === 6) {
             addActionBtn(
-                '2. Repair Irrigation Pump & Calibrate Nutrient Dosing',
-                'Restores automated water and nutrient delivery to all 3 crop beds',
+                'Hermetically Seal Jezero Core Canister into Scientific Sample Vault',
+                'Creates double-brazed titanium seal to prevent terrestrial contamination',
                 () => {
-                    state.faults.irrigationPumpBroken = false;
-                    state.foodCrewDays += 9;
-                    if (typeof spawnFloatingText === 'function') spawnFloatingText('+9 DAYS FOOD RESERVES RESTORED', state.player.x, state.player.y - 20, '#4ade80');
-                    completeTask('ch4_pump');
-                    setAria('Irrigation pump repaired and nutrients calibrated! Make sure Greenhouse LEDs are switched ON to complete Chapter 4.');
-                    updateUI();
+                    state.hasCoreSample = true;
+                    if (typeof spawnFloatingText === 'function') spawnFloatingText('CORE CANISTER SEALED', state.player.x, state.player.y - 20, '#2dd4bf');
+                    completeTask('ch7_seal_canister');
+                    setAria('Sample canister hermetically sealed! Core preserved for Earth laboratory analysis.');
+                    if (typeof updateUI === 'function') updateUI();
                     openObjectModal(obj);
                 },
                 'bg-emerald-600 hover:bg-emerald-500 text-white'
             );
         }
-        addActionBtn(
-            state.loads.greenhouse.on ? '3. Verify Greenhouse LEDs ON (5 kW Active)' : '3. Switch ON Greenhouse LED Array (+5 kW Load)',
-            'Allocates 5 kW of electrical power to sustain long-term food production',
-            () => {
-                state.loads.greenhouse.on = true;
-                if (!state.faults.irrigationPumpBroken) {
-                    completeTask('ch4_power');
-                }
-                updateUI();
-                openObjectModal(obj);
-            },
-            'bg-amber-500 hover:bg-amber-400 text-slate-950'
-        );
-    } else if (obj.id === 'lab_console') {
-        badge.textContent = state.faults.commsAntennaOffline ? 'Comms Link Down' : 'Telemetry Ready';
-        addMetric('High-Gain Comms Dish', state.faults.commsAntennaOffline ? 'SIGNAL LOST' : 'LOCKED (EARTH)', state.faults.commsAntennaOffline ? 'text-red-400' : 'text-emerald-400');
-        addMetric('Net Power Balance', `${pwr.net >= 0 ? '+' : ''}${pwr.net} kW`, pwr.net < 0 ? 'text-red-400' : 'text-emerald-400');
-        addMetric('Atmosphere & Water', `${Math.round(state.co2PPM)} ppm | ${state.waterConductivity} µS/cm`, 'text-sky-300');
-        addMetric('Mission Readiness', state.chapterIdx === 5 ? 'FINAL VERIFICATION' : `SOL ${state.sol} ACTIVE`, 'text-amber-300');
 
-        desc.textContent = 'The Laboratory & Medical Bay houses deep-space telemetry diagnostics, crew health monitors, and the Mission Control readiness uplink.';
-
-        if (state.faults.commsAntennaOffline) {
+        // Mission 10: Package Cores for ERV
+        if (state.chapterIdx === 9) {
             addActionBtn(
-                'Reroute External Comms Antenna via Backup S-Band Transceiver',
-                'Restores telemetry uplink with Mission Control during the dust storm without risky EVA',
+                'Package Certified Core Canisters into Earth Return Vehicle (ERV) Container',
+                'Secures all sampled geological tubes in shock-absorbing transit harness',
                 () => {
-                    state.faults.commsAntennaOffline = false;
-                    completeTask('ch5_comms');
-                    setAria('Comms uplink restored via S-Band backup! Now head to the Crew Quarters Radiation Shelter!');
-                    updateUI();
+                    completeTask('ch10_package_cores');
+                    setAria('Core canisters secured into ERV return module!');
                     openObjectModal(obj);
                 },
                 'bg-sky-600 hover:bg-sky-500 text-white'
             );
-        }
 
-        if (state.chapterIdx === 5) {
-            const systemsHealthy = pwr.net >= 0 && !state.faults.waterPipeLeaking && state.co2PPM < 800 && !state.faults.externalConduitDamaged;
+            // Mission 10: Transmit Final 378-Sol Report & Complete Campaign
             addActionBtn(
-                'Verify All Habitat Systems & Transmit Final Readiness Report',
-                systemsHealthy
-                    ? 'All systems green! Transmit Sol 30 Handover Report to Mission Control'
-                    : 'Requires: External Solar Repaired (28 kW), Net Power >= 0 kW, Water Leak Sealed, CO₂ < 800 ppm',
+                '★ Transmit Final 378-Sol Outpost Handover Debrief to Houston',
+                'Concludes NASA CHAPEA 378-Sol Simulation and triggers Mission Certification!',
                 () => {
-                    completeTask('ch6_systems');
-                    completeTask('ch6_report');
+                    completeTask('ch10_final_report');
                     document.getElementById('modal-console').classList.add('hidden');
                     showVictoryModal();
                 },
-                'bg-emerald-600 hover:bg-emerald-500 text-white',
-                !systemsHealthy
+                'bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold'
             );
         } else {
+            // General Medical Scan
             addActionBtn(
                 'Run Crew Medical & Telemetry Readiness Scan',
                 'Restores crew health to 100% and logs daily science data',
                 () => {
                     state.crewHealth = 100;
                     setAria('Crew medical scan complete! All five astronauts are in peak health.');
-                    updateUI();
+                    if (typeof updateUI === 'function') updateUI();
                     openObjectModal(obj);
                 }
             );
         }
+
     } else if (obj.id === 'shelter_console') {
-        badge.textContent = state.faults.radiationAlertActive ? 'SPE Radiation Alert!' : 'Shelter Standby';
-        addMetric('Surface Dose Rate', `${state.radiationMSvH.toFixed(2)} mSv/h`, state.radiationMSvH > 0.5 ? 'text-red-400' : 'text-emerald-400');
-        addMetric('Water-Wall Shielding', '420 L Polyethylene + H₂O', 'text-sky-300');
-        addMetric('Shelter Protocol', state.faults.shelterProtocolActive ? 'ACTIVE (SHIELDED)' : 'STANDBY', 'text-purple-300');
+        badge.textContent = state.faults.radiationAlertActive ? 'SPE RADIATION CODE RED' : (state.faults.shelterProtocolActive ? 'Shelter Fully Shielded' : 'Shelter Nominal');
+        badge.className = `text-[11px] font-mono-tech font-semibold px-2.5 py-0.5 rounded-full ${state.faults.radiationAlertActive ? 'bg-red-500/20 text-red-300 border border-red-500/40 animate-pulse' : 'bg-purple-500/20 text-purple-300 border border-purple-500/40'}`;
+
+        addMetric('Surface Radiation Dose', `${state.radiationMSvH.toFixed(2)} mSv/h`, state.radiationMSvH > 0.5 ? 'text-red-400' : 'text-emerald-400');
+        addMetric('Water-Wall Shielding', state.faults.shelterProtocolActive ? 'FLOODED (420 L H₂O Jacket)' : 'STANDBY (DRAINED)', 'text-sky-300');
+        addMetric('Shelter Protocol', state.faults.shelterProtocolActive ? 'ACTIVE (CREW SHIELDED)' : 'STANDBY', 'text-purple-300');
         addMetric('Crew Health', `${Math.round(state.crewHealth)}%`, 'text-emerald-400');
 
-        desc.textContent = 'Mars lacks a global magnetosphere and thick atmosphere. During Solar Particle Events (SPE), high-energy protons spike radiation dose rates (mSv/h), requiring the crew to shelter inside central quarters surrounded by water storage tanks.';
+        desc.textContent = 'Radiation Shelter & Crew Quarters. Water storage tanks encase the compartment walls, creating a hydrogen-dense barrier that stops high-energy solar proton events (SPE).';
 
+        // Mission 9: Alarm Siren
         addActionBtn(
-            'Activate Solar Particle Event (SPE) Radiation Shelter Protocol',
-            'Summons all 5 crew members to water-shielded quarters and reduces dose rate to 0.05 mSv/h',
+            'Sound Habitat-Wide Solar Particle Event (SPE) Emergency Siren',
+            'Broadcasts alert chimes to all modules instructing astronauts to abandon stations',
             () => {
-                state.faults.radiationAlertActive = false;
-                state.faults.shelterProtocolActive = true;
-                state.radiationMSvH = 0.05;
-                if (typeof spawnFloatingText === 'function') spawnFloatingText('RADIATION SHELTER ACTIVE', state.player.x, state.player.y - 20, '#c084fc');
+                completeTask('ch9_alarm_siren');
                 completeTask('ch5_shelter');
-                awardBadge('storm_survivor');
-                setAria('Radiation Shelter protocol active! Water-wall shielding reduced crew exposure to 0.05 mSv/h. Storm Survivor badge earned!');
-                updateUI();
+                if (typeof spawnFloatingText === 'function') spawnFloatingText('EMERGENCY SIREN SOUNDED', state.player.x, state.player.y - 20, '#ef4444');
+                if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+                setAria('Emergency radiation siren sounding! Evacuate crew to shelter immediately.');
+                openObjectModal(obj);
+            },
+            'bg-red-600 hover:bg-red-500 text-white'
+        );
+
+        // Mission 9: Evacuate Crew
+        addActionBtn(
+            'Evacuate All 5 Crew Members into Protected Quarters',
+            'Accounts for every astronaut and secures compartment airtight pressure hatch',
+            () => {
+                completeTask('ch9_shelter_evac');
+                if (typeof spawnFloatingText === 'function') spawnFloatingText('5 CREW EVACUATED TO SHELTER', state.player.x, state.player.y - 20, '#c084fc');
+                setAria('All five astronauts safely inside the radiation shelter!');
                 openObjectModal(obj);
             },
             'bg-purple-600 hover:bg-purple-500 text-white'
         );
-    } else if (obj.id === 'solar_array_eva') {
-        badge.textContent = 'Outdoor EVA Array';
-        addMetric('Current Solar Output', `${state.solarOutputKW} kW`, 'text-amber-400');
-        addMetric('Atmospheric Opacity', state.faults.dustStormActive ? 'TAU 3.8 (STORM)' : 'TAU 0.5 (CLEAR)', 'text-orange-300');
-        addMetric('EVA Suit Protection', state.player.inSuit ? 'PRESSURIZED (SAFE)' : 'UNSUITED HAZARD!', state.player.inSuit ? 'text-emerald-400' : 'text-red-500');
-        addMetric('HV Conduit Latch', state.faults.externalConduitDamaged ? 'DISCONNECTED' : 'LOCKED', 'text-sky-300');
 
-        desc.textContent = 'External photovoltaic arrays power Astra-1. Dust accumulation and wind storms require periodic EVA tie-down checks and conduit maintenance.';
-
+        // Mission 9: Water Shield Flood
         addActionBtn(
-            'Secure Solar Array Wind Latch & Clear Regolith Dust',
-            'Protects panels during Chapter 5 Red Storm and boosts solar output',
+            'Deploy Water-Wall Protective Flood (420 L Hydrogen Shielding)',
+            'Attenuates proton flux, dropping exposure from 3.20 mSv/h down to safe 0.04 mSv/h',
             () => {
-                completeTask('ch5_eva');
-                if (state.chapterIdx === 4) state.solarOutputKW = 12;
-                setAria('Solar array wind latches secured! Return through the Airlock before radiation peaks!');
-                updateUI();
+                state.faults.radiationAlertActive = false;
+                state.faults.shelterProtocolActive = true;
+                state.radiationMSvH = 0.04;
+                if (typeof spawnFloatingText === 'function') spawnFloatingText('WATER-WALL FLOODED • 0.04 mSv/h', state.player.x, state.player.y - 20, '#38bdf8');
+                completeTask('ch9_water_shield');
+                completeTask('ch5_shelter');
+                awardBadge('storm_survivor');
+                setAria('Water wall flooded! Crew dose rate reduced to 0.04 mSv/h. Storm Survivor badge earned!');
+                if (typeof updateUI === 'function') updateUI();
                 openObjectModal(obj);
             },
-            'bg-amber-500 hover:bg-amber-400 text-slate-950'
-        );
-
-        if (state.faults.externalConduitDamaged || state.chapterIdx === 5) {
-            addActionBtn(
-                'Repair Storm-Damaged External HV Solar Conduit',
-                'Restores full 28 kW solar array generation for Chapter 6 final readiness',
-                () => {
-                    state.faults.externalConduitDamaged = false;
-                    state.solarOutputKW = 28;
-                    if (typeof spawnFloatingText === 'function') spawnFloatingText('EXTERNAL CONDUIT RESTORED • 28 kW', state.player.x, state.player.y - 20, '#38bdf8');
-                    completeTask('ch6_solar');
-                    if (getPowerStats().net >= 0 && !state.faults.waterPipeLeaking) {
-                        completeTask('ch6_systems');
-                    }
-                    setAria('External HV Solar Conduit restored! Solar generation is up to a full 28 kW!');
-                    updateUI();
-                    openObjectModal(obj);
-                },
-                'bg-emerald-600 hover:bg-emerald-500 text-white'
-            );
-        }
-    } else if (obj.id === 'mars_rover') {
-        badge.textContent = 'Surface Rover';
-        addMetric('Rover Battery Bank', '85 kWh (Charged)', 'text-emerald-400');
-        addMetric('Cabin Pressure', '101.3 kPa', 'text-sky-300');
-        addMetric('Geological Samples', '14.2 kg Basalt Core', 'text-amber-300');
-        addMetric('Emergency Mobile Bus', 'Available', 'text-purple-300');
-        desc.textContent = 'Astra-1’s pressurized rover explores Martian craters and can transfer reserve battery power to the habitat during emergencies.';
-
-        addActionBtn(
-            'Transfer 15 kWh Emergency Rover Reserve to Habitat Battery',
-            'Boosts habitat battery state of charge during low-power emergencies',
-            () => {
-                state.batteryKWh = Math.min(100, state.batteryKWh + 15);
-                if (typeof spawnFloatingText === 'function') spawnFloatingText('+15 kWh EMERGENCY BOOST', state.player.x, state.player.y - 20, '#fbbf24');
-                if (window.sfx && typeof sfx.success === 'function') sfx.success();
-                setAria('Transferred 15 kWh from the Pressurized Rover into Astra-1’s main battery bank!');
-                updateUI();
-                openObjectModal(obj);
-            },
-            'bg-sky-600 hover:bg-sky-500 text-white'
+            'bg-blue-600 hover:bg-blue-500 text-white'
         );
     }
 
@@ -776,7 +1045,12 @@ function updateUI() {
 
     // Sol & Chapter Header
     const hudSol = document.getElementById('hud-sol');
-    if (hudSol) hudSol.textContent = `SOL ${String(state.sol).padStart(2, '0')} / 30`;
+    if (hudSol) hudSol.textContent = `SOL ${String(state.sol).padStart(2, '0')} / 378`;
+
+    const chSel = document.getElementById('chapter-select');
+    if (chSel && chSel.value !== String(state.chapterIdx)) {
+        chSel.value = String(state.chapterIdx);
+    }
 
     const hudTag = document.getElementById('hud-chapter-tag');
     if (hudTag) hudTag.textContent = ch.title.split('—')[0].trim().toUpperCase();
@@ -831,6 +1105,34 @@ function updateUI() {
         valEnv.className = `font-bold text-[11px] sm:text-xs ${effRad > 0.5 ? 'text-red-400' : 'text-lime-300'}`;
     }
 
+    // Cadet Mode 3 Core Meters
+    const cadetValPower = document.getElementById('cadet-val-power');
+    if (cadetValPower) {
+        const isNetNeg = pwr.net < 0;
+        cadetValPower.textContent = `${Math.round(state.batteryKWh)}% ${isNetNeg ? '(-kW Deficit)' : '(Stable)'}`;
+        cadetValPower.className = `font-bold text-[11px] ${state.batteryKWh < 35 || isNetNeg ? 'text-amber-400 animate-pulse' : 'text-emerald-400'}`;
+    }
+
+    const cadetValLife = document.getElementById('cadet-val-life');
+    if (cadetValLife) {
+        const isLifeWarn = state.co2PPM > 900 || state.waterConductivity > 60 || state.faults.co2FilterClogged || state.faults.waterPipeLeaking;
+        cadetValLife.textContent = isLifeWarn ? 'Alert (Check ECLSS)' : 'Optimal (Air & H2O)';
+        cadetValLife.className = `font-bold text-[11px] ${isLifeWarn ? 'text-amber-400 animate-pulse' : 'text-teal-300'}`;
+    }
+
+    const cadetValRad = document.getElementById('cadet-val-rad');
+    if (cadetValRad) {
+        const effRad = state.weatherMutator === 'solar_max' ? state.radiationMSvH * 1.65 : state.radiationMSvH;
+        const isRadDanger = effRad > 0.5 || state.faults.radiationAlertActive;
+        cadetValRad.textContent = isRadDanger ? 'STORM ALERT (SHELTER!)' : `${effRad.toFixed(2)} mSv/h (Safe)`;
+        cadetValRad.className = `font-bold text-[11px] ${isRadDanger ? 'text-red-400 animate-pulse' : 'text-sky-300'}`;
+    }
+
+    const trainerHealthEl = document.getElementById('trainer-health-text');
+    if (trainerHealthEl) {
+        trainerHealthEl.textContent = `Nova: ${Math.round(state.crewHealth)}%`;
+    }
+
     // Suit & Crew Health
     const suitPill = document.getElementById('suit-status-pill');
     if (suitPill) {
@@ -860,7 +1162,7 @@ function updateUI() {
     drawSparkline('spark-co2', sparklineHistory.co2, '#2dd4bf', 'rgba(45, 212, 191, 0.25)');
 
     const badgeCount = document.getElementById('badge-count');
-    if (badgeCount) badgeCount.textContent = `${state.earnedBadges.length}/4`;
+    if (badgeCount) badgeCount.textContent = `${state.earnedBadges.length}/${typeof BADGES !== 'undefined' ? BADGES.length : 5}`;
 
     // Emergency Banner
     const banner = document.getElementById('emergency-banner');
@@ -904,6 +1206,19 @@ function updateUI() {
             if (allDone) advContainer.classList.remove('hidden');
             else advContainer.classList.add('hidden');
         }
+
+        // Active Objective Pill (1-line focus for younger students)
+        const activeTask = ch.tasks.find(t => !t.done);
+        const objTextEl = document.getElementById('active-objective-text');
+        if (objTextEl) {
+            objTextEl.textContent = activeTask ? activeTask.text : 'All Chapter Tasks Complete! Advance Sol when ready.';
+        }
+
+        const taskProgEl = document.getElementById('checklist-progress-text');
+        if (taskProgEl) {
+            const doneCount = ch.tasks.filter(t => t.done).length;
+            taskProgEl.textContent = `Tasks: ${doneCount}/${ch.tasks.length}`;
+        }
     }
 
     // Inventory Pouch
@@ -925,6 +1240,126 @@ function updateUI() {
 
 // --- SETUP EVENT LISTENERS (Modals, Buttons, Jargon, Weather, Comms) ---
 function initUIEventListeners() {
+    // --- HUD Mode Toggle (Cadet Mode vs Engineer Mode) ---
+    let isEngineerMode = false;
+    const btnHudMode = document.getElementById('btn-hud-mode');
+    const labelHudMode = document.getElementById('label-hud-mode');
+    const cadetMeters = document.getElementById('hud-cadet-meters');
+    const engMeters = document.getElementById('hud-engineer-meters');
+
+    if (btnHudMode) {
+        btnHudMode.addEventListener('click', () => {
+            if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+            isEngineerMode = !isEngineerMode;
+            if (isEngineerMode) {
+                if (labelHudMode) labelHudMode.textContent = 'Engineer Mode';
+                if (cadetMeters) cadetMeters.classList.add('hidden');
+                if (engMeters) engMeters.classList.remove('hidden');
+                btnHudMode.classList.add('border-amber-400', 'text-amber-300');
+                setAria('ENGINEER MODE: Detailed kW, kPa, ppm, and mSv/h telemetry exposed for mission diagnostics.');
+            } else {
+                if (labelHudMode) labelHudMode.textContent = 'Cadet Mode';
+                if (cadetMeters) cadetMeters.classList.remove('hidden');
+                if (engMeters) engMeters.classList.add('hidden');
+                btnHudMode.classList.remove('border-amber-400', 'text-amber-300');
+                setAria('CADET MODE: Streamlined 3-pillar safety gauges active. Click any gauge for plain-language decoder.');
+            }
+        });
+    }
+
+    // --- Collapsible Left Checklist Panel ---
+    const btnToggleChecklist = document.getElementById('btn-toggle-checklist');
+    const panelChecklist = document.getElementById('panel-checklist');
+    const pillChecklist = document.getElementById('pill-checklist-collapsed');
+    const activeObjPill = document.getElementById('active-objective-pill');
+
+    const toggleChecklist = (show) => {
+        if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+        const shouldShow = typeof show === 'boolean' ? show : (panelChecklist && panelChecklist.classList.contains('hidden'));
+        if (panelChecklist) {
+            if (shouldShow) {
+                panelChecklist.classList.remove('hidden');
+                if (pillChecklist) pillChecklist.classList.add('hidden');
+            } else {
+                panelChecklist.classList.add('hidden');
+                if (pillChecklist) pillChecklist.classList.remove('hidden');
+            }
+        }
+    };
+
+    if (btnToggleChecklist) btnToggleChecklist.addEventListener('click', () => toggleChecklist(false));
+    if (pillChecklist) pillChecklist.addEventListener('click', () => toggleChecklist(true));
+    if (activeObjPill) activeObjPill.addEventListener('click', () => toggleChecklist(true));
+
+    // --- Collapsible Right Trainer Panel ---
+    const btnToggleTrainer = document.getElementById('btn-toggle-trainer');
+    const panelTrainer = document.getElementById('panel-trainer');
+    const pillTrainer = document.getElementById('pill-trainer-collapsed');
+
+    const toggleTrainer = (show) => {
+        if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+        const shouldShow = typeof show === 'boolean' ? show : (panelTrainer && panelTrainer.classList.contains('hidden'));
+        if (panelTrainer) {
+            if (shouldShow) {
+                panelTrainer.classList.remove('hidden');
+                if (pillTrainer) pillTrainer.classList.add('hidden');
+            } else {
+                panelTrainer.classList.add('hidden');
+                if (pillTrainer) pillTrainer.classList.remove('hidden');
+            }
+        }
+    };
+
+    if (btnToggleTrainer) btnToggleTrainer.addEventListener('click', () => toggleTrainer(false));
+    if (pillTrainer) pillTrainer.addEventListener('click', () => toggleTrainer(true));
+
+    // --- 3D WebGL Simulation Engine (Default Active Viewport) ---
+    window.currentViewMode = '3d';
+    const container3D = document.getElementById('three-container');
+    if (container3D) container3D.classList.remove('hidden');
+
+    // --- Mission Settings & Tools Modal ---
+    const btnSettings = document.getElementById('btn-settings');
+    const modalSettings = document.getElementById('modal-settings');
+    const btnCloseSettings = document.getElementById('btn-close-settings');
+
+    if (btnSettings && modalSettings) {
+        btnSettings.addEventListener('click', () => {
+            if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+            modalSettings.classList.remove('hidden');
+        });
+    }
+    if (btnCloseSettings && modalSettings) {
+        btnCloseSettings.addEventListener('click', () => {
+            if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+            modalSettings.classList.add('hidden');
+        });
+    }
+    if (modalSettings) {
+        modalSettings.addEventListener('click', (e) => {
+            if (e.target === modalSettings) {
+                if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+                modalSettings.classList.add('hidden');
+            }
+        });
+    }
+
+    // Bind Cadet Meters to Jargon Decoder
+    if (typeof JARGON_DECODER !== 'undefined') {
+        const bindJargonClick = (id, key) => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('click', () => {
+                    if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+                    setAria(JARGON_DECODER[key]);
+                });
+            }
+        };
+        bindJargonClick('cadet-meter-power', 'power');
+        bindJargonClick('cadet-meter-life', 'atmo');
+        bindJargonClick('cadet-meter-rad', 'env');
+    }
+
     // Dialogue Modal Controls
     const btnNextDlg = document.getElementById('btn-next-dialogue');
     if (btnNextDlg) btnNextDlg.addEventListener('click', advanceDialogueStep);
@@ -1121,7 +1556,7 @@ function initUIEventListeners() {
             isPingActive = true;
             const label = document.getElementById('ping-houston-label');
 
-            setAria("TRANSMITTING TO EARTH: Radio signals travel at the speed of light (~300,000 km/s). At Mars's current distance, a radio packet takes ~14 minutes one-way (28 min round-trip)! Mars astronauts must rely on onboard checklists during emergencies rather than waiting for Houston.");
+            setAria("TRANSMITTING TO EARTH: Radio signals travel at the speed of light (~300,000 km/s). Delay shifts from 4 to 24 minutes as Earth & Mars orbit the Sun. NASA's 378-day CHAPEA simulation trains with a 22-minute delay; Astra-1 is at a 14-minute mid-orbit delay. Crew responses must be autonomous!");
 
             let countdown = 4;
             if (label) label.textContent = `Radio Lag: 14m (${countdown}s sim)...`;
@@ -1137,7 +1572,7 @@ function initUIEventListeners() {
                     if (label) label.textContent = 'Ping Houston (14m Delay)';
                     btnPingHouston.classList.remove('border-amber-400', 'text-amber-300');
                     if (window.sfx && typeof sfx.chime === 'function') sfx.chime();
-                    setAria("HOUSTON REPLIES (14m Radio Delay): 'Astra-1, telemetry acknowledged. Due to the 14-minute radio lag, you must rely on your onboard checklists and procedures. You are the flight directors of Mars!'");
+                    setAria("HOUSTON REPLIES (14m Radio Delay): 'Astra-1, telemetry acknowledged. In orbit, radio lag ranges from 4 to 24 minutes (NASA CHAPEA tests with a fixed 22m delay!). At 14m mid-orbit delay, you must rely on onboard automated checklists. You are the flight directors of Mars!'");
                 }
             }, 1000);
         });
@@ -1146,8 +1581,18 @@ function initUIEventListeners() {
     // Chapter Select & Advance Handlers
     const chapterSelect = document.getElementById('chapter-select');
     if (chapterSelect) {
+        if (typeof CHAPTERS !== 'undefined' && CHAPTERS.length > 0) {
+            chapterSelect.innerHTML = '';
+            CHAPTERS.forEach((ch, idx) => {
+                const opt = document.createElement('option');
+                opt.value = String(idx);
+                opt.textContent = `Ch ${idx + 1}: ${ch.title} (${ch.solRange})`;
+                chapterSelect.appendChild(opt);
+            });
+            chapterSelect.value = String(state.chapterIdx);
+        }
         chapterSelect.addEventListener('change', (e) => {
-            if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+            if (typeof sfx !== 'undefined' && sfx.beep) sfx.beep();
             loadChapter(parseInt(e.target.value, 10), true);
         });
     }

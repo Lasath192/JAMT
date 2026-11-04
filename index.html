@@ -8,21 +8,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="css/styles.css">
+    <script src="js/three.min.js"></script>
+    <script>if (typeof THREE === 'undefined') document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
+
 </head>
 <body class="relative flex flex-col h-screen w-screen overflow-hidden select-none">
 
     <!-- TOP TELEMETRY BAR -->
-    <header class="z-20 w-full px-2 sm:px-4 py-1.5 hud-panel border-b border-sky-500/30 flex flex-wrap items-center justify-between gap-2">
-        <!-- Mission Sol & NASA Space Apps Badge -->
-        <div class="flex items-center gap-2 sm:gap-3">
-            <div id="badge-hud-sol" class="flex items-center gap-2 bg-slate-900/95 border border-amber-500/50 px-2.5 py-1 rounded-lg shadow-inner cursor-pointer transition hover:border-amber-400 hover:bg-slate-800/80" title="Click for Sol explanation (Ages 7-12 Jargon Decoder)">
+        <!-- TOP TELEMETRY BAR (Streamlined & Kid-Friendly) -->
+    <header class="z-20 w-full px-3 py-1.5 hud-panel border-b border-sky-500/30 flex items-center justify-between gap-2">
+        <!-- Left: Sol & Location -->
+        <div class="flex items-center gap-2 shrink-0">
+            <div id="badge-hud-sol" class="flex items-center gap-2 bg-slate-900/95 border border-amber-500/50 px-2.5 py-1 rounded-xl shadow-inner cursor-pointer transition hover:border-amber-400 hover:bg-slate-800/80" title="Click for Sol explanation (Ages 7-12 Jargon Decoder)">
                 <i class="fa-solid fa-user-astronaut text-amber-400 text-sm animate-pulse"></i>
                 <div>
-                    <div class="text-[9px] uppercase tracking-wider text-sky-400 font-mono-tech leading-none">NASA SPACE APPS 2026</div>
-                    <div id="hud-sol" class="text-xs sm:text-sm font-bold font-display text-white tracking-wide">SOL 01 / 30</div>
+                    <div class="text-[9px] uppercase tracking-wider text-sky-400 font-mono-tech leading-none">NASA SPACE APPS</div>
+                    <div id="hud-sol" class="text-xs sm:text-sm font-bold font-display text-white tracking-wide">SOL 01 / 378</div>
                 </div>
             </div>
-            <div class="hidden md:block">
+            <div class="hidden xl:block">
                 <div id="hud-chapter-tag" class="text-[10px] font-mono-tech uppercase tracking-widest text-amber-400">CHAPTER 1: ARRIVAL</div>
                 <div id="hud-location" class="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
                     <i class="fa-solid fa-location-crosshairs text-sky-400 text-[11px]"></i>
@@ -31,166 +35,251 @@
             </div>
         </div>
 
-        <!-- Core Scientific Telemetry Indicators -->
-        <div class="flex items-center flex-wrap gap-1.5 sm:gap-2.5 font-mono-tech text-xs">
-            <!-- Electrical Power (kW) -->
-            <div id="metric-power" class="bg-slate-900/80 border border-slate-700/80 px-2 py-1 rounded-md flex items-center gap-1.5 cursor-pointer transition hover:border-amber-400 hover:bg-slate-800" title="Click for kW explanation (Solar + Backup Generation vs Current Habitat Load)">
-                <i class="fa-solid fa-bolt text-amber-400"></i>
-                <div>
-                    <div class="text-[9px] text-slate-400 leading-none">GEN / LOAD</div>
-                    <div id="val-power" class="font-bold text-emerald-400 text-[11px] sm:text-xs">18 / 24 kW</div>
-                </div>
-            </div>
-
-            <!-- Stored Energy Battery (kWh) -->
-            <div id="metric-battery" class="bg-slate-900/80 border border-slate-700/80 px-2 py-1 rounded-md flex items-center gap-1.5 cursor-pointer transition hover:border-amber-400 hover:bg-slate-800" title="Click for kWh explanation (Battery State of Charge, 100 kWh capacity)">
-                <i class="fa-solid fa-car-battery text-sky-400"></i>
-                <div>
-                    <div class="text-[9px] text-slate-400 leading-none">BATTERY</div>
-                    <div id="val-battery" class="font-bold text-sky-300 text-[11px] sm:text-xs">68% (68 kWh)</div>
-                </div>
-                <canvas id="spark-battery" width="46" height="16" class="hidden sm:inline-block ml-1 opacity-90 rounded bg-slate-950/60 border border-sky-500/30" title="Battery Rolling SoC Trend"></canvas>
-            </div>
-
-            <!-- Atmosphere (kPa / O2 / CO2) -->
-            <div id="metric-atmo" class="bg-slate-900/80 border border-slate-700/80 px-2 py-1 rounded-md flex items-center gap-1.5 cursor-pointer transition hover:border-amber-400 hover:bg-slate-800" title="Click for kPa & ppm explanation (Cabin Pressure, Oxygen, CO2)">
-                <i class="fa-solid fa-wind text-teal-400"></i>
-                <div>
-                    <div class="text-[9px] text-slate-400 leading-none">ATMO / CO₂</div>
-                    <div id="val-atmo" class="font-bold text-teal-300 text-[11px] sm:text-xs">101.3 kPa | 420 ppm</div>
-                </div>
-                <canvas id="spark-co2" width="46" height="16" class="hidden sm:inline-block ml-1 opacity-90 rounded bg-slate-950/60 border border-teal-500/30" title="CO₂ Rolling ppm Trend"></canvas>
-            </div>
-
-            <!-- Water & Quality (L / µS/cm) -->
-            <div id="metric-water" class="bg-slate-900/80 border border-slate-700/80 px-2 py-1 rounded-md flex items-center gap-1.5 cursor-pointer transition hover:border-amber-400 hover:bg-slate-800" title="Click for L & µS/cm explanation (Potable Water Reserve & Conductivity Quality)">
-                <i class="fa-solid fa-droplet text-blue-400"></i>
-                <div>
-                    <div class="text-[9px] text-slate-400 leading-none">WATER / COND</div>
-                    <div id="val-water" class="font-bold text-blue-300 text-[11px] sm:text-xs">420 L | 45 µS/cm</div>
-                </div>
-            </div>
-
-            <!-- Food & Temp & Radiation -->
-            <div id="metric-env" class="hidden lg:flex bg-slate-900/80 border border-slate-700/80 px-2 py-1 rounded-md items-center gap-1.5 cursor-pointer transition hover:border-amber-400 hover:bg-slate-800" title="Click for food & radiation dose rate explanation">
-                <i class="fa-solid fa-seedling text-lime-400"></i>
-                <div>
-                    <div class="text-[9px] text-slate-400 leading-none">FOOD / RAD</div>
-                    <div id="val-env" class="font-bold text-lime-300 text-[11px] sm:text-xs">32d | 0.08 mSv/h</div>
-                </div>
+        <!-- Center: Active Objective Pill (1-Line Immediate Focus) -->
+        <div id="active-objective-pill" class="cursor-pointer bg-slate-900/95 hover:bg-slate-800/95 border border-amber-400/50 hover:border-amber-300 px-3 py-1 rounded-full shadow-lg flex items-center gap-2 transition max-w-xs sm:max-w-md md:max-w-lg truncate" title="Click to open / focus Mission Checklist">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0"></span>
+            <i class="fa-solid fa-compass text-amber-400 text-xs shrink-0"></i>
+            <div class="text-xs text-white truncate flex items-center gap-1.5">
+                <span class="text-amber-300 font-bold font-mono-tech text-[10px] sm:text-xs shrink-0">TASK:</span>
+                <span id="active-objective-text" class="font-medium text-slate-100 truncate">Inspect Airlock Pressure Console</span>
             </div>
         </div>
 
-        <!-- Action Utility Buttons -->
-        <div class="flex items-center gap-1.5">
-            <button id="btn-replay-dialogue" class="btn-tech bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/50 text-purple-200 px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5" title="Replay Chapter Crew Story & Dialogue">
-                <i class="fa-solid fa-comments"></i>
-                <span class="hidden sm:inline">Crew Comms</span>
+        <!-- Right: 3 Core Cadet Meters (Toggleable with Engineer Mode) + Grid, Badges & Settings Menu -->
+        <div class="flex items-center gap-1.5 sm:gap-2">
+            <!-- Simplified Cadet Mode 3 Core Meters -->
+            <div id="hud-cadet-meters" class="flex items-center gap-1.5 font-mono-tech text-xs">
+                <!-- 1. Power / Energy Meter -->
+                <div id="cadet-meter-power" class="bg-slate-900/80 border border-slate-700/80 hover:border-amber-400/80 px-2 py-1 rounded-lg flex items-center gap-1.5 cursor-pointer transition" title="Power Grid & Battery Status (Click for details)">
+                    <i class="fa-solid fa-bolt text-amber-400 text-xs"></i>
+                    <div class="leading-tight">
+                        <div class="text-[8px] text-slate-400 uppercase">Power</div>
+                        <div id="cadet-val-power" class="font-bold text-emerald-400 text-[11px]">100% OK</div>
+                    </div>
+                </div>
+
+                <!-- 2. Life Support (Air & Water) Meter -->
+                <div id="cadet-meter-life" class="bg-slate-900/80 border border-slate-700/80 hover:border-teal-400/80 px-2 py-1 rounded-lg flex items-center gap-1.5 cursor-pointer transition" title="Life Support: Air & Water (Click for details)">
+                    <i class="fa-solid fa-lungs text-teal-400 text-xs"></i>
+                    <div class="leading-tight">
+                        <div class="text-[8px] text-slate-400 uppercase">Life Support</div>
+                        <div id="cadet-val-life" class="font-bold text-teal-300 text-[11px]">Safe</div>
+                    </div>
+                </div>
+
+                <!-- 3. Radiation & Safety Meter -->
+                <div id="cadet-meter-rad" class="hidden sm:flex bg-slate-900/80 border border-slate-700/80 hover:border-sky-400/80 px-2 py-1 rounded-lg items-center gap-1.5 cursor-pointer transition" title="Space Radiation & Safety Status">
+                    <i class="fa-solid fa-shield-halved text-sky-400 text-xs"></i>
+                    <div class="leading-tight">
+                        <div class="text-[8px] text-slate-400 uppercase">Shield</div>
+                        <div id="cadet-val-rad" class="font-bold text-sky-300 text-[11px]">Safe</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Engineer Telemetry (Hidden by default in Cadet Mode, toggleable) -->
+            <div id="hud-engineer-meters" class="hidden items-center flex-wrap gap-1.5 font-mono-tech text-xs">
+                <!-- Electrical Power (kW) -->
+                <div id="metric-power" class="bg-slate-900/80 border border-slate-700/80 px-2 py-1 rounded-md flex items-center gap-1.5 cursor-pointer transition hover:border-amber-400 hover:bg-slate-800" title="Click for kW explanation">
+                    <i class="fa-solid fa-bolt text-amber-400"></i>
+                    <div>
+                        <div class="text-[9px] text-slate-400 leading-none">GEN/LOAD</div>
+                        <div id="val-power" class="font-bold text-emerald-400 text-[11px]">18 / 24 kW</div>
+                    </div>
+                </div>
+                <!-- Battery (kWh) -->
+                <div id="metric-battery" class="bg-slate-900/80 border border-slate-700/80 px-2 py-1 rounded-md flex items-center gap-1.5 cursor-pointer transition hover:border-amber-400 hover:bg-slate-800" title="Click for kWh explanation">
+                    <i class="fa-solid fa-car-battery text-sky-400"></i>
+                    <div>
+                        <div class="text-[9px] text-slate-400 leading-none">BATTERY</div>
+                        <div id="val-battery" class="font-bold text-sky-300 text-[11px]">68%</div>
+                    </div>
+                </div>
+                <!-- Atmosphere (kPa / CO2) -->
+                <div id="metric-atmo" class="bg-slate-900/80 border border-slate-700/80 px-2 py-1 rounded-md flex items-center gap-1.5 cursor-pointer transition hover:border-amber-400 hover:bg-slate-800" title="Click for kPa & ppm explanation">
+                    <i class="fa-solid fa-wind text-teal-400"></i>
+                    <div>
+                        <div class="text-[9px] text-slate-400 leading-none">ATMO / CO₂</div>
+                        <div id="val-atmo" class="font-bold text-teal-300 text-[11px]">101.3 kPa | 420 ppm</div>
+                    </div>
+                    <canvas id="spark-co2" width="46" height="16" class="hidden sm:inline-block ml-1 opacity-90 rounded bg-slate-950/60 border border-teal-500/30" title="CO₂ Rolling ppm Trend"></canvas>
+                </div>
+                <!-- Water (L / µS/cm) -->
+                <div id="metric-water" class="bg-slate-900/80 border border-slate-700/80 px-2 py-1 rounded-md flex items-center gap-1.5 cursor-pointer transition hover:border-amber-400 hover:bg-slate-800" title="Click for Water explanation">
+                    <i class="fa-solid fa-droplet text-blue-400"></i>
+                    <div>
+                        <div class="text-[9px] text-slate-400 leading-none">WATER</div>
+                        <div id="val-water" class="font-bold text-blue-300 text-[11px]">420 L | 45 µS/cm</div>
+                    </div>
+                </div>
+                <!-- Food & Rad -->
+                <div id="metric-env" class="hidden xl:flex bg-slate-900/80 border border-slate-700/80 px-2 py-1 rounded-md items-center gap-1.5 cursor-pointer transition hover:border-amber-400 hover:bg-slate-800" title="Click for Radiation explanation">
+                    <i class="fa-solid fa-seedling text-lime-400"></i>
+                    <div>
+                        <div class="text-[9px] text-slate-400 leading-none">FOOD / RAD</div>
+                        <div id="val-env" class="font-bold text-lime-300 text-[11px]">32d | 0.08 mSv/h</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mode Toggle: Cadet vs Engineer -->
+            <button id="btn-hud-mode" class="btn-tech bg-slate-800/90 hover:bg-slate-700 border border-slate-600/80 text-slate-300 px-2 py-1 rounded-lg text-[10px] font-mono-tech flex items-center gap-1 cursor-pointer" title="Toggle between simplified Cadet Mode and detailed Engineer Mode">
+                <i class="fa-solid fa-sliders text-amber-400"></i>
+                <span id="label-hud-mode" class="hidden md:inline">Cadet Mode</span>
             </button>
-            <button id="btn-power-grid" class="btn-tech bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5" title="Open Power Load & Telemetry Allocation">
-                <i class="fa-solid fa-sliders"></i>
-                <span class="hidden sm:inline">Power Grid</span>
+
+            <!-- Power Grid Button -->
+            <button id="btn-power-grid" class="btn-tech bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 cursor-pointer" title="Open Power Load & Telemetry Allocation">
+                <i class="fa-solid fa-bolt"></i>
+                <span class="hidden sm:inline">Grid</span>
             </button>
-            <button id="btn-codex" class="btn-tech bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/50 text-sky-300 px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5" title="Space Facts & Mission Badges">
+
+            <!-- Badges / Codex Button -->
+            <button id="btn-codex" class="btn-tech bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/50 text-sky-300 px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 cursor-pointer" title="Space Facts & Mission Badges">
                 <i class="fa-solid fa-award"></i>
-                <span id="badge-count" class="font-mono-tech font-bold">0/4</span>
+                <span id="badge-count" class="font-mono-tech font-bold">0/5</span>
             </button>
-            <button id="btn-music" class="btn-tech bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/50 text-indigo-200 px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5" title="Toggle Space Ambient Music & Room Environment Audio">
-                <i id="icon-music" class="fa-solid fa-music text-indigo-300"></i>
-                <span id="label-music" class="hidden md:inline font-mono-tech text-[10px]">AMBIENT ON</span>
-            </button>
-            <button id="btn-sound" class="btn-tech bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 px-2 py-1 rounded-lg text-xs" title="Toggle Master Audio & SFX">
-                <i id="icon-sound" class="fa-solid fa-volume-high"></i>
+
+
+
+            <!-- Mission Settings & Tools Menu Button -->
+            <button id="btn-settings"  class="btn-tech bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/50 text-indigo-200 px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 cursor-pointer" title="Mission Settings, Audio & Tools">
+                <i class="fa-solid fa-gear"></i>
+                <span class="hidden sm:inline">Menu</span>
             </button>
         </div>
     </header>
 
     <!-- MAIN GAME VIEWPORT -->
     <main class="relative flex-1 w-full h-full overflow-hidden bg-slate-950">
-        <!-- Interactive 2D Tilemap & Astronaut Canvas -->
-        <canvas id="game-canvas"></canvas>
+        <!-- Interactive 2D Tilemap & Astronaut Canvas (Background Fallback) -->
+        <canvas id="game-canvas" class="hidden"></canvas>
+        <!-- Interactive 3D WebGL Simulation Viewport (Default Engine) -->
+        <div id="three-container" class="absolute inset-0 w-full h-full"></div>
+
+        <!-- Real-Time Module Location Pill (Top Center Overlay) -->
+        <div id="hud-location-banner" class="absolute top-3 left-1/2 -translate-x-1/2 z-10 hud-panel px-3.5 py-1.5 rounded-full flex items-center gap-2 border border-sky-400/40 shadow-xl pointer-events-none transition-all">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <i class="fa-solid fa-location-dot text-sky-400 text-xs"></i>
+            <span id="hud-location-text" class="text-xs font-mono-tech text-white font-bold tracking-wide">LOCATION: 1. Airlock & Entrance</span>
+        </div>
 
         <!-- Emergency Warning Banner (Top Center Overlay) -->
-        <div id="emergency-banner" class="hidden absolute top-3 left-1/2 -translate-x-1/2 z-20 hud-panel-red px-4 py-1.5 rounded-full flex items-center gap-2.5 animate-alert pointer-events-none">
+        <div id="emergency-banner" class="hidden absolute top-12 left-1/2 -translate-x-1/2 z-20 hud-panel-red px-4 py-1.5 rounded-full flex items-center gap-2.5 animate-alert pointer-events-none">
             <i class="fa-solid fa-triangle-exclamation text-red-400"></i>
             <span id="emergency-text" class="text-xs sm:text-sm font-bold tracking-wide text-red-200 font-mono-tech">ALERT: CO₂ SCRUBBER FAULT DETECTED</span>
         </div>
 
-        <!-- LEFT OVERLAY: MISSION CHECKLIST & OBJECTIVES -->
-        <aside class="absolute top-3 left-3 z-10 w-64 sm:w-76 hud-panel rounded-xl p-3 pointer-events-auto transition-all max-h-[55vh] flex flex-col">
-            <div class="flex items-center justify-between border-b border-slate-700/80 pb-1.5 mb-2">
-                <div class="flex items-center gap-1.5">
-                    <i class="fa-solid fa-clipboard-check text-sky-400 text-xs"></i>
-                    <h2 class="text-xs font-bold uppercase tracking-wider font-display text-sky-300">Mission Checklist</h2>
-                </div>
-                <span id="chapter-sol-range" class="text-[10px] font-mono-tech bg-sky-500/20 text-sky-300 px-1.5 py-0.5 rounded">Sol 01-02</span>
+        <!-- LEFT OVERLAY: MISSION CHECKLIST & OBJECTIVES (Collapsible) -->
+        <div class="absolute top-3 left-3 z-10 flex flex-col items-start pointer-events-none">
+            <!-- Collapsed Mini Pill -->
+            <div id="pill-checklist-collapsed" class="hidden pointer-events-auto cursor-pointer hud-panel px-3 py-1.5 rounded-full flex items-center gap-2 hover:border-sky-400 hover:bg-slate-800 transition shadow-lg" title="Click to expand Mission Checklist">
+                <i class="fa-solid fa-clipboard-check text-sky-400 text-xs"></i>
+                <span id="checklist-progress-text" class="text-xs font-mono-tech text-white font-bold">Tasks: 0/4</span>
+                <i class="fa-solid fa-chevron-right text-slate-400 text-[10px]"></i>
             </div>
 
-            <div id="task-list" class="space-y-1.5 overflow-y-auto pr-1 text-xs">
-                <!-- Populated dynamically -->
-            </div>
+            <!-- Expanded Panel -->
+            <aside id="panel-checklist" class="w-64 sm:w-76 hud-panel rounded-2xl p-3 pointer-events-auto transition-all max-h-[55vh] flex flex-col shadow-2xl">
+                <div class="flex items-center justify-between border-b border-slate-700/80 pb-1.5 mb-2">
+                    <div class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-clipboard-check text-sky-400 text-xs"></i>
+                        <h2 class="text-xs font-bold uppercase tracking-wider font-display text-sky-300">Mission Checklist</h2>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span id="chapter-sol-range" class="text-[10px] font-mono-tech bg-sky-500/20 text-sky-300 px-1.5 py-0.5 rounded">Sol 01-02</span>
+                        <button id="btn-toggle-checklist" class="p-1 hover:text-white text-slate-400 cursor-pointer rounded hover:bg-slate-800 transition" title="Minimize Checklist">
+                            <i id="icon-toggle-checklist" class="fa-solid fa-chevron-left text-xs"></i>
+                        </button>
+                    </div>
+                </div>
 
-            <!-- Next Chapter / Advance Sol Button when ready -->
-            <div id="advance-container" class="hidden mt-2.5 pt-2 border-t border-slate-700/80">
-                <button id="btn-advance-chapter" class="w-full btn-tech bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/50">
-                    <i class="fa-solid fa-forward-step"></i>
-                    <span>Complete Chapter & Advance Sols</span>
-                </button>
-            </div>
-        </aside>
+                <div id="task-list" class="space-y-1.5 overflow-y-auto pr-1 text-xs">
+                    <!-- Populated dynamically -->
+                </div>
 
-        <!-- RIGHT OVERLAY: CREW STATUS, CAMERA TILT & CHAPTER SELECT -->
-        <aside class="hidden sm:flex flex-col gap-2 absolute top-3 right-3 z-10 w-60 hud-panel rounded-xl p-2.5 pointer-events-auto">
-            <div class="flex items-center justify-between border-b border-slate-700/80 pb-1">
-                <span class="text-[10px] font-mono-tech uppercase tracking-wider text-sky-400 font-bold">Junior Astronaut Trainer</span>
-                <span id="suit-status-pill" class="text-[10px] font-mono-tech px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">IVA HABITAT</span>
-            </div>
-            <div class="space-y-1.5 text-xs">
-                <div class="flex items-center justify-between">
-                    <span class="text-slate-300 font-medium">Cadet Nova (You)</span>
-                    <span id="crew-health-val" class="font-mono-tech font-bold text-emerald-400">100% OK</span>
-                </div>
-                <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                    <div id="crew-health-bar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 100%"></div>
-                </div>
-                <div class="flex items-center justify-between text-[11px] pt-1">
-                    <span class="text-slate-400">Chapter Story</span>
-                    <select id="chapter-select" class="bg-slate-900 border border-slate-700 text-sky-300 rounded px-1.5 py-0.5 text-[10px] font-mono-tech focus:outline-none">
-                        <option value="0">Ch 1: Arrival (Sol 1-2)</option>
-                        <option value="1">Ch 2: Power Down (Sol 3-6)</option>
-                        <option value="2">Ch 3: Breath of Life (Sol 7-11)</option>
-                        <option value="3">Ch 4: Growing Future (Sol 12-16)</option>
-                        <option value="4">Ch 5: The Red Storm (Sol 17-24)</option>
-                        <option value="5">Ch 6: Last 18 Hours (Sol 25-30)</option>
-                    </select>
-                </div>
-                <div class="text-[10px] text-slate-400 pt-0.5 flex items-center justify-between">
-                    <span>Walk near Crew + <kbd class="bg-slate-800 text-amber-300 px-1 rounded">E</kbd> to talk</span>
-                    <span class="text-emerald-400 font-mono-tech">3D Depth ON</span>
-                </div>
-                <div class="pt-2 border-t border-slate-700/80 space-y-1.5">
-                    <button id="btn-weather-mutator" class="w-full text-left bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-amber-400/60 px-2 py-1.5 rounded-lg text-[10px] font-mono-tech transition flex items-center justify-between shadow-sm cursor-pointer" title="Cycle Replayable Space Weather Mutator Scenarios">
-                        <div class="flex items-center gap-1.5">
-                            <i class="fa-solid fa-cloud-sun text-amber-400"></i>
-                            <span class="text-slate-300">Weather:</span>
-                        </div>
-                        <span id="weather-mutator-label" class="font-bold text-amber-300">NASA Baseline</span>
-                    </button>
-                    <button id="btn-ping-houston" class="w-full bg-slate-900/90 hover:bg-slate-800 border border-sky-500/50 hover:border-sky-400 px-2 py-1.5 rounded-lg text-[10px] font-mono-tech transition flex items-center justify-center gap-1.5 text-sky-300 shadow-sm cursor-pointer" title="Simulate 14-Minute Speed-of-Light Radio Delay between Mars and Earth">
-                        <i class="fa-solid fa-satellite-dish text-sky-400"></i>
-                        <span id="ping-houston-label">Ping Houston (14m Delay)</span>
+                <!-- Next Chapter / Advance Sol Button when ready -->
+                <div id="advance-container" class="hidden mt-2.5 pt-2 border-t border-slate-700/80">
+                    <button id="btn-advance-chapter" class="w-full btn-tech bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/50 cursor-pointer">
+                        <i class="fa-solid fa-forward-step"></i>
+                        <span>Complete Chapter & Advance Sols</span>
                     </button>
                 </div>
+            </aside>
+        </div>
+
+        <!-- RIGHT OVERLAY: CREW STATUS & MISSION TOOLS (Collapsible) -->
+        <div class="absolute top-3 right-3 z-10 flex flex-col items-end pointer-events-none">
+            <!-- Collapsed Mini Pill -->
+            <div id="pill-trainer-collapsed" class="hidden pointer-events-auto cursor-pointer hud-panel px-3 py-1.5 rounded-full flex items-center gap-2 hover:border-emerald-400 hover:bg-slate-800 transition shadow-lg" title="Click to expand Crew Status">
+                <i class="fa-solid fa-chevron-left text-slate-400 text-[10px]"></i>
+                <i class="fa-solid fa-user-astronaut text-emerald-400 text-xs"></i>
+                <span id="trainer-health-text" class="text-xs font-mono-tech text-white font-bold">Nova: 100%</span>
             </div>
-        </aside>
+
+            <!-- Expanded Panel -->
+            <aside id="panel-trainer" class="hidden sm:flex flex-col gap-2 w-60 hud-panel rounded-2xl p-2.5 pointer-events-auto shadow-2xl transition-all">
+                <div class="flex items-center justify-between border-b border-slate-700/80 pb-1">
+                    <span class="text-[10px] font-mono-tech uppercase tracking-wider text-sky-400 font-bold">Crew Status</span>
+                    <div class="flex items-center gap-1.5">
+                        <span id="suit-status-pill" class="text-[10px] font-mono-tech px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">IVA HABITAT</span>
+                        <button id="btn-toggle-trainer" class="p-1 hover:text-white text-slate-400 cursor-pointer rounded hover:bg-slate-800 transition" title="Minimize Status">
+                            <i id="icon-toggle-trainer" class="fa-solid fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="space-y-1.5 text-xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-300 font-medium">Cadet Nova (You)</span>
+                        <span id="crew-health-val" class="font-mono-tech font-bold text-emerald-400">100% OK</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                        <div id="crew-health-bar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 100%"></div>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px] pt-1">
+                        <span class="text-slate-400">Chapter</span>
+                        <select id="chapter-select" class="bg-slate-900 border border-slate-700 text-sky-300 rounded px-1.5 py-0.5 text-[10px] font-mono-tech focus:outline-none">
+                            <option value="0">Ch 1: The First Breath (Sol 01–03)</option>
+                            <option value="1">Ch 2: First Seeds in Red Soil (Sol 07–12)</option>
+                            <option value="2">Ch 3: Perseverance & Ingenuity (Sol 20–25)</option>
+                            <option value="3">Ch 4: Rising Sky of Copper (Sol 45–50)</option>
+                            <option value="4">Ch 5: Zero-Visibility EVA (Sol 72–75)</option>
+                            <option value="5">Ch 6: Scrubber Saturation (Sol 95–100)</option>
+                            <option value="6">Ch 7: Jezero Delta Core (Sol 140–150)</option>
+                            <option value="7">Ch 8: Graywater Biofilm Crisis (Sol 185–190)</option>
+                            <option value="8">Ch 9: Solar Particle Event (Sol 290–295)</option>
+                            <option value="9">Ch 10: Outpost Handover (Sol 378)</option>
+                        </select>
+                    </div>
+                    <div class="text-[10px] text-slate-400 pt-0.5 flex items-center justify-between">
+                        <span>Near Crew + <kbd class="bg-slate-800 text-amber-300 px-1 rounded">E</kbd> to talk</span>
+                        <span class="text-emerald-400 font-mono-tech">3D Depth ON</span>
+                    </div>
+                    <div class="pt-2 border-t border-slate-700/80 space-y-1.5">
+                        <button id="btn-weather-mutator" class="w-full text-left bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-amber-400/60 px-2 py-1.5 rounded-lg text-[10px] font-mono-tech transition flex items-center justify-between shadow-sm cursor-pointer" title="Cycle Replayable Space Weather Mutator Scenarios">
+                            <div class="flex items-center gap-1.5">
+                                <i class="fa-solid fa-cloud-sun text-amber-400"></i>
+                                <span class="text-slate-300">Weather:</span>
+                            </div>
+                            <span id="weather-mutator-label" class="font-bold text-amber-300">NASA Baseline</span>
+                        </button>
+                        <button id="btn-ping-houston" class="w-full bg-slate-900/90 hover:bg-slate-800 border border-sky-500/50 hover:border-sky-400 px-2 py-1.5 rounded-lg text-[10px] font-mono-tech transition flex items-center justify-center gap-1.5 text-sky-300 shadow-sm cursor-pointer" title="Simulate 14-Minute Speed-of-Light Radio Delay between Mars and Earth">
+                            <i class="fa-solid fa-satellite-dish text-sky-400"></i>
+                            <span id="ping-houston-label">Ping Houston (14m Delay)</span>
+                        </button>
+                    </div>
+                </div>
+            </aside>
+        </div>
 
         <!-- INTERACTION FLOATING PROMPT (Near Astronaut) -->
-        <div id="interact-prompt" class="hidden absolute left-1/2 bottom-28 -translate-x-1/2 z-20 bg-slate-900/95 border-2 border-amber-400 px-4 py-2 rounded-xl shadow-2xl flex items-center gap-2.5 cursor-pointer hover:bg-slate-800 transition-all">
-            <kbd class="bg-amber-400 text-slate-950 font-mono-tech font-extrabold px-2 py-0.5 rounded text-xs shadow">E</kbd>
+        <div id="interact-prompt" class="hidden absolute left-1/2 bottom-20 -translate-x-1/2 z-30 bg-slate-950/95 border-2 border-amber-400 px-5 py-2.5 rounded-2xl shadow-2xl flex items-center gap-3.5 cursor-pointer hover:bg-slate-900 transition-all pointer-events-auto">
+            <kbd class="bg-amber-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md">E</kbd>
             <div>
-                <div id="interact-title" class="text-xs sm:text-sm font-bold text-white leading-tight">Inspect Power Terminal</div>
-                <div id="interact-sub" class="text-[10px] text-amber-300 font-mono-tech">Click or Press [E] to operate</div>
+                <div id="interact-title" class="text-sm font-bold text-white leading-tight font-display tracking-wide">Inspect Power Terminal</div>
+                <div id="interact-sub" class="text-[11px] text-amber-300 font-mono-tech">Click or Press [E] to interact</div>
             </div>
+        </div>
         </div>
 
         <!-- BOTTOM BAR: ARIA AI COMPANION & INVENTORY -->
@@ -229,7 +318,34 @@
                 </div>
             </div>
 
-            <!-- Astronaut Tool & Part Inventory + Touch Controls -->
+        <!-- NASA Hardware Technical Reference HUD Card (Triggered by [Q] or Click) -->
+        <div id="hud-prop-card" class="hidden absolute bottom-24 right-4 sm:right-6 z-30 w-80 sm:w-96 hud-panel border border-sky-400/60 rounded-2xl p-4 shadow-2xl backdrop-blur-xl pointer-events-auto transition-all">
+            <div class="flex items-center justify-between border-b border-sky-500/30 pb-2 mb-2.5">
+                <div class="flex items-center gap-2">
+                    <span id="prop-card-ref" class="text-[10px] font-mono-tech bg-sky-500/20 border border-sky-400/40 text-sky-300 px-2 py-0.5 rounded-full font-bold">NASA-PWS-BAT01</span>
+                    <span id="prop-card-status" class="text-[10px] font-mono-tech text-emerald-400 font-bold">● OPTIMAL</span>
+                </div>
+                <button id="btn-close-prop-card" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition cursor-pointer" title="Close ([Q] or [ESC])">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+            <h3 id="prop-card-title" class="text-sm font-bold text-white font-display mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-microchip text-sky-400 text-xs"></i>
+                <span>Hardware Subsystem</span>
+            </h3>
+            <p id="prop-card-desc" class="text-xs text-slate-300 leading-relaxed mb-3">
+                Technical specifications and telemetry...
+            </p>
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800 text-[10px] font-mono-tech text-slate-400">
+                <span class="flex items-center gap-1.5 text-sky-400">
+                    <i class="fa-solid fa-satellite-dish"></i>
+                    <span>ECLSS Monitored Asset</span>
+                </span>
+                <span class="bg-slate-800/80 px-2 py-0.5 rounded text-slate-300 border border-slate-700">Press [Q] or [ESC]</span>
+            </div>
+        </div>
+
+        <!-- Astronaut Tool & Part Inventory + Touch Controls -->
             <div class="flex items-center justify-between md:justify-end gap-2 pointer-events-auto">
                 <!-- Inventory Slots -->
                 <div class="hud-panel rounded-xl p-2 flex items-center gap-2">
@@ -457,7 +573,7 @@
             <div class="p-4 overflow-y-auto flex-1 min-h-0 space-y-4">
                 <div>
                     <h4 class="text-xs font-mono-tech uppercase text-sky-400 mb-2">Earned Astronaut Badges</h4>
-                    <div id="codex-badges" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5"></div>
+                    <div id="codex-badges" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5"></div>
                 </div>
                 <div>
                     <h4 class="text-xs font-mono-tech uppercase text-sky-400 mb-2">Discovered Space Fact Cards (<span id="fact-count">0</span>/11)</h4>
@@ -500,6 +616,20 @@
                     <div class="text-[11px] font-mono-tech uppercase text-amber-400 font-bold mb-1">Key Dilemma & Objective</div>
                     <p id="story-dilemma" class="text-xs text-amber-100/90"></p>
                 </div>
+
+                <!-- High-Stakes Consequence Decision Point -->
+                <div id="story-decision-box" class="hidden bg-slate-900/95 border border-amber-400/50 rounded-xl p-3.5 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-mono-tech uppercase text-amber-400 font-bold flex items-center gap-1.5">
+                            <i class="fa-solid fa-scale-balanced text-amber-400"></i>
+                            <span>Operational Trade-Off Decision</span>
+                        </span>
+                        <span id="story-decision-status" class="text-[9px] font-mono-tech bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full font-bold">Action Required</span>
+                    </div>
+                    <div id="story-decision-options" class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                        <!-- Populated dynamically with Choice A and Choice B buttons -->
+                    </div>
+                </div>
             </div>
 
             <div class="bg-slate-900/95 px-5 py-3 border-t border-slate-800 flex items-center justify-between">
@@ -520,7 +650,7 @@
                 <div>
                     <div class="text-[10px] font-mono-tech uppercase tracking-widest text-amber-400 flex items-center gap-2">
                         <i class="fa-solid fa-flag-checkered text-amber-400"></i>
-                        <span>SOL 30 MISSION COMPLETE • ASTRA-2 RELIEF HANDOVER</span>
+                        <span>SOL 378 MISSION COMPLETE • ASTRA-2 RELIEF HANDOVER</span>
                     </div>
                     <h2 id="victory-title" class="text-lg sm:text-2xl font-black font-display text-white">COMMANDER DISTINCTION</h2>
                 </div>
@@ -598,9 +728,9 @@
                 <div>
                     <div class="text-[11px] font-mono-tech uppercase text-amber-400 font-bold mb-1.5 flex items-center justify-between">
                         <span>Earned Mission Specialist Badges</span>
-                        <span id="rpt-badge-count" class="text-slate-400 text-[10px]">4 / 4 Badges</span>
+                        <span id="rpt-badge-count" class="text-slate-400 text-[10px]">5 / 5 Badges</span>
                     </div>
-                    <div id="rpt-badges-list" class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div id="rpt-badges-list" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                         <!-- Badges dynamically rendered here -->
                     </div>
                 </div>
@@ -682,12 +812,66 @@
         </div>
     </div>
 
+    <!-- MISSION SETTINGS & TOOLS MODAL (Consolidated Clean Drawer) -->
+    <div id="modal-settings" class="hidden fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 overflow-y-auto">
+        <div class="hud-panel w-full max-w-md rounded-2xl border border-indigo-500/40 overflow-hidden shadow-2xl flex flex-col my-auto">
+            <div class="bg-slate-900/95 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-gear text-indigo-400"></i>
+                    <h3 class="text-sm font-bold font-display text-white">Mission Settings & Tools</h3>
+                </div>
+                <button id="btn-close-settings" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 border border-slate-700 cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 space-y-3.5 text-xs text-slate-200">
+                <!-- Audio Controls -->
+                <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 space-y-2.5">
+                    <div class="font-bold text-[11px] font-mono-tech text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-volume-high"></i> Audio & Atmosphere
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="btn-music" class="btn-tech bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/50 text-indigo-200 px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-2 cursor-pointer">
+                            <i id="icon-music" class="fa-solid fa-music text-indigo-300"></i>
+                            <span id="label-music" class="font-mono-tech text-[11px]">Ambient: ON</span>
+                        </button>
+                        <button id="btn-sound" class="btn-tech bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-2 cursor-pointer">
+                            <i id="icon-sound" class="fa-solid fa-volume-high"></i>
+                            <span class="font-mono-tech text-[11px]">SFX: ON</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Story & Comms Replay -->
+                <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 space-y-2">
+                    <div class="font-bold text-[11px] font-mono-tech text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-comments"></i> Crew Comms & Story
+                    </div>
+                    <button id="btn-replay-dialogue" class="w-full btn-tech bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/50 text-purple-200 px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>Replay Current Chapter Briefing</span>
+                    </button>
+                </div>
+
+                <!-- Accessibility / HUD Mode Info -->
+                <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-[11px] text-slate-400 leading-relaxed">
+                    <p class="font-semibold text-slate-300 mb-1">
+                        <i class="fa-solid fa-child-reaching text-amber-400 mr-1"></i> Junior Astronaut Friendly (Ages 7–12):
+                    </p>
+                    <p>
+                        Use <strong>Cadet Mode</strong> for 3 clean color-coded safety meters, or click the mode button in the top header to view raw NASA kW, kPa, and ppm telemetry!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Modular Mission Engine Scripts (2026 NASA Space Apps Challenge) -->
     <script src="js/soundfx.js"></script>
     <script src="js/nasa_data.js"></script>
     <script src="js/chapters.js"></script>
     <script src="js/simulation.js"></script>
     <script src="js/render.js"></script>
+    <script src="js/render3d.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/game.js"></script>
 </body>
