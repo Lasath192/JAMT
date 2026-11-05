@@ -1023,14 +1023,20 @@ canvas {
             </div>
 
             <!-- Footer Actions -->
-            <div class="bg-slate-900/95 px-5 py-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2">
-                <button id="btn-replay-mutator" class="btn-tech bg-sky-600 hover:bg-sky-500 text-white font-bold px-4 py-2 rounded-xl text-xs font-display flex items-center gap-1.5">
-                    <i class="fa-solid fa-rotate-right"></i>
-                    <span>Play Again with Space Weather Mutator</span>
+            <div class="bg-slate-900/95 px-5 py-3.5 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                <button id="btn-finish-mission" class="btn-tech bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black px-6 py-2.5 rounded-xl text-sm font-display flex items-center gap-2 shadow-xl shadow-amber-500/30 transition transform hover:scale-105 animate-pulse cursor-pointer">
+                    <i class="fa-solid fa-flag-checkered text-slate-950"></i>
+                    <span>FINISH THE MISSION →</span>
                 </button>
-                <button id="btn-close-victory" class="btn-tech bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2 rounded-xl text-xs font-display">
-                    Free Habitat Exploration [ESC]
-                </button>
+                <div class="flex items-center gap-2">
+                    <button id="btn-replay-mutator" class="btn-tech bg-sky-600 hover:bg-sky-500 text-white font-bold px-4 py-2 rounded-xl text-xs font-display flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>Play Again</span>
+                    </button>
+                    <button id="btn-close-victory" class="btn-tech bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2 rounded-xl text-xs font-display cursor-pointer">
+                        Explore [ESC]
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -7408,12 +7414,27 @@ function isAnyModalOpen() {
     const dialogueModal = document.getElementById('modal-dialogue');
     const victoryModal = document.getElementById('modal-victory');
 
+    const titleWelcomeModal = document.getElementById('modal-title-welcome');
+    const storySlidesModal = document.getElementById('modal-story-slides');
+    const guidelinesModal = document.getElementById('modal-game-guidelines');
+    const outroSlidesModal = document.getElementById('modal-outro-story-slides');
+    const gameOverModal = document.getElementById('modal-gameover');
+    const dilemmaModal = document.getElementById('modal-storm-dilemma');
+    const donkiModal = document.getElementById('modal-donki-weather');
+
     return (consoleModal && !consoleModal.classList.contains('hidden')) ||
            (powerModal && !powerModal.classList.contains('hidden')) ||
            (codexModal && !codexModal.classList.contains('hidden')) ||
            (storyModal && !storyModal.classList.contains('hidden')) ||
            (dialogueModal && !dialogueModal.classList.contains('hidden')) ||
-           (victoryModal && !victoryModal.classList.contains('hidden'));
+           (victoryModal && !victoryModal.classList.contains('hidden')) ||
+           (titleWelcomeModal && !titleWelcomeModal.classList.contains('hidden')) ||
+           (storySlidesModal && !storySlidesModal.classList.contains('hidden')) ||
+           (guidelinesModal && !guidelinesModal.classList.contains('hidden')) ||
+           (outroSlidesModal && !outroSlidesModal.classList.contains('hidden')) ||
+           (gameOverModal && !gameOverModal.classList.contains('hidden')) ||
+           (dilemmaModal && !dilemmaModal.classList.contains('hidden')) ||
+           (donkiModal && !donkiModal.classList.contains('hidden'));
 }
 
 function closeAllModals() {
@@ -8824,6 +8845,55 @@ function initUIEventListeners() {
     if (btnDonkiWeather) {
         btnDonkiWeather.addEventListener('click', openDonkiWeatherModal);
     }
+
+    // --- Story & Guidelines Modals Event Listeners ---
+    const btnEnrollNow = document.getElementById('btn-enroll-now');
+    if (btnEnrollNow) {
+        btnEnrollNow.addEventListener('click', openIntroStorySlides);
+    }
+
+    const btnSkipDirect = document.getElementById('btn-skip-direct-game');
+    if (btnSkipDirect) {
+        btnSkipDirect.addEventListener('click', () => {
+            closeTitleWelcomeModal();
+            if (typeof loadChapter === 'function') loadChapter(0, true);
+        });
+    }
+
+    const btnStoryNext = document.getElementById('btn-story-next');
+    if (btnStoryNext) {
+        btnStoryNext.addEventListener('click', nextIntroStorySlide);
+    }
+
+    const btnStoryPrev = document.getElementById('btn-story-prev');
+    if (btnStoryPrev) {
+        btnStoryPrev.addEventListener('click', prevIntroStorySlide);
+    }
+
+    const btnStorySkip = document.getElementById('btn-story-skip');
+    if (btnStorySkip) {
+        btnStorySkip.addEventListener('click', openGameGuidelinesModal);
+    }
+
+    const btnCommence = document.getElementById('btn-commence-mission');
+    if (btnCommence) {
+        btnCommence.addEventListener('click', commenceMissionFromGuidelines);
+    }
+
+    const btnFinishMission = document.getElementById('btn-finish-mission');
+    if (btnFinishMission) {
+        btnFinishMission.addEventListener('click', openOutroStorySlides);
+    }
+
+    const btnOutroNext = document.getElementById('btn-outro-next');
+    if (btnOutroNext) {
+        btnOutroNext.addEventListener('click', nextOutroStorySlide);
+    }
+
+    const btnOutroPrev = document.getElementById('btn-outro-prev');
+    if (btnOutroPrev) {
+        btnOutroPrev.addEventListener('click', prevOutroStorySlide);
+    }
     const btnCloseDonki = document.getElementById('btn-close-donki');
     if (btnCloseDonki) {
         btnCloseDonki.addEventListener('click', () => {
@@ -9323,6 +9393,230 @@ async function openDonkiWeatherModal() {
     }
 }
 window.openDonkiWeatherModal = openDonkiWeatherModal;
+
+
+// --- 2026 NASA SPACE APPS STORY CINEMATIC DATA (5 INTRO + 5 OUTRO SLIDES) ---
+const INTRO_STORY_SLIDES = [
+    {
+        speaker: 'MISSION CONTROL HOUSTON • KSC LAUNCH COMPLEX',
+        title: 'THE CALL OF THE COSMOS',
+        desc: 'The ground trembles as the massive SLS rocket engines ignite at dawn. Cadet Nova, you have been selected from millions worldwide to participate in humanity\'s most ambitious endurance test: the 378-Sol CHAPEA Mars analog expedition.',
+        image: 'assets/story/intro_1.jpg'
+    },
+    {
+        speaker: 'CADET NOVA MISSION LOG • SOL -210',
+        title: 'THE SILENT VOID',
+        desc: 'Seven months coasting through the black ocean of the solar system. Earth shrinks to a distant blue pixel, while Mars grows into a glowing rust-colored sphere. Radio messages now take 14 minutes each way: on Mars, you must learn to solve problems on your own.',
+        image: 'assets/story/intro_2.jpg'
+    },
+    {
+        speaker: 'DESCENT TELEMETRY COMPUTER • ARCADIA APPROACH',
+        title: 'FIERY DESCENT INTO ARCADIA PLANITIA',
+        desc: 'Retro-thrusters fire with deafening force! Blinding orange dust swirls against the reinforced heat shield as the descent module sets down on the ancient volcanic plains of Arcadia Planitia. Ambient pressure: 0.6 kPa. Temperature: -65°C.',
+        image: 'assets/story/intro_3.jpg'
+    },
+    {
+        speaker: 'HABITAT ARIA AI CORE • INITIALIZATION',
+        title: 'MARS DUNE ALPHA',
+        desc: 'Before you stands your home for the next 378 sols: Mars Dune Alpha. 3D-printed from red basalt lava sand (Lavacrete) by autonomous robotic rovers. Within its curved walls are the life support systems, power grid, greenhouse dome, and radiation shelter.',
+        image: 'assets/story/intro_4.jpg'
+    },
+    {
+        speaker: 'COMMANDER SARAH ROSS • CHAPEA LEAD',
+        title: 'MEET THE CREW',
+        desc: 'The airlock hiss equalizes pressure to 101.3 kPa. Commander Sarah Ross, Dr. Chen, Botanist Elena, and Engineer Marcus salute you warmly. "Welcome aboard, Cadet Nova! Every system here is real. Keep the habitat alive, and let\'s make history!"',
+        image: 'assets/story/intro_5.jpg'
+    }
+];
+
+const OUTRO_STORY_SLIDES = [
+    {
+        speaker: 'CADET NOVA EXPEDITION LOG • SOL 378',
+        title: 'SOL 378: MISSION ACCOMPLISHED',
+        desc: '378 Martian days completed. Through extreme solar particle events, high-voltage failures, graywater biofilms, and blinding dust storms, you kept the habitat thriving. You hold the completed expedition logbook with pride.',
+        image: 'assets/story/outro_1.jpg'
+    },
+    {
+        speaker: 'ARCADIA GROUND COMMS • TOUCHDOWN CONFIRMED',
+        title: 'THE RELIEF EXPEDITION ARRIVES',
+        desc: 'Twin supersonic parachutes blossom across the pink Martian twilight! The NASA Crew 2 Earth return vehicle touches down safely on the landing pad. Relief astronauts step out to take over operations of Mars Dune Alpha.',
+        image: 'assets/story/outro_2.jpg'
+    },
+    {
+        speaker: 'CHIEF SCIENTIST DR. CHEN',
+        title: 'ASTROBIOLOGICAL TREASURE SECURED',
+        desc: 'Carefully loaded into titanium canisters aboard the ascent vehicle are the irreplaceable core samples you collected alongside Perseverance. They hold the ancient geological and potential biological secrets of Mars.',
+        image: 'assets/story/outro_3.jpg'
+    },
+    {
+        speaker: 'EXPEDITION CREW FAREWELL',
+        title: 'FAREWELL, MARS DUNE ALPHA',
+        desc: 'Ascent engines roar into the vacuum. Looking down from orbit, the lights of Mars Dune Alpha glow like a warm ember against the vast rusty desert. You leave behind a functioning colony that will support human exploration for decades.',
+        image: 'assets/story/outro_4.jpg'
+    },
+    {
+        speaker: 'MISSION CONTROL HOUSTON • WELCOME HOME',
+        title: 'HOMECOMING TO THE BLUE PLANET',
+        desc: 'Ahead lies Earth—a brilliant sapphire marble suspended in the stars. You return as a certified NASA Junior Astronaut Commander, having mastered real space systems engineering. The future of space belongs to you!',
+        image: 'assets/story/outro_5.jpg'
+    }
+];
+
+let currentIntroSlideIdx = 0;
+let currentOutroSlideIdx = 0;
+
+function openTitleWelcomeModal() {
+    const m = document.getElementById('modal-title-welcome');
+    if (m) m.classList.remove('hidden');
+    if (window.sfx && typeof sfx.chime === 'function') sfx.chime();
+}
+window.openTitleWelcomeModal = openTitleWelcomeModal;
+
+function closeTitleWelcomeModal() {
+    const m = document.getElementById('modal-title-welcome');
+    if (m) m.classList.add('hidden');
+}
+window.closeTitleWelcomeModal = closeTitleWelcomeModal;
+
+function renderIntroSlide(idx) {
+    currentIntroSlideIdx = Math.max(0, Math.min(INTRO_STORY_SLIDES.length - 1, idx));
+    const slide = INTRO_STORY_SLIDES[currentIntroSlideIdx];
+    const tagEl = document.getElementById('story-slide-tag');
+    const imgEl = document.getElementById('story-slide-img');
+    const speakerEl = document.getElementById('story-slide-speaker');
+    const titleEl = document.getElementById('story-slide-title');
+    const descEl = document.getElementById('story-slide-desc');
+    const prevBtn = document.getElementById('btn-story-prev');
+    const nextLabel = document.getElementById('story-next-label');
+    const dotsEl = document.getElementById('story-dots-container');
+
+    if (tagEl) tagEl.textContent = `TRANSMISSION 0${currentIntroSlideIdx + 1} / 0${INTRO_STORY_SLIDES.length}`;
+    if (imgEl) imgEl.src = slide.image;
+    if (speakerEl) speakerEl.textContent = slide.speaker;
+    if (titleEl) titleEl.textContent = slide.title;
+    if (descEl) descEl.textContent = slide.desc;
+    if (prevBtn) prevBtn.disabled = (currentIntroSlideIdx === 0);
+    if (nextLabel) {
+        nextLabel.textContent = (currentIntroSlideIdx === INTRO_STORY_SLIDES.length - 1) ? 'GUIDELINES 📋' : 'NEXT';
+    }
+    if (dotsEl) {
+        dotsEl.innerHTML = INTRO_STORY_SLIDES.map((_, i) => `
+            <span onclick="renderIntroSlide(${i})" class="w-2.5 h-2.5 rounded-full cursor-pointer transition ${i === currentIntroSlideIdx ? 'bg-sky-400 scale-125' : 'bg-slate-700 hover:bg-slate-500'}"></span>
+        `).join('');
+    }
+    if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+}
+window.renderIntroSlide = renderIntroSlide;
+
+function openIntroStorySlides() {
+    closeTitleWelcomeModal();
+    const m = document.getElementById('modal-story-slides');
+    if (m) m.classList.remove('hidden');
+    renderIntroSlide(0);
+}
+window.openIntroStorySlides = openIntroStorySlides;
+
+function nextIntroStorySlide() {
+    if (currentIntroSlideIdx < INTRO_STORY_SLIDES.length - 1) {
+        renderIntroSlide(currentIntroSlideIdx + 1);
+    } else {
+        openGameGuidelinesModal();
+    }
+}
+window.nextIntroStorySlide = nextIntroStorySlide;
+
+function prevIntroStorySlide() {
+    if (currentIntroSlideIdx > 0) {
+        renderIntroSlide(currentIntroSlideIdx - 1);
+    }
+}
+window.prevIntroStorySlide = prevIntroStorySlide;
+
+function openGameGuidelinesModal() {
+    const s = document.getElementById('modal-story-slides');
+    if (s) s.classList.add('hidden');
+    closeTitleWelcomeModal();
+    const g = document.getElementById('modal-game-guidelines');
+    if (g) g.classList.remove('hidden');
+    if (window.sfx && typeof sfx.pickup === 'function') sfx.pickup();
+}
+window.openGameGuidelinesModal = openGameGuidelinesModal;
+
+function closeGameGuidelinesModal() {
+    const g = document.getElementById('modal-game-guidelines');
+    if (g) g.classList.add('hidden');
+}
+window.closeGameGuidelinesModal = closeGameGuidelinesModal;
+
+function commenceMissionFromGuidelines() {
+    closeGameGuidelinesModal();
+    if (typeof loadChapter === 'function') {
+        loadChapter(0, true);
+    }
+    if (window.sfx && typeof sfx.success === 'function') sfx.success();
+    if (typeof spawnFloatingText === 'function' && state && state.player) {
+        spawnFloatingText('🚀 WELCOME TO ARCADIA PLANITIA', state.player.x, state.player.y - 30, '#38bdf8');
+    }
+    setAria('MISSION COMMENCED: Welcome to Mars Dune Alpha, Cadet Nova. Check Airlock Pressure Console [E] to begin.');
+}
+window.commenceMissionFromGuidelines = commenceMissionFromGuidelines;
+
+function renderOutroSlide(idx) {
+    currentOutroSlideIdx = Math.max(0, Math.min(OUTRO_STORY_SLIDES.length - 1, idx));
+    const slide = OUTRO_STORY_SLIDES[currentOutroSlideIdx];
+    const tagEl = document.getElementById('outro-slide-tag');
+    const imgEl = document.getElementById('outro-slide-img');
+    const speakerEl = document.getElementById('outro-slide-speaker');
+    const titleEl = document.getElementById('outro-slide-title');
+    const descEl = document.getElementById('outro-slide-desc');
+    const prevBtn = document.getElementById('btn-outro-prev');
+    const nextLabel = document.getElementById('outro-next-label');
+    const dotsEl = document.getElementById('outro-dots-container');
+
+    if (tagEl) tagEl.textContent = `EXPEDITION DEBRIEF 0${currentOutroSlideIdx + 1} / 0${OUTRO_STORY_SLIDES.length}`;
+    if (imgEl) imgEl.src = slide.image;
+    if (speakerEl) speakerEl.textContent = slide.speaker;
+    if (titleEl) titleEl.textContent = slide.title;
+    if (descEl) descEl.textContent = slide.desc;
+    if (prevBtn) prevBtn.disabled = (currentOutroSlideIdx === 0);
+    if (nextLabel) {
+        nextLabel.textContent = (currentOutroSlideIdx === OUTRO_STORY_SLIDES.length - 1) ? 'PLAY AGAIN 🌟' : 'NEXT';
+    }
+    if (dotsEl) {
+        dotsEl.innerHTML = OUTRO_STORY_SLIDES.map((_, i) => `
+            <span onclick="renderOutroSlide(${i})" class="w-2.5 h-2.5 rounded-full cursor-pointer transition ${i === currentOutroSlideIdx ? 'bg-amber-400 scale-125' : 'bg-slate-700 hover:bg-slate-500'}"></span>
+        `).join('');
+    }
+    if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+}
+window.renderOutroSlide = renderOutroSlide;
+
+function openOutroStorySlides() {
+    const v = document.getElementById('modal-victory');
+    if (v) v.classList.add('hidden');
+    const m = document.getElementById('modal-outro-story-slides');
+    if (m) m.classList.remove('hidden');
+    renderOutroSlide(0);
+}
+window.openOutroStorySlides = openOutroStorySlides;
+
+function nextOutroStorySlide() {
+    if (currentOutroSlideIdx < OUTRO_STORY_SLIDES.length - 1) {
+        renderOutroSlide(currentOutroSlideIdx + 1);
+    } else {
+        const m = document.getElementById('modal-outro-story-slides');
+        if (m) m.classList.add('hidden');
+        openTitleWelcomeModal();
+    }
+}
+window.nextOutroStorySlide = nextOutroStorySlide;
+
+function prevOutroStorySlide() {
+    if (currentOutroSlideIdx > 0) {
+        renderOutroSlide(currentOutroSlideIdx - 1);
+    }
+}
+window.prevOutroStorySlide = prevOutroStorySlide;
 
 
 /* ===== BUNDLE: js/game.js ===== */

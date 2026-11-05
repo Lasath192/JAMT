@@ -28,6 +28,19 @@ standaloneHtml = standaloneHtml.replace(
     `<style>\n${css}\n</style>`
 );
 
+// Optional: inline story images in assets/story as Base64 in astra_1_the_red_frontier.html
+const storyDir = 'assets/story';
+if (fs.existsSync(storyDir)) {
+    const storyImages = fs.readdirSync(storyDir);
+    for (const imgName of storyImages) {
+        if (imgName.endsWith('.jpg')) {
+            const b64 = fs.readFileSync(`${storyDir}/${imgName}`).toString('base64');
+            const dataUri = `data:image/jpeg;base64,${b64}`;
+            standaloneHtml = standaloneHtml.split(`assets/story/${imgName}`).join(dataUri);
+        }
+    }
+}
+
 // Replace modular <script src="js/..."></script> tags with inlined <script>bundleJs</script>
 const scriptTagsRegex = /<!-- Modular Mission Engine Scripts[\s\S]*?<\/body>/;
 const scriptReplacement = `<!-- STANDALONE INLINED JAVASCRIPT BUNDLE (2026 NASA Space Apps Challenge) -->\n    <script>\n${bundleJs}\n    </script>\n</body>`;

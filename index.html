@@ -790,14 +790,20 @@
             </div>
 
             <!-- Footer Actions -->
-            <div class="bg-slate-900/95 px-5 py-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2">
-                <button id="btn-replay-mutator" class="btn-tech bg-sky-600 hover:bg-sky-500 text-white font-bold px-4 py-2 rounded-xl text-xs font-display flex items-center gap-1.5">
-                    <i class="fa-solid fa-rotate-right"></i>
-                    <span>Play Again with Space Weather Mutator</span>
+            <div class="bg-slate-900/95 px-5 py-3.5 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                <button id="btn-finish-mission" class="btn-tech bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black px-6 py-2.5 rounded-xl text-sm font-display flex items-center gap-2 shadow-xl shadow-amber-500/30 transition transform hover:scale-105 animate-pulse cursor-pointer">
+                    <i class="fa-solid fa-flag-checkered text-slate-950"></i>
+                    <span>FINISH THE MISSION →</span>
                 </button>
-                <button id="btn-close-victory" class="btn-tech bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2 rounded-xl text-xs font-display">
-                    Free Habitat Exploration [ESC]
-                </button>
+                <div class="flex items-center gap-2">
+                    <button id="btn-replay-mutator" class="btn-tech bg-sky-600 hover:bg-sky-500 text-white font-bold px-4 py-2 rounded-xl text-xs font-display flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>Play Again</span>
+                    </button>
+                    <button id="btn-close-victory" class="btn-tech bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2 rounded-xl text-xs font-display cursor-pointer">
+                        Explore [ESC]
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1016,5 +1022,271 @@
     <script src="js/render3d.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/game.js"></script>
+
+    <!-- 1. POPUP TITLE / WELCOME MODAL WITH ENROLL NOW BUTTON -->
+    <div id="modal-title-welcome" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+        <div class="hud-panel w-full max-w-2xl rounded-3xl border-2 border-amber-400/80 overflow-hidden shadow-2xl bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 flex flex-col relative animate-fade-in my-auto">
+            <!-- Decorative Glow Elements -->
+            <div class="absolute -top-24 -left-24 w-48 h-48 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-sky-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <!-- Top Header Badge -->
+            <div class="px-6 pt-6 pb-2 text-center">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/10 border border-amber-400/40 text-amber-300 text-xs font-mono-tech uppercase tracking-widest shadow-inner">
+                    <i class="fa-solid fa-satellite-dish text-amber-400 animate-pulse"></i>
+                    <span>2026 NASA Space Apps Challenge</span>
+                </div>
+                <h1 class="text-3xl sm:text-5xl font-black font-display text-white mt-3 tracking-wide drop-shadow-md">
+                    ASTRA-1: THE RED FRONTIER
+                </h1>
+                <div class="text-sky-400 font-mono-tech text-xs sm:text-sm tracking-wider uppercase mt-1">
+                    Junior Astronaut Mission Trainer • 378-Sol Mars Analog
+                </div>
+            </div>
+
+            <!-- Visual Feature Banner -->
+            <div class="px-6 py-4">
+                <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 relative overflow-hidden space-y-3">
+                    <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
+                        Humanity's first permanent surface habitat in <strong class="text-amber-300">Arcadia Planitia</strong> is operational. As junior astronaut <strong class="text-white">Cadet Nova</strong>, you will manage life-critical electrical loads, scrub compounding CO₂ levels, survive severe solar flares, cultivate hydroponic crops, and keep the Mars Dune Alpha base alive for 378 Martian Sols.
+                    </p>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 font-mono-tech text-[10px]">
+                        <div class="bg-slate-950/80 border border-slate-800 rounded-lg p-2 text-center">
+                            <div class="text-amber-400 font-bold">⚡ POWER</div>
+                            <div class="text-slate-400">100 kW Array</div>
+                        </div>
+                        <div class="bg-slate-950/80 border border-slate-800 rounded-lg p-2 text-center">
+                            <div class="text-teal-400 font-bold">🫧 AIR & CO₂</div>
+                            <div class="text-slate-400">ECLSS Loop</div>
+                        </div>
+                        <div class="bg-slate-950/80 border border-slate-800 rounded-lg p-2 text-center">
+                            <div class="text-sky-400 font-bold">🧑‍🚀 AIRLOCK</div>
+                            <div class="text-slate-400">EVA Protocol</div>
+                        </div>
+                        <div class="bg-slate-950/80 border border-slate-800 rounded-lg p-2 text-center">
+                            <div class="text-rose-400 font-bold">❤️❤️❤️ LIVES</div>
+                            <div class="text-slate-400">3-Heart Buffer</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Call to Action Footer with ENROLL NOW Button -->
+            <div class="px-6 pb-6 pt-1 flex flex-col items-center gap-3">
+                <button id="btn-enroll-now" class="w-full sm:w-auto px-10 py-3.5 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-base sm:text-lg font-display uppercase tracking-wider rounded-2xl shadow-xl shadow-amber-500/30 flex items-center justify-center gap-3 transition transform hover:scale-105 active:scale-95 cursor-pointer">
+                    <i class="fa-solid fa-rocket text-slate-950 text-xl"></i>
+                    <span>ENROLL NOW</span>
+                </button>
+                <button id="btn-skip-direct-game" class="text-slate-500 hover:text-slate-300 text-xs font-mono-tech transition cursor-pointer">
+                    Skip Intro & Jump Straight to Habitat →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. INTRO STORY SLIDES MODAL (5 CINEMATIC SLIDES) -->
+    <div id="modal-story-slides" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+        <div class="hud-panel w-full max-w-3xl rounded-3xl border border-sky-400/60 overflow-hidden shadow-2xl bg-slate-950 flex flex-col max-h-[96vh]">
+            <!-- Top Slide Bar -->
+            <div class="px-5 py-3 border-b border-slate-800 bg-slate-900/80 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-sky-400 animate-ping"></span>
+                    <span id="story-slide-tag" class="text-[11px] font-mono-tech uppercase tracking-widest text-sky-400 font-bold">TRANSMISSION 01 / 05</span>
+                </div>
+                <button id="btn-story-skip" class="text-slate-400 hover:text-white text-xs font-mono-tech transition cursor-pointer">
+                    Skip to Guidelines ⏩
+                </button>
+            </div>
+
+            <!-- Slide Image Frame -->
+            <div class="w-full bg-slate-950 border-b border-slate-800 relative overflow-hidden flex items-center justify-center min-h-[200px] sm:min-h-[290px] max-h-[380px]">
+                <img id="story-slide-img" src="assets/story/intro_1.jpg" alt="Mission Story Scene" class="w-full h-full object-cover select-none">
+            </div>
+
+            <!-- Slide Narrative & Caption Box -->
+            <div class="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3 bg-gradient-to-b from-slate-900/90 to-slate-950">
+                <div>
+                    <div class="flex items-center gap-2 text-[10px] font-mono-tech uppercase tracking-wider text-amber-400 mb-1">
+                        <i class="fa-solid fa-terminal"></i>
+                        <span id="story-slide-speaker">MISSION CONTROL HOUSTON</span>
+                    </div>
+                    <h3 id="story-slide-title" class="text-base sm:text-xl font-bold font-display text-white">
+                        THE CALL OF THE COSMOS
+                    </h3>
+                    <p id="story-slide-desc" class="text-xs sm:text-sm text-slate-300 leading-relaxed mt-1.5 font-sans min-h-[50px]">
+                        The ground trembles as the massive SLS engines ignite at dawn. Cadet Nova, you have been selected from millions worldwide to participate in humanity's most ambitious human endurance test: the 378-Sol CHAPEA Mars analog expedition.
+                    </p>
+                </div>
+
+                <!-- Slide Navigation Dots & Buttons -->
+                <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                    <button id="btn-story-prev" class="btn-tech bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3.5 py-1.5 rounded-xl font-mono-tech flex items-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
+                        <i class="fa-solid fa-chevron-left"></i>
+                        <span>BACK</span>
+                    </button>
+
+                    <!-- Dot Indicators -->
+                    <div id="story-dots-container" class="flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-slate-700"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-slate-700"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-slate-700"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-slate-700"></span>
+                    </div>
+
+                    <button id="btn-story-next" class="btn-tech bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs px-4 py-1.5 rounded-xl font-display flex items-center gap-1.5 cursor-pointer shadow-md shadow-sky-500/20">
+                        <span id="story-next-label">NEXT</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. GAME GUIDELINES & MANUAL MODAL -->
+    <div id="modal-game-guidelines" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+        <div class="hud-panel w-full max-w-2xl rounded-3xl border border-amber-400/70 overflow-hidden shadow-2xl bg-slate-950 flex flex-col max-h-[94vh]">
+            <!-- Header -->
+            <div class="px-5 py-3.5 bg-gradient-to-r from-amber-950/80 via-slate-900 to-slate-900 border-b border-amber-500/40 flex items-center justify-between">
+                <div>
+                    <div class="text-[10px] font-mono-tech uppercase tracking-widest text-amber-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-book-journal-whills"></i>
+                        <span>NASA ASTRONAUT FIELD MANUAL</span>
+                    </div>
+                    <h2 class="text-lg sm:text-2xl font-black font-display text-white">MISSION GUIDELINES & CONTROLS</h2>
+                </div>
+                <div class="w-9 h-9 rounded-full bg-amber-400/20 border border-amber-400/50 flex items-center justify-center text-amber-300">
+                    <i class="fa-solid fa-gamepad"></i>
+                </div>
+            </div>
+
+            <!-- Guidelines Body: 4 Cards -->
+            <div class="p-4 sm:p-5 overflow-y-auto space-y-3 flex-1 text-xs sm:text-sm">
+                <!-- Card 1: Movement -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-400 shrink-0 mt-0.5">
+                        <i class="fa-solid fa-arrows-up-down-left-right text-xs"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-white font-display">1. Movement & Camera</div>
+                        <div class="text-slate-300 text-xs mt-0.5 leading-relaxed">
+                            Use <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[11px] text-amber-300 font-mono-tech">W</kbd>
+                            <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[11px] text-amber-300 font-mono-tech">A</kbd>
+                            <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[11px] text-amber-300 font-mono-tech">S</kbd>
+                            <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[11px] text-amber-300 font-mono-tech">D</kbd>
+                            or Arrow Keys to walk. You can also <strong>Click or Tap anywhere on the floor</strong> for waypoint navigation. Switch between <strong>3D</strong> and <strong>2D</strong> on the right anytime.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Interaction -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400 shrink-0 mt-0.5">
+                        <kbd class="font-mono-tech font-bold text-xs">E</kbd>
+                    </div>
+                    <div>
+                        <div class="font-bold text-white font-display">2. Consoles, Tools & Crew</div>
+                        <div class="text-slate-300 text-xs mt-0.5 leading-relaxed">
+                            Walk up to any machinery, power console, hydroponics tray, or crew specialist. The <strong class="text-amber-300">[E] Interaction Prompt</strong> will pop up. Press <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[11px] text-amber-300 font-mono-tech">E</kbd> or click the prompt to open terminals or talk.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Airlock & Spacesuit -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 shrink-0 mt-0.5">
+                        <i class="fa-solid fa-door-open text-xs"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-white font-display">3. Airlock Protocol & EVA Spacesuit</div>
+                        <div class="text-slate-300 text-xs mt-0.5 leading-relaxed">
+                            To step onto Mars: Go to the <strong>Airlock Console</strong> and click <strong class="text-sky-300">1. Put On Suit</strong>, then <strong class="text-emerald-300">2. Check Seal</strong>. Next, step to the outer hatch and press <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[11px] text-sky-300 font-mono-tech">E</kbd> to open. Returning inside automatically stows your suit and locks the door.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4: Lives & Emergencies -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-rose-500/20 border border-rose-400/40 flex items-center justify-center text-rose-400 shrink-0 mt-0.5">
+                        <i class="fa-solid fa-heart-pulse text-xs"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-white font-display">4. 3-Heart Health & Emergency Timers</div>
+                        <div class="text-slate-300 text-xs mt-0.5 leading-relaxed">
+                            You have <strong class="text-rose-400">❤️❤️❤️ 3 Hearts</strong>. Do not let the battery or clean air deplete, and never turn off life support. During crisis chapters, complete objectives before the <strong>countdown timer bar</strong> expires!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Guidelines Launch Button -->
+            <div class="px-5 py-3.5 bg-slate-900/95 border-t border-slate-800 flex items-center justify-center">
+                <button id="btn-commence-mission" class="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-sm font-display uppercase tracking-wider rounded-xl shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer transition transform hover:scale-105 active:scale-95">
+                    <i class="fa-solid fa-user-astronaut text-slate-950 text-base"></i>
+                    <span>COMMENCE MISSION: SOL 01</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. OUTRO STORY SLIDES MODAL (5 CINEMATIC ENDING SLIDES) -->
+    <div id="modal-outro-story-slides" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+        <div class="hud-panel w-full max-w-3xl rounded-3xl border border-amber-400/70 overflow-hidden shadow-2xl bg-slate-950 flex flex-col max-h-[96vh]">
+            <!-- Top Slide Bar -->
+            <div class="px-5 py-3 border-b border-slate-800 bg-slate-900/80 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+                    <span id="outro-slide-tag" class="text-[11px] font-mono-tech uppercase tracking-widest text-amber-400 font-bold">EXPEDITION DEBRIEF 01 / 05</span>
+                </div>
+                <div class="text-xs font-mono-tech text-slate-400">
+                    ASTRA-1 MISSION VICTORY
+                </div>
+            </div>
+
+            <!-- Outro Slide Image Frame -->
+            <div class="w-full bg-slate-950 border-b border-slate-800 relative overflow-hidden flex items-center justify-center min-h-[200px] sm:min-h-[290px] max-h-[380px]">
+                <img id="outro-slide-img" src="assets/story/outro_1.jpg" alt="Outro Story Scene" class="w-full h-full object-cover select-none">
+            </div>
+
+            <!-- Outro Slide Narrative & Caption Box -->
+            <div class="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3 bg-gradient-to-b from-slate-900/90 to-slate-950">
+                <div>
+                    <div class="flex items-center gap-2 text-[10px] font-mono-tech uppercase tracking-wider text-amber-400 mb-1">
+                        <i class="fa-solid fa-medal"></i>
+                        <span id="outro-slide-speaker">CADET NOVA EXPEDITION LOG</span>
+                    </div>
+                    <h3 id="outro-slide-title" class="text-base sm:text-xl font-bold font-display text-white">
+                        SOL 378: MISSION ACCOMPLISHED
+                    </h3>
+                    <p id="outro-slide-desc" class="text-xs sm:text-sm text-slate-300 leading-relaxed mt-1.5 font-sans min-h-[50px]">
+                        378 Martian days completed. Through extreme solar particle events, high-voltage failures, graywater biofilms, and blinding dust storms, you kept the habitat thriving. You hold the completed expedition logbook with pride.
+                    </p>
+                </div>
+
+                <!-- Slide Navigation Dots & Buttons -->
+                <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                    <button id="btn-outro-prev" class="btn-tech bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3.5 py-1.5 rounded-xl font-mono-tech flex items-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
+                        <i class="fa-solid fa-chevron-left"></i>
+                        <span>BACK</span>
+                    </button>
+
+                    <!-- Dot Indicators -->
+                    <div id="outro-dots-container" class="flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-slate-700"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-slate-700"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-slate-700"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-slate-700"></span>
+                    </div>
+
+                    <button id="btn-outro-next" class="btn-tech bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs px-4 py-1.5 rounded-xl font-display flex items-center gap-1.5 cursor-pointer shadow-md shadow-amber-400/20">
+                        <span id="outro-next-label">NEXT</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
