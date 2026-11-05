@@ -209,6 +209,37 @@ canvas {
     box-shadow: 0 4px 12px rgba(255, 255, 255, 0.08);
 }
 
+/* Strict Horizontal HUD Hearts & Action Buttons Alignment */
+#hud-hearts-container {
+    height: 32px !important;
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+}
+
+#crew-hearts {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 4px !important;
+    white-space: nowrap !important;
+    line-height: 1 !important;
+    flex-shrink: 0 !important;
+}
+
+.heart-glyph {
+    display: inline-block !important;
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    line-height: 1 !important;
+    font-size: 14px !important;
+}
+
+
 </style>
     <script src="js/three.min.js"></script>
     <script>if (typeof THREE === 'undefined') document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
@@ -248,41 +279,41 @@ canvas {
         </div>
 
         <!-- Right: 3 Core Cadet Meters (Toggleable with Engineer Mode) + Grid, Badges & Settings Menu -->
-        <div class="flex items-center gap-1.5 sm:gap-2">
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <!-- Simplified Cadet Mode 3 Core Meters -->
-            <div id="hud-cadet-meters" class="flex items-center gap-1.5 font-mono-tech text-xs">
+            <div id="hud-cadet-meters" class="flex items-center gap-1.5 font-mono-tech text-xs shrink-0">
                 <!-- 1. Power / Energy Meter -->
-                <div id="cadet-meter-power" class="bg-slate-900/80 border border-slate-700/80 hover:border-amber-400/80 px-2 py-1 rounded-lg flex items-center gap-1.5 cursor-pointer transition" title="Power Grid & Battery Status (Click for details)">
+                <div id="cadet-meter-power" class="h-8 bg-slate-900/80 border border-slate-700/80 hover:border-amber-400/80 px-2.5 rounded-lg flex items-center gap-1.5 cursor-pointer transition shrink-0 box-border" title="Power Grid & Battery Status (Click for details)">
                     <i class="fa-solid fa-bolt text-amber-400 text-xs"></i>
-                    <div class="leading-tight">
-                        <div class="text-[8px] text-slate-400 uppercase">Power</div>
-                        <div id="cadet-val-power" class="font-bold text-emerald-400 text-[11px]">100% OK</div>
+                    <div class="leading-none flex flex-col justify-center">
+                        <div class="text-[8px] text-slate-400 uppercase leading-tight">Power</div>
+                        <div id="cadet-val-power" class="font-bold text-emerald-400 text-[11px] leading-tight">100% OK</div>
                     </div>
                 </div>
 
                 <!-- 2. Life Support (Air & Water) Meter -->
-                <div id="cadet-meter-life" class="bg-slate-900/80 border border-slate-700/80 hover:border-teal-400/80 px-2 py-1 rounded-lg flex items-center gap-1.5 cursor-pointer transition" title="Life Support: Air & Water (Click for details)">
+                <div id="cadet-meter-life" class="h-8 bg-slate-900/80 border border-slate-700/80 hover:border-teal-400/80 px-2.5 rounded-lg flex items-center gap-1.5 cursor-pointer transition shrink-0 box-border" title="Life Support: Air & Water (Click for details)">
                     <i class="fa-solid fa-lungs text-teal-400 text-xs"></i>
-                    <div class="leading-tight">
-                        <div class="text-[8px] text-slate-400 uppercase">Life Support</div>
-                        <div id="cadet-val-life" class="font-bold text-teal-300 text-[11px]">Safe</div>
+                    <div class="leading-none flex flex-col justify-center">
+                        <div class="text-[8px] text-slate-400 uppercase leading-tight">Life Support</div>
+                        <div id="cadet-val-life" class="font-bold text-teal-300 text-[11px] leading-tight">Safe</div>
                     </div>
                 </div>
 
                 <!-- 3. Radiation & Safety Meter -->
-                <div id="cadet-meter-rad" class="hidden sm:flex bg-slate-900/80 border border-slate-700/80 hover:border-sky-400/80 px-2 py-1 rounded-lg items-center gap-1.5 cursor-pointer transition" title="Space Radiation & Safety Status">
+                <div id="cadet-meter-rad" class="hidden sm:flex h-8 bg-slate-900/80 border border-slate-700/80 hover:border-sky-400/80 px-2.5 rounded-lg items-center gap-1.5 cursor-pointer transition shrink-0 box-border" title="Space Radiation & Safety Status">
                     <i class="fa-solid fa-shield-halved text-sky-400 text-xs"></i>
-                    <div class="leading-tight">
-                        <div class="text-[8px] text-slate-400 uppercase">Shield</div>
-                        <div id="cadet-val-rad" class="font-bold text-sky-300 text-[11px]">Safe</div>
+                    <div class="leading-none flex flex-col justify-center">
+                        <div class="text-[8px] text-slate-400 uppercase leading-tight">Shield</div>
+                        <div id="cadet-val-rad" class="font-bold text-sky-300 text-[11px] leading-tight">Safe</div>
                     </div>
                 </div>
             </div>
 
             <!-- Detailed Engineer Telemetry (Hidden by default in Cadet Mode, toggleable) -->
-            <div id="hud-engineer-meters" class="hidden items-center flex-wrap gap-1.5 font-mono-tech text-xs">
+            <div id="hud-engineer-meters" class="hidden items-center flex-wrap gap-1.5 font-mono-tech text-xs shrink-0">
                 <!-- Electrical Power (kW) -->
-                <div id="metric-power" class="bg-slate-900/80 border border-slate-700/80 px-2 py-1 rounded-md flex items-center gap-1.5 cursor-pointer transition hover:border-amber-400 hover:bg-slate-800" title="Click for kW explanation">
+                <div id="metric-power" class="h-8 bg-slate-900/80 border border-slate-700/80 px-2 rounded-md flex items-center gap-1.5 cursor-pointer transition hover:border-amber-400 hover:bg-slate-800 shrink-0 box-border" title="Click for kW explanation">
                     <i class="fa-solid fa-bolt text-amber-400"></i>
                     <div>
                         <div class="text-[9px] text-slate-400 leading-none">GEN/LOAD</div>
@@ -290,7 +321,7 @@ canvas {
                     </div>
                 </div>
                 <!-- Battery (kWh) -->
-                <div id="metric-battery" class="bg-slate-900/80 border border-slate-700/80 px-2 py-1 rounded-md flex items-center gap-1.5 cursor-pointer transition hover:border-amber-400 hover:bg-slate-800" title="Click for kWh explanation">
+                <div id="metric-battery" class="h-8 bg-slate-900/80 border border-slate-700/80 px-2 rounded-md flex items-center gap-1.5 cursor-pointer transition hover:border-amber-400 hover:bg-slate-800 shrink-0 box-border" title="Click for kWh explanation">
                     <i class="fa-solid fa-car-battery text-sky-400"></i>
                     <div>
                         <div class="text-[9px] text-slate-400 leading-none">BATTERY</div>
@@ -298,7 +329,7 @@ canvas {
                     </div>
                 </div>
                 <!-- Atmosphere (kPa / CO2) -->
-                <div id="metric-atmo" class="bg-slate-900/80 border border-slate-700/80 px-2 py-1 rounded-md flex items-center gap-1.5 cursor-pointer transition hover:border-amber-400 hover:bg-slate-800" title="Click for kPa & ppm explanation">
+                <div id="metric-atmo" class="h-8 bg-slate-900/80 border border-slate-700/80 px-2 rounded-md flex items-center gap-1.5 cursor-pointer transition hover:border-amber-400 hover:bg-slate-800 shrink-0 box-border" title="Click for kPa & ppm explanation">
                     <i class="fa-solid fa-wind text-teal-400"></i>
                     <div>
                         <div class="text-[9px] text-slate-400 leading-none">ATMO / CO₂</div>
@@ -307,7 +338,7 @@ canvas {
                     <canvas id="spark-co2" width="46" height="16" class="hidden sm:inline-block ml-1 opacity-90 rounded bg-slate-950/60 border border-teal-500/30" title="CO₂ Rolling ppm Trend"></canvas>
                 </div>
                 <!-- Water (L / µS/cm) -->
-                <div id="metric-water" class="bg-slate-900/80 border border-slate-700/80 px-2 py-1 rounded-md flex items-center gap-1.5 cursor-pointer transition hover:border-amber-400 hover:bg-slate-800" title="Click for Water explanation">
+                <div id="metric-water" class="h-8 bg-slate-900/80 border border-slate-700/80 px-2 rounded-md flex items-center gap-1.5 cursor-pointer transition hover:border-amber-400 hover:bg-slate-800 shrink-0 box-border" title="Click for Water explanation">
                     <i class="fa-solid fa-droplet text-blue-400"></i>
                     <div>
                         <div class="text-[9px] text-slate-400 leading-none">WATER</div>
@@ -315,7 +346,7 @@ canvas {
                     </div>
                 </div>
                 <!-- Food & Rad -->
-                <div id="metric-env" class="hidden xl:flex bg-slate-900/80 border border-slate-700/80 px-2 py-1 rounded-md items-center gap-1.5 cursor-pointer transition hover:border-amber-400 hover:bg-slate-800" title="Click for Radiation explanation">
+                <div id="metric-env" class="hidden xl:flex h-8 bg-slate-900/80 border border-slate-700/80 px-2 rounded-md items-center gap-1.5 cursor-pointer transition hover:border-amber-400 hover:bg-slate-800 shrink-0 box-border" title="Click for Radiation explanation">
                     <i class="fa-solid fa-seedling text-lime-400"></i>
                     <div>
                         <div class="text-[9px] text-slate-400 leading-none">FOOD / RAD</div>
@@ -324,28 +355,51 @@ canvas {
                 </div>
             </div>
 
+            <!-- 3-Heart Life System (Strict Horizontal Alignment) -->
+            <div id="hud-hearts-container" class="h-8 bg-slate-900/90 border border-red-500/50 hover:border-red-400 px-2.5 rounded-lg flex flex-row items-center justify-center shrink-0 whitespace-nowrap min-w-[76px] cursor-pointer shadow-sm transition box-border" title="Cadet Nova Lives: 3 Hearts Max (Click for details)">
+                <div id="crew-hearts" class="flex flex-row items-center justify-center gap-1 text-sm leading-none whitespace-nowrap select-none">
+                    <span class="heart-glyph inline-block">❤️</span><span class="heart-glyph inline-block">❤️</span><span class="heart-glyph inline-block">❤️</span>
+                </div>
+            </div>
+
+            <!-- Quick [E/F] Airlock Door Button -->
+            <button id="btn-quick-door-f" class="h-8 btn-tech bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/50 text-sky-200 px-2.5 rounded-lg text-xs font-mono-tech flex items-center justify-center gap-1.5 cursor-pointer shrink-0 box-border" title="Press [E] / [F] or Click to Open/Close Outer Airlock Door">
+                <i id="icon-quick-door" class="fa-solid fa-door-closed text-sky-400 text-xs"></i>
+                <span id="label-quick-door" class="hidden lg:inline">[E] Door</span>
+            </button>
+
+            <!-- 10s Solar Storm Test Button (Mike Given Challenge Mechanic) -->
+            <button id="btn-quick-dilemma" class="h-8 btn-tech bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 text-amber-300 px-2.5 rounded-lg text-xs font-mono-tech flex items-center justify-center gap-1.5 cursor-pointer shrink-0 box-border" title="Test 10-Second Solar Panel Storm Decision">
+                <i class="fa-solid fa-wind text-amber-400 text-xs"></i>
+                <span class="hidden xl:inline">10s Storm</span>
+            </button>
+
+            <!-- Live NASA DONKI Space Weather Button -->
+            <button id="btn-donki-weather" class="h-8 btn-tech bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/50 text-cyan-200 px-2.5 rounded-lg text-xs font-mono-tech flex items-center justify-center gap-1.5 cursor-pointer shrink-0 box-border" title="View Live NASA DONKI Space Weather and Solar Flares">
+                <i class="fa-solid fa-satellite-dish text-cyan-400 text-xs"></i>
+                <span class="hidden sm:inline">Weather</span>
+            </button>
+
             <!-- Mode Toggle: Cadet vs Engineer -->
-            <button id="btn-hud-mode" class="btn-tech bg-slate-800/90 hover:bg-slate-700 border border-slate-600/80 text-slate-300 px-2 py-1 rounded-lg text-[10px] font-mono-tech flex items-center gap-1 cursor-pointer" title="Toggle between simplified Cadet Mode and detailed Engineer Mode">
+            <button id="btn-hud-mode" class="h-8 btn-tech bg-slate-800/90 hover:bg-slate-700 border border-slate-600/80 text-slate-300 px-2.5 rounded-lg text-xs font-mono-tech flex items-center justify-center gap-1.5 cursor-pointer shrink-0 box-border" title="Toggle between simplified Cadet Mode and detailed Engineer Mode">
                 <i class="fa-solid fa-sliders text-amber-400"></i>
-                <span id="label-hud-mode" class="hidden md:inline">Cadet Mode</span>
+                <span id="label-hud-mode" class="hidden md:inline">Cadet</span>
             </button>
 
             <!-- Power Grid Button -->
-            <button id="btn-power-grid" class="btn-tech bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 cursor-pointer" title="Open Power Load & Telemetry Allocation">
+            <button id="btn-power-grid" class="h-8 btn-tech bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 px-2.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 cursor-pointer shrink-0 box-border" title="Open Power Load & Telemetry Allocation">
                 <i class="fa-solid fa-bolt"></i>
                 <span class="hidden sm:inline">Grid</span>
             </button>
 
             <!-- Badges / Codex Button -->
-            <button id="btn-codex" class="btn-tech bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/50 text-sky-300 px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 cursor-pointer" title="Space Facts & Mission Badges">
+            <button id="btn-codex" class="h-8 btn-tech bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/50 text-sky-300 px-2.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 cursor-pointer shrink-0 box-border" title="Space Facts & Mission Badges">
                 <i class="fa-solid fa-award"></i>
                 <span id="badge-count" class="font-mono-tech font-bold">0/5</span>
             </button>
 
-
-
             <!-- Mission Settings & Tools Menu Button -->
-            <button id="btn-settings"  class="btn-tech bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/50 text-indigo-200 px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 cursor-pointer" title="Mission Settings, Audio & Tools">
+            <button id="btn-settings" class="h-8 btn-tech bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/50 text-indigo-200 px-2.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 cursor-pointer shrink-0 box-border" title="Mission Settings, Audio & Tools">
                 <i class="fa-solid fa-gear"></i>
                 <span class="hidden sm:inline">Menu</span>
             </button>
@@ -396,6 +450,16 @@ canvas {
                     </div>
                 </div>
 
+                <!-- Countdown Emergency Timer Bar -->
+                <div id="task-timer-bar-container" class="hidden mb-2 p-2 rounded-xl bg-slate-900/90 border border-amber-400/40">
+                    <div class="flex items-center justify-between text-[11px] font-mono-tech font-bold text-amber-300">
+                        <span class="flex items-center gap-1"><i class="fa-solid fa-hourglass-half text-amber-400"></i> TIME LEFT TO FIX:</span>
+                        <span id="task-timer-val" class="text-amber-300 font-black">⏱️ 01:15</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-1.5 border border-slate-700">
+                        <div id="task-timer-fill" class="bg-amber-400 h-full transition-all duration-300" style="width: 100%"></div>
+                    </div>
+                </div>
                 <div id="task-list" class="space-y-1.5 overflow-y-auto pr-1 text-xs">
                     <!-- Populated dynamically -->
                 </div>
@@ -476,7 +540,7 @@ canvas {
 
         <!-- INTERACTION FLOATING PROMPT (Near Astronaut) -->
         <div id="interact-prompt" class="hidden absolute left-1/2 bottom-20 -translate-x-1/2 z-30 bg-slate-950/95 border-2 border-amber-400 px-5 py-2.5 rounded-2xl shadow-2xl flex items-center gap-3.5 cursor-pointer hover:bg-slate-900 transition-all pointer-events-auto">
-            <kbd class="bg-amber-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md">E</kbd>
+            <kbd id="interact-kbd" class="bg-amber-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md">E</kbd>
             <div>
                 <div id="interact-title" class="text-sm font-bold text-white leading-tight font-display tracking-wide">Inspect Power Terminal</div>
                 <div id="interact-sub" class="text-[11px] text-amber-300 font-mono-tech">Click or Press [E] to interact</div>
@@ -563,7 +627,8 @@ canvas {
                     <button data-dir="up" class="dpad-btn w-8 h-8 bg-slate-800 active:bg-sky-600 rounded flex items-center justify-center text-white"><i class="fa-solid fa-chevron-up text-xs"></i></button>
                     <div></div>
                     <button data-dir="left" class="dpad-btn w-8 h-8 bg-slate-800 active:bg-sky-600 rounded flex items-center justify-center text-white"><i class="fa-solid fa-chevron-left text-xs"></i></button>
-                    <button id="btn-touch-e" class="w-8 h-8 bg-amber-500 active:bg-amber-400 rounded flex items-center justify-center text-slate-950 font-bold font-mono-tech text-xs">E</button>
+                    <button id="btn-touch-e" class="w-8 h-8 bg-amber-500 active:bg-amber-400 rounded flex items-center justify-center text-slate-950 font-bold font-mono-tech text-xs" title="[E] Interact">E</button>
+                    <button id="btn-touch-f" class="w-8 h-8 bg-sky-600 active:bg-sky-500 rounded flex items-center justify-center text-white font-bold font-mono-tech text-xs" title="[F] Door">F</button>
                     <button data-dir="right" class="dpad-btn w-8 h-8 bg-slate-800 active:bg-sky-600 rounded flex items-center justify-center text-white"><i class="fa-solid fa-chevron-right text-xs"></i></button>
                     <div></div>
                     <button data-dir="down" class="dpad-btn w-8 h-8 bg-slate-800 active:bg-sky-600 rounded flex items-center justify-center text-white"><i class="fa-solid fa-chevron-down text-xs"></i></button>
@@ -1063,6 +1128,114 @@ canvas {
                     <p>
                         Use <strong>Cadet Mode</strong> for 3 clean color-coded safety meters, or click the mode button in the top header to view raw NASA kW, kPa, and ppm telemetry!
                     </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- MISSION FAILED GAME OVER MODAL -->
+    <div id="modal-gameover" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="hud-panel-red w-full max-w-lg rounded-2xl border-2 border-red-500 overflow-hidden shadow-[0_0_60px_rgba(239,68,68,0.4)] flex flex-col my-auto animate-alert">
+            <div class="bg-red-950/90 px-6 py-4 border-b border-red-500/40 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-triangle-exclamation text-red-400 text-2xl animate-pulse"></i>
+                    <div>
+                        <h2 class="text-lg font-black font-display text-white tracking-wider">MISSION FAILED</h2>
+                        <p class="text-xs text-red-300 font-mono-tech">OUTPOST ASTRA-1 COMPROMISED</p>
+                    </div>
+                </div>
+                <div class="text-2xl font-mono-tech" id="gameover-hearts">🖤🖤🖤</div>
+            </div>
+            <div class="p-6 space-y-4 text-slate-200">
+                <div class="bg-red-950/40 border border-red-500/30 rounded-xl p-4">
+                    <div class="text-xs uppercase font-mono-tech text-red-400 font-bold mb-1">What Went Wrong:</div>
+                    <div id="gameover-reason" class="text-sm font-semibold text-white">Emergency systems ran out of time or resources were depleted.</div>
+                </div>
+                <div class="bg-slate-900/80 border border-slate-700 rounded-xl p-4">
+                    <div class="text-xs uppercase font-mono-tech text-amber-400 font-bold mb-1">🔬 NASA Science Lesson:</div>
+                    <div id="gameover-lesson" class="text-xs text-slate-300 leading-relaxed">
+                        On Mars, life-support is interconnected: electricity drives oxygen scrubbers and water pumps. Without continuous power and clean air, astronauts cannot survive in the harsh Martian environment!
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <button id="btn-gameover-retry" class="btn-tech bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 px-4 rounded-xl text-xs font-display flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-amber-900/50">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>Retry Mission (Restore ❤️❤️❤️)</span>
+                    </button>
+                    <button id="btn-gameover-restart" class="btn-tech bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 px-4 rounded-xl text-xs font-display flex items-center justify-center gap-2 cursor-pointer border border-slate-600">
+                        <i class="fa-solid fa-backward-step"></i>
+                        <span>Restart Game from Sol 1</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 10-SECOND SOLAR DUST STORM DILEMMA MODAL (Mike Given Challenge Mechanic) -->
+    <div id="modal-storm-dilemma" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="hud-panel-amber w-full max-w-lg rounded-2xl border-2 border-amber-400 overflow-hidden shadow-[0_0_60px_rgba(245,158,11,0.4)] flex flex-col my-auto">
+            <div class="bg-amber-950/90 px-6 py-4 border-b border-amber-400/40 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-wind text-amber-400 text-2xl animate-spin" style="animation-duration: 3s"></i>
+                    <div>
+                        <h2 class="text-lg font-black font-display text-white tracking-wider">🌪️ DUST STORM APPROACHING!</h2>
+                        <p class="text-xs text-amber-300 font-mono-tech">10-SECOND EMERGENCY DECISION</p>
+                    </div>
+                </div>
+                <div id="storm-dilemma-timer" class="text-2xl font-black font-mono-tech text-amber-300 px-3 py-1 bg-black/60 rounded-xl border border-amber-400">10.0s</div>
+            </div>
+            <div class="p-6 space-y-4 text-slate-200">
+                <p class="text-sm leading-relaxed text-amber-100">
+                    A massive Martian dust storm with 140 km/h wind gusts is hitting Arcadia Planitia! Airborne hematite dust and flying pebbles threaten the external solar array. You must decide immediately:
+                </p>
+                <div class="space-y-3">
+                    <button id="btn-dilemma-fold" class="w-full text-left p-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border-2 border-emerald-500/60 hover:border-emerald-400 transition cursor-pointer shadow-lg">
+                        <div class="font-bold text-sm text-emerald-300 flex items-center gap-2 mb-1">
+                            <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+                            <span>Option A: 🛡️ Fold Up Solar Panels (Safe, 0 Power Tonight)</span>
+                        </div>
+                        <p class="text-xs text-slate-300">
+                            Panels are locked safely into protective storm slots. No panel damage, but daytime solar drops to 0 kW, draining battery reserves unless you shed loads or fire the backup generator.
+                        </p>
+                    </button>
+                    <button id="btn-dilemma-open" class="w-full text-left p-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border-2 border-red-500/60 hover:border-red-400 transition cursor-pointer shadow-lg">
+                        <div class="font-bold text-sm text-amber-300 flex items-center gap-2 mb-1">
+                            <i class="fa-solid fa-bolt text-amber-400"></i>
+                            <span>Option B: ⚡ Leave Panels Open (Keep Power, Risk Damage!)</span>
+                        </div>
+                        <p class="text-xs text-slate-300">
+                            Keeps 14 kW solar generation flowing right now, but high-speed flying dust severs external conduits (-1 💔 penalty until repaired via an exterior EVA!).
+                        </p>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LIVE NASA DONKI SPACE WEATHER MODAL -->
+    <div id="modal-donki-weather" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="hud-panel w-full max-w-xl rounded-2xl border-2 border-sky-400 overflow-hidden shadow-[0_0_60px_rgba(56,189,248,0.3)] flex flex-col my-auto">
+            <div class="bg-slate-900/95 px-6 py-4 border-b border-sky-400/40 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-satellite-dish text-sky-400 text-2xl"></i>
+                    <div>
+                        <h2 class="text-base font-black font-display text-white tracking-wider">🛰️ LIVE NASA DONKI SPACE WEATHER</h2>
+                        <p class="text-xs text-sky-300 font-mono-tech">Space Weather Database of Notifications, Knowledge, Information</p>
+                    </div>
+                </div>
+                <button id="btn-close-donki" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition cursor-pointer">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4 text-slate-200">
+                <div class="flex items-center justify-between bg-sky-500/10 border border-sky-400/30 rounded-xl p-3 text-xs font-mono-tech">
+                    <span class="text-slate-300">DATA SOURCE:</span>
+                    <span id="donki-status" class="text-emerald-400 font-bold">NASA GSFC / DONKI API (Online)</span>
+                </div>
+                <div id="donki-results" class="bg-slate-900/70 border border-slate-700 rounded-xl p-4 space-y-2 text-xs">
+                    <!-- Dynamically populated flare / CME data -->
+                </div>
+                <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 text-xs text-slate-300 leading-relaxed">
+                    <strong class="text-amber-400">🧑‍🚀 Why this matters on Mars:</strong> Unlike Earth, Mars lacks a global magnetic field (magnetosphere). When the Sun unleashes Coronal Mass Ejections (CMEs) or X-class Solar Flares, high-energy protons travel across space at 2,000 km/s. Astronauts must monitor DONKI alerts and shelter inside the high-mass water-jacketed <strong>Radiation Shelter</strong>!
                 </div>
             </div>
         </div>
@@ -2238,6 +2411,11 @@ const state = {
     crewHealth: 100,
     cropGrowthStage: 0,
     hasCoreSample: false,
+    hearts: 3,
+    maxHearts: 3,
+    taskTimer: 75,
+    timerDuration: 75,
+    timerActive: false,
     selectedDilemmas: {},
     gridOverloadSeconds: 0,
     inventory: [],
@@ -2268,12 +2446,41 @@ const state = {
         y: 385,
         speed: 185,
         inSuit: false,
+        suitChecked: false,
+        outerDoorOpen: false,
         facing: 'right',
         targetX: null,
         targetY: null
     }
 };
 
+function loseHeart(reasonText) {
+    if (state.hearts <= 0) return;
+    state.hearts = Math.max(0, state.hearts - 1);
+    if (typeof triggerCameraShake === 'function') triggerCameraShake(6.0);
+    if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+    if (typeof spawnFloatingText === 'function' && state.player) {
+        spawnFloatingText('-1 💔 ' + (reasonText || 'Danger!'), state.player.x, state.player.y - 25, '#ef4444');
+    }
+    setAria('⚠️ HEART LOST! ' + reasonText);
+    if (typeof updateUI === 'function') updateUI();
+    if (state.hearts <= 0) {
+        triggerGameOver(reasonText);
+    }
+}
+
+function triggerGameOver(reasonText) {
+    if (typeof closeAllModals === 'function') closeAllModals();
+    const modal = document.getElementById('modal-gameover');
+    if (modal) {
+        modal.classList.remove('hidden');
+        const reasonEl = document.getElementById('gameover-reason');
+        if (reasonEl) reasonEl.textContent = reasonText || 'Outpost environmental and life-support boundaries exceeded.';
+        const heartsEl = document.getElementById('gameover-hearts');
+        if (heartsEl) heartsEl.textContent = '🖤🖤🖤';
+    }
+    if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+}
 function hasItem(itemName) {
     return state.inventory.includes(itemName);
 }
@@ -2398,7 +2605,26 @@ function loadChapter(idx, showBriefing = true) {
     state.faults.shelterProtocolActive = false;
     state.faults.breakerTripped = false;
     state.gridOverloadSeconds = 0;
-    if (state.player) state.player.inSuit = false;
+    if (state.hearts <= 0) state.hearts = 3;
+    if (state.player) {
+        state.player.inSuit = false;
+        state.player.suitChecked = false;
+        state.player.outerDoorOpen = false;
+    }
+    // Configure emergency countdown timer per mission
+    if (idx === 3 || idx === 4 || idx === 5 || idx === 7) {
+        state.timerActive = true;
+        state.timerDuration = 75;
+        state.taskTimer = 75;
+    } else if (idx === 8) {
+        state.timerActive = true;
+        state.timerDuration = 60;
+        state.taskTimer = 60;
+    } else {
+        state.timerActive = false;
+        state.timerDuration = 75;
+        state.taskTimer = 75;
+    }
 
     // Crop Growth Stage progression by Sol
     if (state.sol < 45) {
@@ -2892,6 +3118,8 @@ if (typeof module !== 'undefined') {
         showVictoryModal,
         syncTasksWithState,
         completeTask,
+        loseHeart,
+        triggerGameOver,
         isTaskDone,
         unlockFact,
         awardBadge
@@ -2903,6 +3131,8 @@ if (typeof window !== 'undefined') {
     window.loadChapter = loadChapter;
     window.applyDilemmaChoice = applyDilemmaChoice;
     window.completeTask = completeTask;
+    window.loseHeart = loseHeart;
+    window.triggerGameOver = triggerGameOver;
     window.isTaskDone = isTaskDone;
     window.syncTasksWithState = syncTasksWithState;
     window.calculateMissionLegacy = calculateMissionLegacy;
@@ -4533,7 +4763,8 @@ function renderGame(now) {
         const y = cy - halfH;
 
         const distToDoor = (typeof state !== 'undefined' && state && state.player) ? Math.hypot(state.player.x - cx, state.player.y - cy) : 999;
-        const isOpen = (distToDoor <= 55);
+        const isOuterAirlock = (d.id === 'door_airlock_eva');
+        const isOpen = isOuterAirlock ? !!(state && state.player && state.player.outerDoorOpen) : (distToDoor <= 55);
 
         // Outer doorframe
         ctx.fillStyle = '#090d16';
@@ -4573,10 +4804,48 @@ function renderGame(now) {
             } else {
                 ctx.fillRect(x + 2, cy - 10, d.w - 4, 20);
             }
-            // Amber status LEDs (SEALED)
-            ctx.fillStyle = '#f59e0b';
+            // Status LEDs (Red for locked outer door, Amber for internal sealed)
+            ctx.fillStyle = isOuterAirlock ? '#ef4444' : '#f59e0b';
             ctx.fillRect(x + 1, y + 1, 3, 3);
             ctx.fillRect(x + d.w - 4, y + d.h - 4, 3, 3);
+
+            if (isOuterAirlock) {
+                ctx.fillStyle = '#ef4444';
+                ctx.font = 'bold 9px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('🔒', cx, cy);
+            }
+        }
+
+        // Door Control Switch Panel on wall next to outer airlock hatch
+        if (isOuterAirlock) {
+            const switchX = 290;
+            const switchY = 345;
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(switchX - 1, switchY - 1, 14, 18);
+            ctx.fillStyle = isOpen ? '#22c55e' : '#ef4444';
+            ctx.fillRect(switchX + 2, switchY + 2, 10, 6);
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(switchX + 4, switchY + 10, 6, 6);
+
+            // Floating prompt badge right at the door when astronaut is near
+            if (distToDoor <= 75) {
+                const pulse = Math.sin(now * 0.008) * 3;
+                ctx.save();
+                ctx.fillStyle = isOpen ? 'rgba(34, 197, 94, 0.95)' : 'rgba(56, 189, 248, 0.95)';
+                ctx.shadowColor = isOpen ? '#22c55e' : '#38bdf8';
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.roundRect(cx - 30, cy - 35 + pulse, 60, 18, 5);
+                ctx.fill();
+                ctx.fillStyle = '#020617';
+                ctx.font = 'bold 9px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(isOpen ? '[E] CLOSE' : '[E] OPEN', cx, cy - 26 + pulse);
+                ctx.restore();
+            }
         }
     }
 
@@ -7019,11 +7288,12 @@ function renderGame3D(now) {
         for (let i = 0; i < habitatDoor3DMeshes.length; i++) {
             const d = habitatDoor3DMeshes[i];
             const dist = Math.hypot(px - d.x, py - d.y);
-            const isOpen = (dist <= 65);
+            const isOuterAirlock = (d.id === 'door_airlock_eva');
+            const isOpen = isOuterAirlock ? !!(state.player && state.player.outerDoorOpen) : (dist <= 65);
             const targetY = isOpen ? d.openY : d.closedY;
             d.hatchGroup.position.y += (targetY - d.hatchGroup.position.y) * 0.18;
             if (d.ledMat) {
-                const targetCol = isOpen ? 0x22c55e : 0xf59e0b;
+                const targetCol = isOpen ? 0x22c55e : (isOuterAirlock ? 0xef4444 : 0xf59e0b);
                 if (d.ledMat.color.getHex() !== targetCol) {
                     d.ledMat.color.setHex(targetCol);
                     d.ledMat.emissive.setHex(targetCol);
@@ -7247,6 +7517,16 @@ function getNearestCrewNPC() {
 }
 
 function triggerNearestObjectInteraction() {
+    // 1. Priority: Outer Airlock Door (within 75px)
+    if (state && state.player) {
+        const distToDoor = Math.hypot(state.player.x - 276, state.player.y - 380);
+        if (distToDoor <= 75) {
+            if (typeof toggleOuterAirlockDoor === 'function') {
+                toggleOuterAirlockDoor();
+                return;
+            }
+        }
+    }
     const obj = getNearestObject();
     if (obj) {
         if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
@@ -7314,58 +7594,14 @@ function openObjectModal(obj) {
         addMetric('Outer Hatch Interlock', 'VERIFIED SEALED', 'text-emerald-300');
         desc.textContent = 'The Airlock isolates Astra-1’s 101.3 kPa breathable atmosphere from the 0.6 kPa Martian surface. Always don your pressurized EVA suit before stepping onto the Martian surface.';
 
-        // Mission 1: The First Breath
+        // UPGRADE 1: Two Clear, Kid-Friendly Numbered Buttons
+        // Button 1: Don / Doff Spacesuit
         addActionBtn(
-            state.player.inSuit ? '✓ Airlock Pressure Verified & EVA Suit Pressurized' : 'Verify Cabin Pressure & Don EVA Suit',
-            'Electronic Orion-style telemetry verification and 30 kPa suit pressurization',
-            () => {
-                state.player.inSuit = true;
-                completeTask('ch1_airlock');
-                if (typeof spawnFloatingText === 'function') spawnFloatingText('EVA SUIT DONNED & PRESSURIZED', state.player.x, state.player.y - 20, '#38bdf8');
-                if (typeof sfx !== 'undefined' && sfx.pickup) sfx.pickup();
-                setAria('Airlock pressure verified at 101.3 kPa and EVA Suit pressurized! Next, grab your tools from Central Storage.');
-                if (typeof updateUI === 'function') updateUI();
-                openObjectModal(obj);
-            },
-            state.player.inSuit ? 'bg-emerald-700/80 hover:bg-emerald-600 text-emerald-100' : 'bg-sky-600 hover:bg-sky-500 text-white'
-        );
-
-        // Mission 3: Commissioning Perseverance & Ingenuity
-        if (state.chapterIdx === 2) {
-            addActionBtn(
-                'Don EVA Spacesuit & Depressurize for Surface Rover EVA',
-                'Prepares astronaut for outdoor surface traverse to NASA Perseverance',
-                () => {
-                    state.player.inSuit = true;
-                    completeTask('ch3_eva_prep');
-                    setAria('EVA Spacesuit pressurized! Step through the outer hatch to link with the Mars Rover.');
-                    openObjectModal(obj);
-                },
-                'bg-amber-500 hover:bg-amber-400 text-slate-950'
-            );
-        }
-
-        // Mission 5: The Zero-Visibility EVA
-        if (state.chapterIdx === 4) {
-            addActionBtn(
-                'Don Heavy Storm Suit & Cycle Hatch into Zero-Visibility Gale',
-                'Required to reach outdoor solar array latches during dust storm',
-                () => {
-                    state.player.inSuit = true;
-                    completeTask('ch5_airlock_exit');
-                    setAria('Storm suit locked and pressurized! Head outside immediately to secure the solar array latches.');
-                    openObjectModal(obj);
-                },
-                'bg-red-600 hover:bg-red-500 text-white'
-            );
-        }
-
-        // General Suit Toggle
-        addActionBtn(
-            state.player.inSuit ? 'Doff EVA Spacesuit (Return to Shirtsleeve IVA)' : 'Don & Pressurize EVA Spacesuit',
-            state.player.inSuit ? 'Stow suit in airlock rack' : 'Required for safe outdoor Mars surface excursions',
+            state.player.inSuit ? '🧑‍🚀 1. Spacesuit On (Click to Doff / Remove)' : '🧑‍🚀 1. Put On Spacesuit',
+            state.player.inSuit ? 'Take off bulky spacesuit and return to comfortable shirtsleeve uniform' : 'Equip pressurized Orion EVA spacesuit with helmet and oxygen pack',
             () => {
                 state.player.inSuit = !state.player.inSuit;
+                if (!state.player.inSuit) state.player.suitChecked = false;
                 if (typeof sfx !== 'undefined' && sfx.pickup) sfx.pickup();
                 if (typeof spawnFloatingText === 'function') {
                     spawnFloatingText(state.player.inSuit ? 'EVA SUIT DONNED' : 'SHIRTSLEEVE IVA', state.player.x, state.player.y - 20, state.player.inSuit ? '#38bdf8' : '#4ade80');
@@ -7374,7 +7610,31 @@ function openObjectModal(obj) {
                 if (typeof updateUI === 'function') updateUI();
                 openObjectModal(obj);
             },
-            state.player.inSuit ? 'bg-amber-600 hover:bg-amber-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-white'
+            state.player.inSuit ? 'bg-amber-600 hover:bg-amber-500 text-white font-bold' : 'bg-sky-600 hover:bg-sky-500 text-white font-bold'
+        );
+
+        // Button 2: Check Suit & Airlock Seal
+        addActionBtn(
+            state.player.suitChecked ? '✅ 2. Suit & Airlock Seal Verified' : '✅ 2. Check Suit & Airlock Seal',
+            state.player.inSuit ? 'Electronic pressure integrity test (Required before opening outer door!)' : '⚠️ PUT ON SUIT FIRST BEFORE RUNNING PRESSURE CHECK!',
+            () => {
+                if (!state.player.inSuit) {
+                    if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+                    if (typeof spawnFloatingText === 'function') spawnFloatingText('PUT ON SUIT FIRST!', state.player.x, state.player.y - 20, '#ef4444');
+                    setAria('You cannot check the suit seal while wearing shirtsleeves! Put on the Spacesuit first.');
+                    return;
+                }
+                state.player.suitChecked = true;
+                completeTask('ch1_airlock');
+                if (state.chapterIdx === 2) completeTask('ch3_eva_prep');
+                if (state.chapterIdx === 4) completeTask('ch5_airlock_exit');
+                if (typeof sfx !== 'undefined' && sfx.success) sfx.success();
+                if (typeof spawnFloatingText === 'function') spawnFloatingText('SUIT & SEAL VERIFIED! PRESS [F] AT DOOR', state.player.x, state.player.y - 20, '#22c55e');
+                setAria('Suit Checked! Pressure nominal at 101.3 kPa. Now walk to the left door and press [F] (or click) to open the outer hatch!');
+                if (typeof updateUI === 'function') updateUI();
+                openObjectModal(obj);
+            },
+            state.player.suitChecked ? 'bg-emerald-700 hover:bg-emerald-600 text-emerald-100 font-bold' : (state.player.inSuit ? 'bg-emerald-600 hover:bg-emerald-500 text-white font-bold' : 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-60')
         );
 
     } else if (obj.id === 'storage_locker') {
@@ -8086,6 +8346,12 @@ function openPowerModal() {
             if (key === 'lifesupport' && !item.on) {
                 setAria("WARNING! You shut off Primary Life Support! Carbon dioxide (ppm) is now rising rapidly in the habitat!");
                 if (window.sfx && typeof sfx.alert === 'function') sfx.alert();
+                if (typeof loseHeart === 'function') loseHeart("Essential Life Support was shut down!");
+            }
+            if (key === 'heating' && !item.on) {
+                setAria("WARNING! You shut off Habitat Thermal Control! Outpost temperatures dropping to subzero!");
+                if (window.sfx && typeof sfx.alert === 'function') sfx.alert();
+                if (typeof loseHeart === 'function') loseHeart("Habitat Heating was shut down!");
             }
             checkPowerTasks();
             updateUI();
@@ -8250,9 +8516,68 @@ function updateUI() {
         cadetValRad.className = `font-bold text-[11px] ${isRadDanger ? 'text-red-400 animate-pulse' : 'text-sky-300'}`;
     }
 
+    // UPGRADE 2: 3-Heart Life System Display (Strict horizontal alignment with glow)
+    const crewHeartsEl = document.getElementById('crew-hearts');
+    const hCount = (typeof state.hearts === 'number') ? state.hearts : 3;
+    if (crewHeartsEl) {
+        let heartsHtml = '';
+        for (let i = 0; i < 3; i++) {
+            if (i < hCount) {
+                heartsHtml += '<span class="heart-glyph inline-block text-sm leading-none shrink-0" style="filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.7));">❤️</span>';
+            } else {
+                heartsHtml += '<span class="heart-glyph inline-block text-sm leading-none shrink-0 opacity-30 grayscale">🖤</span>';
+            }
+        }
+        crewHeartsEl.innerHTML = heartsHtml;
+    }
+
+    // Dynamic Quick Door Button Update
+    const iconQuickDoor = document.getElementById('icon-quick-door');
+    const labelQuickDoor = document.getElementById('label-quick-door');
+    const btnQuickDoor = document.getElementById('btn-quick-door-f');
+    if (btnQuickDoor) {
+        const isDoorOpen = !!(state.player && state.player.outerDoorOpen);
+        if (iconQuickDoor) {
+            iconQuickDoor.className = isDoorOpen ? 'fa-solid fa-door-open text-emerald-400 text-xs' : 'fa-solid fa-door-closed text-sky-400 text-xs';
+        }
+        if (labelQuickDoor) {
+            labelQuickDoor.textContent = isDoorOpen ? '[E] Close' : '[E] Open';
+        }
+        btnQuickDoor.className = isDoorOpen
+            ? 'h-8 btn-tech bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/50 text-emerald-200 px-2.5 rounded-lg text-xs font-mono-tech flex items-center justify-center gap-1.5 cursor-pointer shrink-0 box-border'
+            : 'h-8 btn-tech bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/50 text-sky-200 px-2.5 rounded-lg text-xs font-mono-tech flex items-center justify-center gap-1.5 cursor-pointer shrink-0 box-border';
+    }
+
+    // UPGRADE 3: Emergency Task Countdown Bar
+    const timerContainer = document.getElementById('task-timer-bar-container');
+    const timerVal = document.getElementById('task-timer-val');
+    const timerFill = document.getElementById('task-timer-fill');
+    if (timerContainer && timerVal && timerFill) {
+        if (state.timerActive) {
+            timerContainer.classList.remove('hidden');
+            const secs = Math.max(0, Math.ceil(state.taskTimer));
+            const m = Math.floor(secs / 60);
+            const secRemain = secs % 60;
+            timerVal.textContent = `⏱️ ${String(m).padStart(2, '0')}:${String(secRemain).padStart(2, '0')}`;
+            const pct = Math.max(0, Math.min(100, (state.taskTimer / (state.timerDuration || 75)) * 100));
+            timerFill.style.width = `${pct}%`;
+            if (secs <= 15) {
+                timerFill.className = 'bg-red-500 h-full animate-pulse transition-all duration-200';
+                timerVal.className = 'font-bold text-red-400 animate-pulse font-mono-tech';
+            } else if (secs <= 30) {
+                timerFill.className = 'bg-amber-400 h-full transition-all duration-200';
+                timerVal.className = 'font-bold text-amber-300 font-mono-tech';
+            } else {
+                timerFill.className = 'bg-emerald-400 h-full transition-all duration-200';
+                timerVal.className = 'font-bold text-emerald-300 font-mono-tech';
+            }
+        } else {
+            timerContainer.classList.add('hidden');
+        }
+    }
     const trainerHealthEl = document.getElementById('trainer-health-text');
     if (trainerHealthEl) {
-        trainerHealthEl.textContent = `Nova: ${Math.round(state.crewHealth)}%`;
+        trainerHealthEl.textContent = '❤️'.repeat(Math.max(0, hCount)) + '🖤'.repeat(Math.max(0, 3 - hCount));
     }
 
     // Suit & Crew Health
@@ -8343,18 +8668,34 @@ function updateUI() {
         }
     }
 
-    // Inventory Pouch
+    // UPGRADE 4: Icon-Only Square Inventory Pouch (36x36px with Tooltips)
     const invEl = document.getElementById('inventory-list');
     if (invEl) {
         invEl.innerHTML = '';
         if (state.inventory.length === 0) {
-            invEl.innerHTML = `<span class="text-[10px] font-mono-tech text-slate-500 px-2">Empty (Visit Storage)</span>`;
+            invEl.innerHTML = `<span class="text-[10px] font-mono-tech text-slate-500 px-2 select-none">Empty Pouch</span>`;
         } else {
             state.inventory.forEach(item => {
-                const pill = document.createElement('span');
-                pill.className = 'text-[10px] font-mono-tech bg-sky-500/20 border border-sky-400/40 text-sky-200 px-2 py-0.5 rounded-md flex items-center gap-1';
-                pill.innerHTML = `<i class="fa-solid fa-wrench text-[9px] text-amber-400"></i>${item}`;
-                invEl.appendChild(pill);
+                const badge = document.createElement('div');
+                badge.title = `${item} (Equipped in Pouch)`;
+                let iconHTML = `<i class="fa-solid fa-wrench text-slate-300 text-base"></i>`;
+                let extraClass = '';
+                if (item === 'Multi-Tool') {
+                    extraClass = ' border-amber-400/60 bg-amber-500/10';
+                    iconHTML = `<i class="fa-solid fa-screwdriver-wrench text-amber-400 text-base"></i>`;
+                } else if (item === 'HV Fuse') {
+                    extraClass = ' border-yellow-400/60 bg-yellow-500/10';
+                    iconHTML = `<i class="fa-solid fa-bolt text-yellow-300 text-base"></i>`;
+                } else if (item === 'LiOH Filter') {
+                    extraClass = ' border-teal-400/60 bg-teal-500/10';
+                    iconHTML = `<i class="fa-solid fa-fan text-teal-300 text-base"></i>`;
+                } else if (item === 'Pipe Seal Kit') {
+                    extraClass = ' border-sky-400/60 bg-sky-500/10';
+                    iconHTML = `<i class="fa-solid fa-faucet-drip text-sky-400 text-base"></i>`;
+                }
+                badge.className = 'w-9 h-9 rounded-xl bg-slate-900/90 border border-slate-700/80 hover:border-amber-400 flex items-center justify-center cursor-pointer shadow-md transition-all hover:scale-110' + extraClass;
+                badge.innerHTML = iconHTML;
+                invEl.appendChild(badge);
             });
         }
     }
@@ -8432,6 +8773,73 @@ function initUIEventListeners() {
         }
     };
 
+    // UPGRADE 1: Quick [F] Airlock Door Toggle Button
+    const btnQuickDoorF = document.getElementById('btn-quick-door-f');
+    if (btnQuickDoorF) {
+        btnQuickDoorF.addEventListener('click', () => {
+            if (typeof toggleOuterAirlockDoor === 'function') toggleOuterAirlockDoor();
+        });
+    }
+    const btnTouchF = document.getElementById('btn-touch-f');
+    if (btnTouchF) {
+        btnTouchF.addEventListener('click', () => {
+            if (typeof toggleOuterAirlockDoor === 'function') toggleOuterAirlockDoor();
+        });
+    }
+
+    // UPGRADE 2: Game Over Modal Buttons
+    const btnGameOverRetry = document.getElementById('btn-gameover-retry');
+    if (btnGameOverRetry) {
+        btnGameOverRetry.addEventListener('click', () => {
+            state.hearts = 3;
+            state.timerActive = false;
+            const modal = document.getElementById('modal-gameover');
+            if (modal) modal.classList.add('hidden');
+            if (typeof loadChapter === 'function') loadChapter(state.chapterIdx, false);
+        });
+    }
+    const btnGameOverRestart = document.getElementById('btn-gameover-restart');
+    if (btnGameOverRestart) {
+        btnGameOverRestart.addEventListener('click', () => {
+            state.hearts = 3;
+            state.timerActive = false;
+            const modal = document.getElementById('modal-gameover');
+            if (modal) modal.classList.add('hidden');
+            if (typeof loadChapter === 'function') loadChapter(0, true);
+        });
+    }
+
+    // UPGRADE 5: 10s Solar Storm Dilemma Buttons
+    const btnQuickDilemma = document.getElementById('btn-quick-dilemma');
+    if (btnQuickDilemma) {
+        btnQuickDilemma.addEventListener('click', triggerTenSecondStormDilemma);
+    }
+    const btnDilemmaFold = document.getElementById('btn-dilemma-fold');
+    if (btnDilemmaFold) btnDilemmaFold.addEventListener('click', onDilemmaOptionA);
+    const btnDilemmaOpen = document.getElementById('btn-dilemma-open');
+    if (btnDilemmaOpen) btnDilemmaOpen.addEventListener('click', onDilemmaOptionB);
+
+    // UPGRADE 6: Live NASA DONKI Space Weather Button & Modal
+    const btnDonkiWeather = document.getElementById('btn-donki-weather');
+    if (btnDonkiWeather) {
+        btnDonkiWeather.addEventListener('click', openDonkiWeatherModal);
+    }
+    const btnCloseDonki = document.getElementById('btn-close-donki');
+    if (btnCloseDonki) {
+        btnCloseDonki.addEventListener('click', () => {
+            const modal = document.getElementById('modal-donki-weather');
+            if (modal) modal.classList.add('hidden');
+        });
+    }
+
+    // Hearts Container Click
+    const hudHeartsContainer = document.getElementById('hud-hearts-container');
+    if (hudHeartsContainer) {
+        hudHeartsContainer.addEventListener('click', () => {
+            if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+            setAria(`Cadet Nova has ${state.hearts || 3} of 3 Hearts remaining! Protect your life support and power to keep the habitat online.`);
+        });
+    }
     if (btnToggleTrainer) btnToggleTrainer.addEventListener('click', () => toggleTrainer(false));
     if (pillTrainer) pillTrainer.addEventListener('click', () => toggleTrainer(true));
 
@@ -8731,11 +9139,18 @@ function initUIEventListeners() {
         });
     }
 
-    // Floating Prompt click
+    // Floating Prompt click (Supports door toggle and nearest objects)
     const interactPrompt = document.getElementById('interact-prompt');
     if (interactPrompt) {
         interactPrompt.addEventListener('click', () => {
-            if (!isAnyModalOpen()) triggerNearestObjectInteraction();
+            if (isAnyModalOpen()) return;
+            if (state && state.player && Math.hypot(state.player.x - 276, state.player.y - 380) <= 75) {
+                if (typeof toggleOuterAirlockDoor === 'function') {
+                    toggleOuterAirlockDoor();
+                    return;
+                }
+            }
+            triggerNearestObjectInteraction();
         });
     }
 
@@ -8799,8 +9214,149 @@ if (document.readyState === 'loading') {
 }
 
 
+// --- UPGRADE 5: MIKE GIVEN 10-SECOND SOLAR DUST STORM DILEMMA ---
+let stormDilemmaInterval = null;
+function triggerTenSecondStormDilemma() {
+    const modal = document.getElementById('modal-storm-dilemma');
+    if (!modal) return;
+    if (typeof closeAllModals === 'function') closeAllModals();
+    modal.classList.remove('hidden');
+    if (window.sfx && typeof sfx.alert === 'function') sfx.alert();
+
+    let timeLeft = 10.0;
+    const timerEl = document.getElementById('storm-dilemma-timer');
+    if (timerEl) timerEl.textContent = '10.0s';
+
+    if (stormDilemmaInterval) clearInterval(stormDilemmaInterval);
+    stormDilemmaInterval = setInterval(() => {
+        timeLeft -= 0.1;
+        if (timerEl) timerEl.textContent = `${Math.max(0, timeLeft).toFixed(1)}s`;
+        if (timeLeft <= 0) {
+            clearInterval(stormDilemmaInterval);
+            // Default: Option A (Safe stow)
+            onDilemmaOptionA();
+        }
+    }, 100);
+}
+window.triggerTenSecondStormDilemma = triggerTenSecondStormDilemma;
+
+function onDilemmaOptionA() {
+    if (stormDilemmaInterval) clearInterval(stormDilemmaInterval);
+    const modal = document.getElementById('modal-storm-dilemma');
+    if (modal) modal.classList.add('hidden');
+    state.solarOutputKW = 0;
+    if (typeof spawnFloatingText === 'function') spawnFloatingText('🛡️ PANELS FOLDED SAFELY (0 kW)', state.player.x, state.player.y - 20, '#22c55e');
+    setAria('Decision A Chosen: Solar panels folded into protective slots! Conduits safe, but solar output dropped to 0 kW. Monitor battery closely tonight!');
+    if (typeof updateUI === 'function') updateUI();
+}
+
+function onDilemmaOptionB() {
+    if (stormDilemmaInterval) clearInterval(stormDilemmaInterval);
+    const modal = document.getElementById('modal-storm-dilemma');
+    if (modal) modal.classList.add('hidden');
+    state.faults.externalConduitDamaged = true;
+    if (typeof loseHeart === 'function') loseHeart('Flying dust storm debris severed external solar conduit!');
+    if (typeof spawnFloatingText === 'function') spawnFloatingText('⚡ PANELS DAMAGED BY DEBRIS (-1 ❤️)', state.player.x, state.player.y - 20, '#ef4444');
+    setAria('Decision B Chosen: Panels kept open for power, but gale winds severed external cabling! Exit on EVA to repair before power fails.');
+    if (typeof updateUI === 'function') updateUI();
+}
+
+// --- UPGRADE 6: LIVE NASA DONKI SPACE WEATHER FETCHER ---
+async function openDonkiWeatherModal() {
+    const modal = document.getElementById('modal-donki-weather');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+
+    const statusEl = document.getElementById('donki-status');
+    const resultsEl = document.getElementById('donki-results');
+    if (statusEl) statusEl.textContent = 'Connecting to NASA DONKI Telemetry...';
+    if (resultsEl) resultsEl.innerHTML = '<div class="text-sky-300 animate-pulse py-2">Querying NASA Space Weather Database (api.nasa.gov)...</div>';
+
+    try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 2500);
+        const res = await fetch('https://api.nasa.gov/DONKI/FLR?api_key=DEMO_KEY', { signal: controller.signal });
+        clearTimeout(timeout);
+        if (!res.ok) throw new Error('API unavailable');
+        const data = await res.json();
+        if (statusEl) statusEl.textContent = 'NASA GSFC / DONKI Live API (Synchronized)';
+        if (resultsEl) {
+            if (Array.isArray(data) && data.length > 0) {
+                const latest = data.slice(-3).reverse();
+                resultsEl.innerHTML = latest.map(f => `
+                    <div class="p-2.5 rounded-lg bg-slate-800/80 border border-sky-500/30 flex items-center justify-between">
+                        <div>
+                            <div class="font-bold text-amber-300 font-display flex items-center gap-1.5">
+                                <i class="fa-solid fa-sun text-amber-400"></i> ${f.classType || 'M-Class'} Solar Flare
+                            </div>
+                            <div class="text-[11px] text-slate-400 font-mono-tech">Peak Time: ${f.peakTime || 'Recent'}</div>
+                        </div>
+                        <span class="text-[10px] font-mono-tech bg-red-500/20 text-red-300 border border-red-500/40 px-2 py-0.5 rounded-full">CME Proton Flux</span>
+                    </div>
+                `).join('');
+            } else {
+                throw new Error('No recent flares in window');
+            }
+        }
+    } catch (e) {
+        // Instant authentic NASA DONKI offline fallback
+        if (statusEl) statusEl.textContent = 'NASA DONKI Archive Telemetry (Local Offline Buffer)';
+        if (resultsEl) {
+            resultsEl.innerHTML = `
+                <div class="p-2.5 rounded-lg bg-slate-800/80 border border-amber-500/30 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div class="font-bold text-amber-300 font-display flex items-center gap-1.5">
+                            <i class="fa-solid fa-sun text-amber-400"></i> X1.5 High-Energy Solar Flare (DONKI Logged)
+                        </div>
+                        <span class="text-[10px] font-mono-tech bg-red-500/20 text-red-300 border border-red-500/40 px-2 py-0.5 rounded-full">2.45 mSv/h Radiation</span>
+                    </div>
+                    <div class="text-[11px] text-slate-300">
+                        Coronal Mass Ejection detected propagating outward. Surface cosmic radiation dosage rates increase from baseline 0.08 mSv/h to 2.45 mSv/h.
+                    </div>
+                    <div class="text-[10px] font-mono-tech text-emerald-300">
+                        ✓ Countermeasure: Evacuate crew into Module 07 (Radiation Shelter with Water-Wall Shielding).
+                    </div>
+                </div>
+            `;
+        }
+    }
+}
+window.openDonkiWeatherModal = openDonkiWeatherModal;
+
 
 /* ===== BUNDLE: js/game.js ===== */
+function toggleOuterAirlockDoor() {
+    if (!state || !state.player) return;
+    const distToDoor = Math.hypot(state.player.x - 276, state.player.y - 380);
+    if (distToDoor > 85) {
+        setAria('Walk closer to the Airlock outer door at the left entrance to cycle the outer hatch.');
+        if (typeof spawnFloatingText === 'function') {
+            spawnFloatingText('🚪 WALK CLOSER TO AIRLOCK DOOR', state.player.x, state.player.y - 25, '#f59e0b');
+        }
+        return;
+    }
+
+    if (!state.player.inSuit || !state.player.suitChecked) {
+        if (window.sfx && typeof sfx.alert === 'function') sfx.alert();
+        if (typeof triggerCameraShake === 'function') triggerCameraShake(3.0);
+        if (typeof spawnFloatingText === 'function') {
+            spawnFloatingText('🔒 PUT ON SUIT & CHECK SEAL FIRST!', state.player.x, state.player.y - 25, '#ef4444');
+        }
+        setAria('LOCKED! Inspect Airlock Console [E] to don and pressure-check your spacesuit before opening the outer hatch.');
+        return;
+    }
+
+    state.player.outerDoorOpen = !state.player.outerDoorOpen;
+    if (window.sfx && typeof sfx.pickup === 'function') sfx.pickup();
+    if (typeof triggerCameraShake === 'function') triggerCameraShake(2.0);
+    if (typeof spawnFloatingText === 'function') {
+        spawnFloatingText(state.player.outerDoorOpen ? '💨 OUTER HATCH UNLOCKED & OPEN' : '🔒 OUTER HATCH SEALED', state.player.x, state.player.y - 25, state.player.outerDoorOpen ? '#22c55e' : '#f59e0b');
+    }
+    setAria(state.player.outerDoorOpen ? 'Outer airlock hatch unsealed and opened! Safe to conduct EVA excursion on Martian surface.' : 'Outer airlock hatch sealed and locked.');
+    if (typeof updateUI === 'function') updateUI();
+}
+window.toggleOuterAirlockDoor = toggleOuterAirlockDoor;
 /**
  * ASTRA-1: The Red Frontier - Main Game Loop, Input Controller & Player Physics
  * 2026 NASA Space Apps Challenge
@@ -8816,6 +9372,10 @@ window.addEventListener('keydown', (e) => {
     if (k === 'a' || k === 'arrowleft') { keys.left = true; if (state.player) state.player.targetX = null; }
     if (k === 'd' || k === 'arrowright') { keys.right = true; if (state.player) state.player.targetX = null; }
     
+    if (k === 'f') {
+        toggleOuterAirlockDoor();
+        return;
+    }
     if (k === 'e') {
         const dlgModal = document.getElementById('modal-dialogue');
         if (dlgModal && !dlgModal.classList.contains('hidden')) {
@@ -8823,6 +9383,15 @@ window.addEventListener('keydown', (e) => {
             return;
         }
         if (typeof isAnyModalOpen === 'function' && isAnyModalOpen()) return;
+
+        // Check if near Outer Airlock Door (within 75px)
+        if (state && state.player) {
+            const distToDoor = Math.hypot(state.player.x - 276, state.player.y - 380);
+            if (distToDoor <= 75) {
+                toggleOuterAirlockDoor();
+                return;
+            }
+        }
         if (typeof triggerNearestObjectInteraction === 'function') triggerNearestObjectInteraction();
     }
     
@@ -8914,6 +9483,23 @@ function initCanvasPointer() {
         const clampedY = Math.max(55, Math.min(705, worldY));
 
         if (isInitialClick) {
+            // Check direct click on Outer Airlock Door (within 35px of x: 276, y: 380)
+            if (Math.hypot(worldX - 276, worldY - 380) <= 35) {
+                const distToDoor = Math.hypot(state.player.x - 276, state.player.y - 380);
+                if (distToDoor <= 75) {
+                    toggleOuterAirlockDoor();
+                    return;
+                } else {
+                    const targetX = (state.player.x > 276) ? 295 : 240;
+                    state.player.targetX = targetX;
+                    state.player.targetY = 380;
+                    state.player.targetAction = null;
+                    if (typeof spawnClickMarker === 'function') spawnClickMarker(276, 380, '#38bdf8');
+                    if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+                    return;
+                }
+            }
+
             let clickedObj = null;
             if (typeof OBJECTS !== 'undefined') {
                 for (const obj of OBJECTS) {
@@ -9026,6 +9612,18 @@ function initCanvasPointer() {
 // --- HABITAT SOLID COLLISION DETECTOR ---
 // Prevents walking through regolith walls, central master consoles, and perimeter machinery.
 function checkSolidCollision(px, py, radius = 13) {
+    // 0. Outer Airlock Hatch Barrier: Closed door acts as a solid physical wall
+    if (typeof state !== 'undefined' && state.player && !state.player.outerDoorOpen) {
+        const doorX = 270;
+        const doorY = 325;
+        const doorW = 16;
+        const doorH = 110;
+        if (px + radius > doorX && px - radius < doorX + doorW &&
+            py + radius > doorY && py - radius < doorY + doorH) {
+            return true;
+        }
+    }
+
     // 1. Solid Regolith Habitat Walls
     if (typeof HABITAT_WALLS !== 'undefined') {
         for (let i = 0; i < HABITAT_WALLS.length; i++) {
@@ -9205,9 +9803,33 @@ function updateGame(dt) {
     }
 
     // Apply movement with axis-independent sliding collision against 3D-printed regolith walls
-    const moveX = dx * state.player.speed * dt;
-    const moveY = dy * state.player.speed * dt;
+    let moveX = dx * state.player.speed * dt;
+    let moveY = dy * state.player.speed * dt;
 
+    // Strict Outer Airlock Hatch Barrier when closed (!state.player.outerDoorOpen)
+    if (state.player && !state.player.outerDoorOpen) {
+        const inDoorY = (state.player.y >= 325 && state.player.y <= 435);
+        if (inDoorY) {
+            // If inside habitat (x >= 280), prevent moving left through closed door (x < 286)
+            if (state.player.x >= 280 && (state.player.x + moveX) < 286) {
+                moveX = 0;
+                dx = 0;
+                if (state.player.targetX !== null && state.player.targetX < 286) {
+                    state.player.targetX = null;
+                    state.player.targetY = null;
+                }
+            }
+            // If outside habitat (x <= 274), prevent moving right through closed door (x > 270)
+            if (state.player.x <= 274 && (state.player.x + moveX) > 270) {
+                moveX = 0;
+                dx = 0;
+                if (state.player.targetX !== null && state.player.targetX > 270) {
+                    state.player.targetX = null;
+                    state.player.targetY = null;
+                }
+            }
+        }
+    }
     if (moveX !== 0) {
         const nextX = Math.max(45, Math.min(1145, state.player.x + moveX));
         if (!checkWallCollision(nextX, state.player.y)) {
@@ -9226,6 +9848,23 @@ function updateGame(dt) {
         }
     }
 
+    // UPGRADE 3: Emergency Countdown Timer Ticking
+    if (state.timerActive && state.taskTimer > 0) {
+        state.taskTimer -= dt;
+        if (state.taskTimer <= 0) {
+            state.taskTimer = 0;
+            if (typeof loseHeart === 'function') {
+                loseHeart('Time ran out! Emergency systems overloaded!');
+            }
+            if (state.hearts > 0) {
+                state.taskTimer = state.timerDuration || 75;
+            }
+        }
+    }
+    const activeCh = (typeof CHAPTERS !== 'undefined') ? CHAPTERS[state.chapterIdx] : null;
+    if (activeCh && activeCh.tasks && activeCh.tasks.every(t => t.done)) {
+        state.timerActive = false;
+    }
     const isMoving = (dx !== 0 || dy !== 0);
     state.player.isMoving = isMoving;
 
@@ -9256,11 +9895,13 @@ function updateGame(dt) {
         setAria("Airlock Interlock: EVA Spacesuit automatically donned and pressurized to 30 kPa pure O₂ for Martian surface excursion (0.6 kPa exterior).");
         if (typeof updateUI === 'function') updateUI();
     } else if (state.player.x >= 415 && state.player.inSuit) {
-        // Returning to Central Spine stows the EVA suit
+        // Returning to Central Spine stows the EVA suit and closes outer door
         state.player.inSuit = false;
+        state.player.suitChecked = false;
+        state.player.outerDoorOpen = false;
         if (typeof triggerCameraShake === 'function') triggerCameraShake(2.0);
-        if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
-        setAria("Airlock Equalization Complete: Returned to 101.3 kPa shirtsleeve IVA habitat environment. EVA suit stowed in Airlock.");
+        if (window.sfx && typeof sfx.chime === 'function') sfx.chime();
+        setAria('Airlock Equalization Complete: Returned to 101.3 kPa shirtsleeve IVA habitat environment. Outer door sealed and suit stowed.');
         if (typeof updateUI === 'function') updateUI();
     }
 
@@ -9293,20 +9934,52 @@ function updateGame(dt) {
     window.camera = cam;
 
     // Floating interaction prompt update
+    const distToDoor = (state && state.player) ? Math.hypot(state.player.x - 276, state.player.y - 380) : 999;
+    const inAirlockHatchArea = (distToDoor <= 75);
     const nearestObj = (typeof getNearestObject === 'function') ? getNearestObject() : null;
     const nearestNPC = (typeof getNearestCrewNPC === 'function') ? getNearestCrewNPC() : null;
     const promptEl = document.getElementById('interact-prompt');
+    const kbdEl = document.getElementById('interact-kbd');
     const titleEl = document.getElementById('interact-title');
     const subEl = document.getElementById('interact-sub');
 
     // Floating interaction prompt: Visible in both 2D and 3D mode for maximum clarity
     if (promptEl && titleEl && subEl) {
-        if (nearestObj) {
+        if (inAirlockHatchArea) {
             promptEl.classList.remove('hidden');
+            if (kbdEl) kbdEl.textContent = 'E';
+            if (!state.player.inSuit || !state.player.suitChecked) {
+                titleEl.textContent = '🔒 AIRLOCK DOOR: LOCKED';
+                subEl.textContent = 'Don EVA Suit & Check Seal at Console [E] first';
+                promptEl.style.borderColor = '#ef4444';
+                if (kbdEl) kbdEl.className = 'bg-rose-500 text-white font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
+            } else if (!state.player.outerDoorOpen) {
+                titleEl.textContent = '🚪 AIRLOCK DOOR: UNLOCK & OPEN';
+                subEl.textContent = 'Click button or Press [E] / [F] to Open Door';
+                promptEl.style.borderColor = '#38bdf8';
+                if (kbdEl) kbdEl.className = 'bg-sky-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md animate-pulse';
+            } else {
+                titleEl.textContent = '💨 AIRLOCK DOOR: CLOSE & LOCK';
+                subEl.textContent = 'Click button or Press [E] / [F] to Close Door';
+                promptEl.style.borderColor = '#22c55e';
+                if (kbdEl) kbdEl.className = 'bg-emerald-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
+            }
+        } else if (nearestObj) {
+            promptEl.classList.remove('hidden');
+            promptEl.style.borderColor = '#f59e0b';
+            if (kbdEl) {
+                kbdEl.textContent = 'E';
+                kbdEl.className = 'bg-amber-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
+            }
             titleEl.textContent = nearestObj.name;
             subEl.textContent = 'Click or Press [E] to interact';
         } else if (nearestNPC) {
             promptEl.classList.remove('hidden');
+            promptEl.style.borderColor = '#22c55e';
+            if (kbdEl) {
+                kbdEl.textContent = 'E';
+                kbdEl.className = 'bg-emerald-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
+            }
             titleEl.textContent = `Talk to ${nearestNPC.name} (${nearestNPC.role})`;
             subEl.textContent = 'Click or Press [E] for Crew Dialogue';
         } else {
@@ -9341,6 +10014,7 @@ function gameLoop(now) {
 // --- BOOTSTRAP INITIALIZATION ---
 function initGame() {
     window.currentViewMode = '3d';
+    // interact-prompt click handled in js/ui.js with full modal & range safety
     initTouchControls();
     initCanvasPointer();
     if (typeof initThreeScene === 'function') initThreeScene();

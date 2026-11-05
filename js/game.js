@@ -1,3 +1,34 @@
+function toggleOuterAirlockDoor() {
+    if (!state || !state.player) return;
+    const distToDoor = Math.hypot(state.player.x - 276, state.player.y - 380);
+    if (distToDoor > 85) {
+        setAria('Walk closer to the Airlock outer door at the left entrance to cycle the outer hatch.');
+        if (typeof spawnFloatingText === 'function') {
+            spawnFloatingText('🚪 WALK CLOSER TO AIRLOCK DOOR', state.player.x, state.player.y - 25, '#f59e0b');
+        }
+        return;
+    }
+
+    if (!state.player.inSuit || !state.player.suitChecked) {
+        if (window.sfx && typeof sfx.alert === 'function') sfx.alert();
+        if (typeof triggerCameraShake === 'function') triggerCameraShake(3.0);
+        if (typeof spawnFloatingText === 'function') {
+            spawnFloatingText('🔒 PUT ON SUIT & CHECK SEAL FIRST!', state.player.x, state.player.y - 25, '#ef4444');
+        }
+        setAria('LOCKED! Inspect Airlock Console [E] to don and pressure-check your spacesuit before opening the outer hatch.');
+        return;
+    }
+
+    state.player.outerDoorOpen = !state.player.outerDoorOpen;
+    if (window.sfx && typeof sfx.pickup === 'function') sfx.pickup();
+    if (typeof triggerCameraShake === 'function') triggerCameraShake(2.0);
+    if (typeof spawnFloatingText === 'function') {
+        spawnFloatingText(state.player.outerDoorOpen ? '💨 OUTER HATCH UNLOCKED & OPEN' : '🔒 OUTER HATCH SEALED', state.player.x, state.player.y - 25, state.player.outerDoorOpen ? '#22c55e' : '#f59e0b');
+    }
+    setAria(state.player.outerDoorOpen ? 'Outer airlock hatch unsealed and opened! Safe to conduct EVA excursion on Martian surface.' : 'Outer airlock hatch sealed and locked.');
+    if (typeof updateUI === 'function') updateUI();
+}
+window.toggleOuterAirlockDoor = toggleOuterAirlockDoor;
 /**
  * ASTRA-1: The Red Frontier - Main Game Loop, Input Controller & Player Physics
  * 2026 NASA Space Apps Challenge
@@ -13,6 +44,10 @@ window.addEventListener('keydown', (e) => {
     if (k === 'a' || k === 'arrowleft') { keys.left = true; if (state.player) state.player.targetX = null; }
     if (k === 'd' || k === 'arrowright') { keys.right = true; if (state.player) state.player.targetX = null; }
     
+    if (k === 'f') {
+        toggleOuterAirlockDoor();
+        return;
+    }
     if (k === 'e') {
         const dlgModal = document.getElementById('modal-dialogue');
         if (dlgModal && !dlgModal.classList.contains('hidden')) {
@@ -20,6 +55,15 @@ window.addEventListener('keydown', (e) => {
             return;
         }
         if (typeof isAnyModalOpen === 'function' && isAnyModalOpen()) return;
+
+        // Check if near Outer Airlock Door (within 75px)
+        if (state && state.player) {
+            const distToDoor = Math.hypot(state.player.x - 276, state.player.y - 380);
+            if (distToDoor <= 75) {
+                toggleOuterAirlockDoor();
+                return;
+            }
+        }
         if (typeof triggerNearestObjectInteraction === 'function') triggerNearestObjectInteraction();
     }
     
@@ -111,6 +155,23 @@ function initCanvasPointer() {
         const clampedY = Math.max(55, Math.min(705, worldY));
 
         if (isInitialClick) {
+            // Check direct click on Outer Airlock Door (within 35px of x: 276, y: 380)
+            if (Math.hypot(worldX - 276, worldY - 380) <= 35) {
+                const distToDoor = Math.hypot(state.player.x - 276, state.player.y - 380);
+                if (distToDoor <= 75) {
+                    toggleOuterAirlockDoor();
+                    return;
+                } else {
+                    const targetX = (state.player.x > 276) ? 295 : 240;
+                    state.player.targetX = targetX;
+                    state.player.targetY = 380;
+                    state.player.targetAction = null;
+                    if (typeof spawnClickMarker === 'function') spawnClickMarker(276, 380, '#38bdf8');
+                    if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+                    return;
+                }
+            }
+
             let clickedObj = null;
             if (typeof OBJECTS !== 'undefined') {
                 for (const obj of OBJECTS) {
@@ -223,6 +284,18 @@ function initCanvasPointer() {
 // --- HABITAT SOLID COLLISION DETECTOR ---
 // Prevents walking through regolith walls, central master consoles, and perimeter machinery.
 function checkSolidCollision(px, py, radius = 13) {
+    // 0. Outer Airlock Hatch Barrier: Closed door acts as a solid physical wall
+    if (typeof state !== 'undefined' && state.player && !state.player.outerDoorOpen) {
+        const doorX = 270;
+        const doorY = 325;
+        const doorW = 16;
+        const doorH = 110;
+        if (px + radius > doorX && px - radius < doorX + doorW &&
+            py + radius > doorY && py - radius < doorY + doorH) {
+            return true;
+        }
+    }
+
     // 1. Solid Regolith Habitat Walls
     if (typeof HABITAT_WALLS !== 'undefined') {
         for (let i = 0; i < HABITAT_WALLS.length; i++) {
@@ -402,9 +475,33 @@ function updateGame(dt) {
     }
 
     // Apply movement with axis-independent sliding collision against 3D-printed regolith walls
-    const moveX = dx * state.player.speed * dt;
-    const moveY = dy * state.player.speed * dt;
+    let moveX = dx * state.player.speed * dt;
+    let moveY = dy * state.player.speed * dt;
 
+    // Strict Outer Airlock Hatch Barrier when closed (!state.player.outerDoorOpen)
+    if (state.player && !state.player.outerDoorOpen) {
+        const inDoorY = (state.player.y >= 325 && state.player.y <= 435);
+        if (inDoorY) {
+            // If inside habitat (x >= 280), prevent moving left through closed door (x < 286)
+            if (state.player.x >= 280 && (state.player.x + moveX) < 286) {
+                moveX = 0;
+                dx = 0;
+                if (state.player.targetX !== null && state.player.targetX < 286) {
+                    state.player.targetX = null;
+                    state.player.targetY = null;
+                }
+            }
+            // If outside habitat (x <= 274), prevent moving right through closed door (x > 270)
+            if (state.player.x <= 274 && (state.player.x + moveX) > 270) {
+                moveX = 0;
+                dx = 0;
+                if (state.player.targetX !== null && state.player.targetX > 270) {
+                    state.player.targetX = null;
+                    state.player.targetY = null;
+                }
+            }
+        }
+    }
     if (moveX !== 0) {
         const nextX = Math.max(45, Math.min(1145, state.player.x + moveX));
         if (!checkWallCollision(nextX, state.player.y)) {
@@ -423,6 +520,23 @@ function updateGame(dt) {
         }
     }
 
+    // UPGRADE 3: Emergency Countdown Timer Ticking
+    if (state.timerActive && state.taskTimer > 0) {
+        state.taskTimer -= dt;
+        if (state.taskTimer <= 0) {
+            state.taskTimer = 0;
+            if (typeof loseHeart === 'function') {
+                loseHeart('Time ran out! Emergency systems overloaded!');
+            }
+            if (state.hearts > 0) {
+                state.taskTimer = state.timerDuration || 75;
+            }
+        }
+    }
+    const activeCh = (typeof CHAPTERS !== 'undefined') ? CHAPTERS[state.chapterIdx] : null;
+    if (activeCh && activeCh.tasks && activeCh.tasks.every(t => t.done)) {
+        state.timerActive = false;
+    }
     const isMoving = (dx !== 0 || dy !== 0);
     state.player.isMoving = isMoving;
 
@@ -453,11 +567,13 @@ function updateGame(dt) {
         setAria("Airlock Interlock: EVA Spacesuit automatically donned and pressurized to 30 kPa pure O₂ for Martian surface excursion (0.6 kPa exterior).");
         if (typeof updateUI === 'function') updateUI();
     } else if (state.player.x >= 415 && state.player.inSuit) {
-        // Returning to Central Spine stows the EVA suit
+        // Returning to Central Spine stows the EVA suit and closes outer door
         state.player.inSuit = false;
+        state.player.suitChecked = false;
+        state.player.outerDoorOpen = false;
         if (typeof triggerCameraShake === 'function') triggerCameraShake(2.0);
-        if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
-        setAria("Airlock Equalization Complete: Returned to 101.3 kPa shirtsleeve IVA habitat environment. EVA suit stowed in Airlock.");
+        if (window.sfx && typeof sfx.chime === 'function') sfx.chime();
+        setAria('Airlock Equalization Complete: Returned to 101.3 kPa shirtsleeve IVA habitat environment. Outer door sealed and suit stowed.');
         if (typeof updateUI === 'function') updateUI();
     }
 
@@ -490,20 +606,52 @@ function updateGame(dt) {
     window.camera = cam;
 
     // Floating interaction prompt update
+    const distToDoor = (state && state.player) ? Math.hypot(state.player.x - 276, state.player.y - 380) : 999;
+    const inAirlockHatchArea = (distToDoor <= 75);
     const nearestObj = (typeof getNearestObject === 'function') ? getNearestObject() : null;
     const nearestNPC = (typeof getNearestCrewNPC === 'function') ? getNearestCrewNPC() : null;
     const promptEl = document.getElementById('interact-prompt');
+    const kbdEl = document.getElementById('interact-kbd');
     const titleEl = document.getElementById('interact-title');
     const subEl = document.getElementById('interact-sub');
 
     // Floating interaction prompt: Visible in both 2D and 3D mode for maximum clarity
     if (promptEl && titleEl && subEl) {
-        if (nearestObj) {
+        if (inAirlockHatchArea) {
             promptEl.classList.remove('hidden');
+            if (kbdEl) kbdEl.textContent = 'E';
+            if (!state.player.inSuit || !state.player.suitChecked) {
+                titleEl.textContent = '🔒 AIRLOCK DOOR: LOCKED';
+                subEl.textContent = 'Don EVA Suit & Check Seal at Console [E] first';
+                promptEl.style.borderColor = '#ef4444';
+                if (kbdEl) kbdEl.className = 'bg-rose-500 text-white font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
+            } else if (!state.player.outerDoorOpen) {
+                titleEl.textContent = '🚪 AIRLOCK DOOR: UNLOCK & OPEN';
+                subEl.textContent = 'Click button or Press [E] / [F] to Open Door';
+                promptEl.style.borderColor = '#38bdf8';
+                if (kbdEl) kbdEl.className = 'bg-sky-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md animate-pulse';
+            } else {
+                titleEl.textContent = '💨 AIRLOCK DOOR: CLOSE & LOCK';
+                subEl.textContent = 'Click button or Press [E] / [F] to Close Door';
+                promptEl.style.borderColor = '#22c55e';
+                if (kbdEl) kbdEl.className = 'bg-emerald-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
+            }
+        } else if (nearestObj) {
+            promptEl.classList.remove('hidden');
+            promptEl.style.borderColor = '#f59e0b';
+            if (kbdEl) {
+                kbdEl.textContent = 'E';
+                kbdEl.className = 'bg-amber-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
+            }
             titleEl.textContent = nearestObj.name;
             subEl.textContent = 'Click or Press [E] to interact';
         } else if (nearestNPC) {
             promptEl.classList.remove('hidden');
+            promptEl.style.borderColor = '#22c55e';
+            if (kbdEl) {
+                kbdEl.textContent = 'E';
+                kbdEl.className = 'bg-emerald-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
+            }
             titleEl.textContent = `Talk to ${nearestNPC.name} (${nearestNPC.role})`;
             subEl.textContent = 'Click or Press [E] for Crew Dialogue';
         } else {
@@ -538,6 +686,7 @@ function gameLoop(now) {
 // --- BOOTSTRAP INITIALIZATION ---
 function initGame() {
     window.currentViewMode = '3d';
+    // interact-prompt click handled in js/ui.js with full modal & range safety
     initTouchControls();
     initCanvasPointer();
     if (typeof initThreeScene === 'function') initThreeScene();

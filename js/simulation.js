@@ -23,6 +23,11 @@ const state = {
     crewHealth: 100,
     cropGrowthStage: 0,
     hasCoreSample: false,
+    hearts: 3,
+    maxHearts: 3,
+    taskTimer: 75,
+    timerDuration: 75,
+    timerActive: false,
     selectedDilemmas: {},
     gridOverloadSeconds: 0,
     inventory: [],
@@ -53,12 +58,41 @@ const state = {
         y: 385,
         speed: 185,
         inSuit: false,
+        suitChecked: false,
+        outerDoorOpen: false,
         facing: 'right',
         targetX: null,
         targetY: null
     }
 };
 
+function loseHeart(reasonText) {
+    if (state.hearts <= 0) return;
+    state.hearts = Math.max(0, state.hearts - 1);
+    if (typeof triggerCameraShake === 'function') triggerCameraShake(6.0);
+    if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+    if (typeof spawnFloatingText === 'function' && state.player) {
+        spawnFloatingText('-1 💔 ' + (reasonText || 'Danger!'), state.player.x, state.player.y - 25, '#ef4444');
+    }
+    setAria('⚠️ HEART LOST! ' + reasonText);
+    if (typeof updateUI === 'function') updateUI();
+    if (state.hearts <= 0) {
+        triggerGameOver(reasonText);
+    }
+}
+
+function triggerGameOver(reasonText) {
+    if (typeof closeAllModals === 'function') closeAllModals();
+    const modal = document.getElementById('modal-gameover');
+    if (modal) {
+        modal.classList.remove('hidden');
+        const reasonEl = document.getElementById('gameover-reason');
+        if (reasonEl) reasonEl.textContent = reasonText || 'Outpost environmental and life-support boundaries exceeded.';
+        const heartsEl = document.getElementById('gameover-hearts');
+        if (heartsEl) heartsEl.textContent = '🖤🖤🖤';
+    }
+    if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+}
 function hasItem(itemName) {
     return state.inventory.includes(itemName);
 }
@@ -183,7 +217,26 @@ function loadChapter(idx, showBriefing = true) {
     state.faults.shelterProtocolActive = false;
     state.faults.breakerTripped = false;
     state.gridOverloadSeconds = 0;
-    if (state.player) state.player.inSuit = false;
+    if (state.hearts <= 0) state.hearts = 3;
+    if (state.player) {
+        state.player.inSuit = false;
+        state.player.suitChecked = false;
+        state.player.outerDoorOpen = false;
+    }
+    // Configure emergency countdown timer per mission
+    if (idx === 3 || idx === 4 || idx === 5 || idx === 7) {
+        state.timerActive = true;
+        state.timerDuration = 75;
+        state.taskTimer = 75;
+    } else if (idx === 8) {
+        state.timerActive = true;
+        state.timerDuration = 60;
+        state.taskTimer = 60;
+    } else {
+        state.timerActive = false;
+        state.timerDuration = 75;
+        state.taskTimer = 75;
+    }
 
     // Crop Growth Stage progression by Sol
     if (state.sol < 45) {
@@ -677,6 +730,8 @@ if (typeof module !== 'undefined') {
         showVictoryModal,
         syncTasksWithState,
         completeTask,
+        loseHeart,
+        triggerGameOver,
         isTaskDone,
         unlockFact,
         awardBadge
@@ -688,6 +743,8 @@ if (typeof window !== 'undefined') {
     window.loadChapter = loadChapter;
     window.applyDilemmaChoice = applyDilemmaChoice;
     window.completeTask = completeTask;
+    window.loseHeart = loseHeart;
+    window.triggerGameOver = triggerGameOver;
     window.isTaskDone = isTaskDone;
     window.syncTasksWithState = syncTasksWithState;
     window.calculateMissionLegacy = calculateMissionLegacy;

@@ -198,3 +198,34 @@ canvas {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(255, 255, 255, 0.08);
 }
+
+/* Strict Horizontal HUD Hearts & Action Buttons Alignment */
+#hud-hearts-container {
+    height: 32px !important;
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+}
+
+#crew-hearts {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 4px !important;
+    white-space: nowrap !important;
+    line-height: 1 !important;
+    flex-shrink: 0 !important;
+}
+
+.heart-glyph {
+    display: inline-block !important;
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    line-height: 1 !important;
+    font-size: 14px !important;
+}
+

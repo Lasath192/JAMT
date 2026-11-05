@@ -160,6 +160,16 @@ function getNearestCrewNPC() {
 }
 
 function triggerNearestObjectInteraction() {
+    // 1. Priority: Outer Airlock Door (within 75px)
+    if (state && state.player) {
+        const distToDoor = Math.hypot(state.player.x - 276, state.player.y - 380);
+        if (distToDoor <= 75) {
+            if (typeof toggleOuterAirlockDoor === 'function') {
+                toggleOuterAirlockDoor();
+                return;
+            }
+        }
+    }
     const obj = getNearestObject();
     if (obj) {
         if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
@@ -227,58 +237,14 @@ function openObjectModal(obj) {
         addMetric('Outer Hatch Interlock', 'VERIFIED SEALED', 'text-emerald-300');
         desc.textContent = 'The Airlock isolates Astra-1’s 101.3 kPa breathable atmosphere from the 0.6 kPa Martian surface. Always don your pressurized EVA suit before stepping onto the Martian surface.';
 
-        // Mission 1: The First Breath
+        // UPGRADE 1: Two Clear, Kid-Friendly Numbered Buttons
+        // Button 1: Don / Doff Spacesuit
         addActionBtn(
-            state.player.inSuit ? '✓ Airlock Pressure Verified & EVA Suit Pressurized' : 'Verify Cabin Pressure & Don EVA Suit',
-            'Electronic Orion-style telemetry verification and 30 kPa suit pressurization',
-            () => {
-                state.player.inSuit = true;
-                completeTask('ch1_airlock');
-                if (typeof spawnFloatingText === 'function') spawnFloatingText('EVA SUIT DONNED & PRESSURIZED', state.player.x, state.player.y - 20, '#38bdf8');
-                if (typeof sfx !== 'undefined' && sfx.pickup) sfx.pickup();
-                setAria('Airlock pressure verified at 101.3 kPa and EVA Suit pressurized! Next, grab your tools from Central Storage.');
-                if (typeof updateUI === 'function') updateUI();
-                openObjectModal(obj);
-            },
-            state.player.inSuit ? 'bg-emerald-700/80 hover:bg-emerald-600 text-emerald-100' : 'bg-sky-600 hover:bg-sky-500 text-white'
-        );
-
-        // Mission 3: Commissioning Perseverance & Ingenuity
-        if (state.chapterIdx === 2) {
-            addActionBtn(
-                'Don EVA Spacesuit & Depressurize for Surface Rover EVA',
-                'Prepares astronaut for outdoor surface traverse to NASA Perseverance',
-                () => {
-                    state.player.inSuit = true;
-                    completeTask('ch3_eva_prep');
-                    setAria('EVA Spacesuit pressurized! Step through the outer hatch to link with the Mars Rover.');
-                    openObjectModal(obj);
-                },
-                'bg-amber-500 hover:bg-amber-400 text-slate-950'
-            );
-        }
-
-        // Mission 5: The Zero-Visibility EVA
-        if (state.chapterIdx === 4) {
-            addActionBtn(
-                'Don Heavy Storm Suit & Cycle Hatch into Zero-Visibility Gale',
-                'Required to reach outdoor solar array latches during dust storm',
-                () => {
-                    state.player.inSuit = true;
-                    completeTask('ch5_airlock_exit');
-                    setAria('Storm suit locked and pressurized! Head outside immediately to secure the solar array latches.');
-                    openObjectModal(obj);
-                },
-                'bg-red-600 hover:bg-red-500 text-white'
-            );
-        }
-
-        // General Suit Toggle
-        addActionBtn(
-            state.player.inSuit ? 'Doff EVA Spacesuit (Return to Shirtsleeve IVA)' : 'Don & Pressurize EVA Spacesuit',
-            state.player.inSuit ? 'Stow suit in airlock rack' : 'Required for safe outdoor Mars surface excursions',
+            state.player.inSuit ? '🧑‍🚀 1. Spacesuit On (Click to Doff / Remove)' : '🧑‍🚀 1. Put On Spacesuit',
+            state.player.inSuit ? 'Take off bulky spacesuit and return to comfortable shirtsleeve uniform' : 'Equip pressurized Orion EVA spacesuit with helmet and oxygen pack',
             () => {
                 state.player.inSuit = !state.player.inSuit;
+                if (!state.player.inSuit) state.player.suitChecked = false;
                 if (typeof sfx !== 'undefined' && sfx.pickup) sfx.pickup();
                 if (typeof spawnFloatingText === 'function') {
                     spawnFloatingText(state.player.inSuit ? 'EVA SUIT DONNED' : 'SHIRTSLEEVE IVA', state.player.x, state.player.y - 20, state.player.inSuit ? '#38bdf8' : '#4ade80');
@@ -287,7 +253,31 @@ function openObjectModal(obj) {
                 if (typeof updateUI === 'function') updateUI();
                 openObjectModal(obj);
             },
-            state.player.inSuit ? 'bg-amber-600 hover:bg-amber-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-white'
+            state.player.inSuit ? 'bg-amber-600 hover:bg-amber-500 text-white font-bold' : 'bg-sky-600 hover:bg-sky-500 text-white font-bold'
+        );
+
+        // Button 2: Check Suit & Airlock Seal
+        addActionBtn(
+            state.player.suitChecked ? '✅ 2. Suit & Airlock Seal Verified' : '✅ 2. Check Suit & Airlock Seal',
+            state.player.inSuit ? 'Electronic pressure integrity test (Required before opening outer door!)' : '⚠️ PUT ON SUIT FIRST BEFORE RUNNING PRESSURE CHECK!',
+            () => {
+                if (!state.player.inSuit) {
+                    if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+                    if (typeof spawnFloatingText === 'function') spawnFloatingText('PUT ON SUIT FIRST!', state.player.x, state.player.y - 20, '#ef4444');
+                    setAria('You cannot check the suit seal while wearing shirtsleeves! Put on the Spacesuit first.');
+                    return;
+                }
+                state.player.suitChecked = true;
+                completeTask('ch1_airlock');
+                if (state.chapterIdx === 2) completeTask('ch3_eva_prep');
+                if (state.chapterIdx === 4) completeTask('ch5_airlock_exit');
+                if (typeof sfx !== 'undefined' && sfx.success) sfx.success();
+                if (typeof spawnFloatingText === 'function') spawnFloatingText('SUIT & SEAL VERIFIED! PRESS [F] AT DOOR', state.player.x, state.player.y - 20, '#22c55e');
+                setAria('Suit Checked! Pressure nominal at 101.3 kPa. Now walk to the left door and press [F] (or click) to open the outer hatch!');
+                if (typeof updateUI === 'function') updateUI();
+                openObjectModal(obj);
+            },
+            state.player.suitChecked ? 'bg-emerald-700 hover:bg-emerald-600 text-emerald-100 font-bold' : (state.player.inSuit ? 'bg-emerald-600 hover:bg-emerald-500 text-white font-bold' : 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-60')
         );
 
     } else if (obj.id === 'storage_locker') {
@@ -999,6 +989,12 @@ function openPowerModal() {
             if (key === 'lifesupport' && !item.on) {
                 setAria("WARNING! You shut off Primary Life Support! Carbon dioxide (ppm) is now rising rapidly in the habitat!");
                 if (window.sfx && typeof sfx.alert === 'function') sfx.alert();
+                if (typeof loseHeart === 'function') loseHeart("Essential Life Support was shut down!");
+            }
+            if (key === 'heating' && !item.on) {
+                setAria("WARNING! You shut off Habitat Thermal Control! Outpost temperatures dropping to subzero!");
+                if (window.sfx && typeof sfx.alert === 'function') sfx.alert();
+                if (typeof loseHeart === 'function') loseHeart("Habitat Heating was shut down!");
             }
             checkPowerTasks();
             updateUI();
@@ -1163,9 +1159,68 @@ function updateUI() {
         cadetValRad.className = `font-bold text-[11px] ${isRadDanger ? 'text-red-400 animate-pulse' : 'text-sky-300'}`;
     }
 
+    // UPGRADE 2: 3-Heart Life System Display (Strict horizontal alignment with glow)
+    const crewHeartsEl = document.getElementById('crew-hearts');
+    const hCount = (typeof state.hearts === 'number') ? state.hearts : 3;
+    if (crewHeartsEl) {
+        let heartsHtml = '';
+        for (let i = 0; i < 3; i++) {
+            if (i < hCount) {
+                heartsHtml += '<span class="heart-glyph inline-block text-sm leading-none shrink-0" style="filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.7));">❤️</span>';
+            } else {
+                heartsHtml += '<span class="heart-glyph inline-block text-sm leading-none shrink-0 opacity-30 grayscale">🖤</span>';
+            }
+        }
+        crewHeartsEl.innerHTML = heartsHtml;
+    }
+
+    // Dynamic Quick Door Button Update
+    const iconQuickDoor = document.getElementById('icon-quick-door');
+    const labelQuickDoor = document.getElementById('label-quick-door');
+    const btnQuickDoor = document.getElementById('btn-quick-door-f');
+    if (btnQuickDoor) {
+        const isDoorOpen = !!(state.player && state.player.outerDoorOpen);
+        if (iconQuickDoor) {
+            iconQuickDoor.className = isDoorOpen ? 'fa-solid fa-door-open text-emerald-400 text-xs' : 'fa-solid fa-door-closed text-sky-400 text-xs';
+        }
+        if (labelQuickDoor) {
+            labelQuickDoor.textContent = isDoorOpen ? '[E] Close' : '[E] Open';
+        }
+        btnQuickDoor.className = isDoorOpen
+            ? 'h-8 btn-tech bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/50 text-emerald-200 px-2.5 rounded-lg text-xs font-mono-tech flex items-center justify-center gap-1.5 cursor-pointer shrink-0 box-border'
+            : 'h-8 btn-tech bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/50 text-sky-200 px-2.5 rounded-lg text-xs font-mono-tech flex items-center justify-center gap-1.5 cursor-pointer shrink-0 box-border';
+    }
+
+    // UPGRADE 3: Emergency Task Countdown Bar
+    const timerContainer = document.getElementById('task-timer-bar-container');
+    const timerVal = document.getElementById('task-timer-val');
+    const timerFill = document.getElementById('task-timer-fill');
+    if (timerContainer && timerVal && timerFill) {
+        if (state.timerActive) {
+            timerContainer.classList.remove('hidden');
+            const secs = Math.max(0, Math.ceil(state.taskTimer));
+            const m = Math.floor(secs / 60);
+            const secRemain = secs % 60;
+            timerVal.textContent = `⏱️ ${String(m).padStart(2, '0')}:${String(secRemain).padStart(2, '0')}`;
+            const pct = Math.max(0, Math.min(100, (state.taskTimer / (state.timerDuration || 75)) * 100));
+            timerFill.style.width = `${pct}%`;
+            if (secs <= 15) {
+                timerFill.className = 'bg-red-500 h-full animate-pulse transition-all duration-200';
+                timerVal.className = 'font-bold text-red-400 animate-pulse font-mono-tech';
+            } else if (secs <= 30) {
+                timerFill.className = 'bg-amber-400 h-full transition-all duration-200';
+                timerVal.className = 'font-bold text-amber-300 font-mono-tech';
+            } else {
+                timerFill.className = 'bg-emerald-400 h-full transition-all duration-200';
+                timerVal.className = 'font-bold text-emerald-300 font-mono-tech';
+            }
+        } else {
+            timerContainer.classList.add('hidden');
+        }
+    }
     const trainerHealthEl = document.getElementById('trainer-health-text');
     if (trainerHealthEl) {
-        trainerHealthEl.textContent = `Nova: ${Math.round(state.crewHealth)}%`;
+        trainerHealthEl.textContent = '❤️'.repeat(Math.max(0, hCount)) + '🖤'.repeat(Math.max(0, 3 - hCount));
     }
 
     // Suit & Crew Health
@@ -1256,18 +1311,34 @@ function updateUI() {
         }
     }
 
-    // Inventory Pouch
+    // UPGRADE 4: Icon-Only Square Inventory Pouch (36x36px with Tooltips)
     const invEl = document.getElementById('inventory-list');
     if (invEl) {
         invEl.innerHTML = '';
         if (state.inventory.length === 0) {
-            invEl.innerHTML = `<span class="text-[10px] font-mono-tech text-slate-500 px-2">Empty (Visit Storage)</span>`;
+            invEl.innerHTML = `<span class="text-[10px] font-mono-tech text-slate-500 px-2 select-none">Empty Pouch</span>`;
         } else {
             state.inventory.forEach(item => {
-                const pill = document.createElement('span');
-                pill.className = 'text-[10px] font-mono-tech bg-sky-500/20 border border-sky-400/40 text-sky-200 px-2 py-0.5 rounded-md flex items-center gap-1';
-                pill.innerHTML = `<i class="fa-solid fa-wrench text-[9px] text-amber-400"></i>${item}`;
-                invEl.appendChild(pill);
+                const badge = document.createElement('div');
+                badge.title = `${item} (Equipped in Pouch)`;
+                let iconHTML = `<i class="fa-solid fa-wrench text-slate-300 text-base"></i>`;
+                let extraClass = '';
+                if (item === 'Multi-Tool') {
+                    extraClass = ' border-amber-400/60 bg-amber-500/10';
+                    iconHTML = `<i class="fa-solid fa-screwdriver-wrench text-amber-400 text-base"></i>`;
+                } else if (item === 'HV Fuse') {
+                    extraClass = ' border-yellow-400/60 bg-yellow-500/10';
+                    iconHTML = `<i class="fa-solid fa-bolt text-yellow-300 text-base"></i>`;
+                } else if (item === 'LiOH Filter') {
+                    extraClass = ' border-teal-400/60 bg-teal-500/10';
+                    iconHTML = `<i class="fa-solid fa-fan text-teal-300 text-base"></i>`;
+                } else if (item === 'Pipe Seal Kit') {
+                    extraClass = ' border-sky-400/60 bg-sky-500/10';
+                    iconHTML = `<i class="fa-solid fa-faucet-drip text-sky-400 text-base"></i>`;
+                }
+                badge.className = 'w-9 h-9 rounded-xl bg-slate-900/90 border border-slate-700/80 hover:border-amber-400 flex items-center justify-center cursor-pointer shadow-md transition-all hover:scale-110' + extraClass;
+                badge.innerHTML = iconHTML;
+                invEl.appendChild(badge);
             });
         }
     }
@@ -1345,6 +1416,73 @@ function initUIEventListeners() {
         }
     };
 
+    // UPGRADE 1: Quick [F] Airlock Door Toggle Button
+    const btnQuickDoorF = document.getElementById('btn-quick-door-f');
+    if (btnQuickDoorF) {
+        btnQuickDoorF.addEventListener('click', () => {
+            if (typeof toggleOuterAirlockDoor === 'function') toggleOuterAirlockDoor();
+        });
+    }
+    const btnTouchF = document.getElementById('btn-touch-f');
+    if (btnTouchF) {
+        btnTouchF.addEventListener('click', () => {
+            if (typeof toggleOuterAirlockDoor === 'function') toggleOuterAirlockDoor();
+        });
+    }
+
+    // UPGRADE 2: Game Over Modal Buttons
+    const btnGameOverRetry = document.getElementById('btn-gameover-retry');
+    if (btnGameOverRetry) {
+        btnGameOverRetry.addEventListener('click', () => {
+            state.hearts = 3;
+            state.timerActive = false;
+            const modal = document.getElementById('modal-gameover');
+            if (modal) modal.classList.add('hidden');
+            if (typeof loadChapter === 'function') loadChapter(state.chapterIdx, false);
+        });
+    }
+    const btnGameOverRestart = document.getElementById('btn-gameover-restart');
+    if (btnGameOverRestart) {
+        btnGameOverRestart.addEventListener('click', () => {
+            state.hearts = 3;
+            state.timerActive = false;
+            const modal = document.getElementById('modal-gameover');
+            if (modal) modal.classList.add('hidden');
+            if (typeof loadChapter === 'function') loadChapter(0, true);
+        });
+    }
+
+    // UPGRADE 5: 10s Solar Storm Dilemma Buttons
+    const btnQuickDilemma = document.getElementById('btn-quick-dilemma');
+    if (btnQuickDilemma) {
+        btnQuickDilemma.addEventListener('click', triggerTenSecondStormDilemma);
+    }
+    const btnDilemmaFold = document.getElementById('btn-dilemma-fold');
+    if (btnDilemmaFold) btnDilemmaFold.addEventListener('click', onDilemmaOptionA);
+    const btnDilemmaOpen = document.getElementById('btn-dilemma-open');
+    if (btnDilemmaOpen) btnDilemmaOpen.addEventListener('click', onDilemmaOptionB);
+
+    // UPGRADE 6: Live NASA DONKI Space Weather Button & Modal
+    const btnDonkiWeather = document.getElementById('btn-donki-weather');
+    if (btnDonkiWeather) {
+        btnDonkiWeather.addEventListener('click', openDonkiWeatherModal);
+    }
+    const btnCloseDonki = document.getElementById('btn-close-donki');
+    if (btnCloseDonki) {
+        btnCloseDonki.addEventListener('click', () => {
+            const modal = document.getElementById('modal-donki-weather');
+            if (modal) modal.classList.add('hidden');
+        });
+    }
+
+    // Hearts Container Click
+    const hudHeartsContainer = document.getElementById('hud-hearts-container');
+    if (hudHeartsContainer) {
+        hudHeartsContainer.addEventListener('click', () => {
+            if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+            setAria(`Cadet Nova has ${state.hearts || 3} of 3 Hearts remaining! Protect your life support and power to keep the habitat online.`);
+        });
+    }
     if (btnToggleTrainer) btnToggleTrainer.addEventListener('click', () => toggleTrainer(false));
     if (pillTrainer) pillTrainer.addEventListener('click', () => toggleTrainer(true));
 
@@ -1644,11 +1782,18 @@ function initUIEventListeners() {
         });
     }
 
-    // Floating Prompt click
+    // Floating Prompt click (Supports door toggle and nearest objects)
     const interactPrompt = document.getElementById('interact-prompt');
     if (interactPrompt) {
         interactPrompt.addEventListener('click', () => {
-            if (!isAnyModalOpen()) triggerNearestObjectInteraction();
+            if (isAnyModalOpen()) return;
+            if (state && state.player && Math.hypot(state.player.x - 276, state.player.y - 380) <= 75) {
+                if (typeof toggleOuterAirlockDoor === 'function') {
+                    toggleOuterAirlockDoor();
+                    return;
+                }
+            }
+            triggerNearestObjectInteraction();
         });
     }
 
@@ -1711,3 +1856,113 @@ if (document.readyState === 'loading') {
     initUIEventListeners();
 }
 
+
+// --- UPGRADE 5: MIKE GIVEN 10-SECOND SOLAR DUST STORM DILEMMA ---
+let stormDilemmaInterval = null;
+function triggerTenSecondStormDilemma() {
+    const modal = document.getElementById('modal-storm-dilemma');
+    if (!modal) return;
+    if (typeof closeAllModals === 'function') closeAllModals();
+    modal.classList.remove('hidden');
+    if (window.sfx && typeof sfx.alert === 'function') sfx.alert();
+
+    let timeLeft = 10.0;
+    const timerEl = document.getElementById('storm-dilemma-timer');
+    if (timerEl) timerEl.textContent = '10.0s';
+
+    if (stormDilemmaInterval) clearInterval(stormDilemmaInterval);
+    stormDilemmaInterval = setInterval(() => {
+        timeLeft -= 0.1;
+        if (timerEl) timerEl.textContent = `${Math.max(0, timeLeft).toFixed(1)}s`;
+        if (timeLeft <= 0) {
+            clearInterval(stormDilemmaInterval);
+            // Default: Option A (Safe stow)
+            onDilemmaOptionA();
+        }
+    }, 100);
+}
+window.triggerTenSecondStormDilemma = triggerTenSecondStormDilemma;
+
+function onDilemmaOptionA() {
+    if (stormDilemmaInterval) clearInterval(stormDilemmaInterval);
+    const modal = document.getElementById('modal-storm-dilemma');
+    if (modal) modal.classList.add('hidden');
+    state.solarOutputKW = 0;
+    if (typeof spawnFloatingText === 'function') spawnFloatingText('🛡️ PANELS FOLDED SAFELY (0 kW)', state.player.x, state.player.y - 20, '#22c55e');
+    setAria('Decision A Chosen: Solar panels folded into protective slots! Conduits safe, but solar output dropped to 0 kW. Monitor battery closely tonight!');
+    if (typeof updateUI === 'function') updateUI();
+}
+
+function onDilemmaOptionB() {
+    if (stormDilemmaInterval) clearInterval(stormDilemmaInterval);
+    const modal = document.getElementById('modal-storm-dilemma');
+    if (modal) modal.classList.add('hidden');
+    state.faults.externalConduitDamaged = true;
+    if (typeof loseHeart === 'function') loseHeart('Flying dust storm debris severed external solar conduit!');
+    if (typeof spawnFloatingText === 'function') spawnFloatingText('⚡ PANELS DAMAGED BY DEBRIS (-1 ❤️)', state.player.x, state.player.y - 20, '#ef4444');
+    setAria('Decision B Chosen: Panels kept open for power, but gale winds severed external cabling! Exit on EVA to repair before power fails.');
+    if (typeof updateUI === 'function') updateUI();
+}
+
+// --- UPGRADE 6: LIVE NASA DONKI SPACE WEATHER FETCHER ---
+async function openDonkiWeatherModal() {
+    const modal = document.getElementById('modal-donki-weather');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+
+    const statusEl = document.getElementById('donki-status');
+    const resultsEl = document.getElementById('donki-results');
+    if (statusEl) statusEl.textContent = 'Connecting to NASA DONKI Telemetry...';
+    if (resultsEl) resultsEl.innerHTML = '<div class="text-sky-300 animate-pulse py-2">Querying NASA Space Weather Database (api.nasa.gov)...</div>';
+
+    try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 2500);
+        const res = await fetch('https://api.nasa.gov/DONKI/FLR?api_key=DEMO_KEY', { signal: controller.signal });
+        clearTimeout(timeout);
+        if (!res.ok) throw new Error('API unavailable');
+        const data = await res.json();
+        if (statusEl) statusEl.textContent = 'NASA GSFC / DONKI Live API (Synchronized)';
+        if (resultsEl) {
+            if (Array.isArray(data) && data.length > 0) {
+                const latest = data.slice(-3).reverse();
+                resultsEl.innerHTML = latest.map(f => `
+                    <div class="p-2.5 rounded-lg bg-slate-800/80 border border-sky-500/30 flex items-center justify-between">
+                        <div>
+                            <div class="font-bold text-amber-300 font-display flex items-center gap-1.5">
+                                <i class="fa-solid fa-sun text-amber-400"></i> ${f.classType || 'M-Class'} Solar Flare
+                            </div>
+                            <div class="text-[11px] text-slate-400 font-mono-tech">Peak Time: ${f.peakTime || 'Recent'}</div>
+                        </div>
+                        <span class="text-[10px] font-mono-tech bg-red-500/20 text-red-300 border border-red-500/40 px-2 py-0.5 rounded-full">CME Proton Flux</span>
+                    </div>
+                `).join('');
+            } else {
+                throw new Error('No recent flares in window');
+            }
+        }
+    } catch (e) {
+        // Instant authentic NASA DONKI offline fallback
+        if (statusEl) statusEl.textContent = 'NASA DONKI Archive Telemetry (Local Offline Buffer)';
+        if (resultsEl) {
+            resultsEl.innerHTML = `
+                <div class="p-2.5 rounded-lg bg-slate-800/80 border border-amber-500/30 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div class="font-bold text-amber-300 font-display flex items-center gap-1.5">
+                            <i class="fa-solid fa-sun text-amber-400"></i> X1.5 High-Energy Solar Flare (DONKI Logged)
+                        </div>
+                        <span class="text-[10px] font-mono-tech bg-red-500/20 text-red-300 border border-red-500/40 px-2 py-0.5 rounded-full">2.45 mSv/h Radiation</span>
+                    </div>
+                    <div class="text-[11px] text-slate-300">
+                        Coronal Mass Ejection detected propagating outward. Surface cosmic radiation dosage rates increase from baseline 0.08 mSv/h to 2.45 mSv/h.
+                    </div>
+                    <div class="text-[10px] font-mono-tech text-emerald-300">
+                        ✓ Countermeasure: Evacuate crew into Module 07 (Radiation Shelter with Water-Wall Shielding).
+                    </div>
+                </div>
+            `;
+        }
+    }
+}
+window.openDonkiWeatherModal = openDonkiWeatherModal;

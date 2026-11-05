@@ -1619,7 +1619,8 @@ function renderGame(now) {
         const y = cy - halfH;
 
         const distToDoor = (typeof state !== 'undefined' && state && state.player) ? Math.hypot(state.player.x - cx, state.player.y - cy) : 999;
-        const isOpen = (distToDoor <= 55);
+        const isOuterAirlock = (d.id === 'door_airlock_eva');
+        const isOpen = isOuterAirlock ? !!(state && state.player && state.player.outerDoorOpen) : (distToDoor <= 55);
 
         // Outer doorframe
         ctx.fillStyle = '#090d16';
@@ -1659,10 +1660,48 @@ function renderGame(now) {
             } else {
                 ctx.fillRect(x + 2, cy - 10, d.w - 4, 20);
             }
-            // Amber status LEDs (SEALED)
-            ctx.fillStyle = '#f59e0b';
+            // Status LEDs (Red for locked outer door, Amber for internal sealed)
+            ctx.fillStyle = isOuterAirlock ? '#ef4444' : '#f59e0b';
             ctx.fillRect(x + 1, y + 1, 3, 3);
             ctx.fillRect(x + d.w - 4, y + d.h - 4, 3, 3);
+
+            if (isOuterAirlock) {
+                ctx.fillStyle = '#ef4444';
+                ctx.font = 'bold 9px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('🔒', cx, cy);
+            }
+        }
+
+        // Door Control Switch Panel on wall next to outer airlock hatch
+        if (isOuterAirlock) {
+            const switchX = 290;
+            const switchY = 345;
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(switchX - 1, switchY - 1, 14, 18);
+            ctx.fillStyle = isOpen ? '#22c55e' : '#ef4444';
+            ctx.fillRect(switchX + 2, switchY + 2, 10, 6);
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(switchX + 4, switchY + 10, 6, 6);
+
+            // Floating prompt badge right at the door when astronaut is near
+            if (distToDoor <= 75) {
+                const pulse = Math.sin(now * 0.008) * 3;
+                ctx.save();
+                ctx.fillStyle = isOpen ? 'rgba(34, 197, 94, 0.95)' : 'rgba(56, 189, 248, 0.95)';
+                ctx.shadowColor = isOpen ? '#22c55e' : '#38bdf8';
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.roundRect(cx - 30, cy - 35 + pulse, 60, 18, 5);
+                ctx.fill();
+                ctx.fillStyle = '#020617';
+                ctx.font = 'bold 9px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(isOpen ? '[E] CLOSE' : '[E] OPEN', cx, cy - 26 + pulse);
+                ctx.restore();
+            }
         }
     }
 
