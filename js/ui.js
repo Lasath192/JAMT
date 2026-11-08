@@ -222,6 +222,69 @@ function openObjectModal(obj) {
 
     const pwr = getPowerStats();
 
+    // Check if there is an active (or completed) interactive task for this equipment in the current chapter
+    const activityMount = document.getElementById('console-activity-mount');
+    if (activityMount) activityMount.innerHTML = '';
+
+    const activeChapter = (typeof CHAPTERS !== 'undefined') ? CHAPTERS[state.chapterIdx] : null;
+    let targetTask = null;
+    let isTaskAlreadyDone = false;
+
+    if (activeChapter && activeChapter.tasks) {
+        // Priority 1: Uncompleted task for this object
+        const uncompleted = activeChapter.tasks.find(t => TASK_OBJECT_MAP[t.id] === obj.id && !t.done);
+        if (uncompleted) {
+            targetTask = uncompleted;
+            isTaskAlreadyDone = false;
+        } else {
+            // Priority 2: Completed task for this object (available for replay)
+            const completed = activeChapter.tasks.find(t => TASK_OBJECT_MAP[t.id] === obj.id && t.done);
+            if (completed) {
+                targetTask = completed;
+                isTaskAlreadyDone = true;
+            }
+        }
+    }
+
+    if (targetTask && typeof window.AstraActivities !== 'undefined' && window.AstraActivities.hasActivity(targetTask.id)) {
+        if (!isTaskAlreadyDone) {
+            badge.textContent = 'Active Astronaut Procedure';
+            badge.className = 'text-[11px] font-mono-tech font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse';
+            window.AstraActivities.renderTask(targetTask.id, activityMount, () => {
+                if (typeof updateUI === 'function') updateUI();
+                openObjectModal(obj);
+            });
+        } else {
+            badge.textContent = 'Verified Operational (Nominal)';
+            badge.className = 'text-[11px] font-mono-tech font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+            activityMount.innerHTML = `
+                <div class="p-3 bg-slate-900/90 border border-emerald-500/30 rounded-xl flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                        <div>
+                            <div class="text-xs font-bold text-white">${targetTask.text}</div>
+                            <div class="text-[10px] text-emerald-300 font-mono-tech">Procedure Verified Complete • All systems nominal</div>
+                        </div>
+                    </div>
+                    <button id="btn-replay-activity" class="btn-tech bg-slate-800 hover:bg-slate-700 text-sky-300 border border-sky-500/40 px-3 py-1.5 rounded-lg text-xs font-mono-tech cursor-pointer">
+                        <i class="fa-solid fa-rotate-right mr-1"></i>
+                        <span>Replay Simulation</span>
+                    </button>
+                </div>
+            `;
+            const replayBtn = activityMount.querySelector('#btn-replay-activity');
+            if (replayBtn) {
+                replayBtn.addEventListener('click', () => {
+                    activityMount.innerHTML = '';
+                    window.AstraActivities.renderTask(targetTask.id, activityMount, () => {
+                        if (typeof updateUI === 'function') updateUI();
+                        openObjectModal(obj);
+                    });
+                });
+            }
+        }
+    }
+
     const addMetric = (label, value, colorClass = 'text-white') => {
         const div = document.createElement('div');
         div.innerHTML = `<div class="text-[10px] text-slate-400">${label}</div><div class="text-sm sm:text-base font-bold ${colorClass}">${value}</div>`;
@@ -242,6 +305,29 @@ function openObjectModal(obj) {
         if (!disabled) btn.addEventListener('click', onClick);
         actionsEl.appendChild(btn);
     };
+
+    const addTaskActionBtn = (taskIds, label, subtext, onClick, styleClass = 'bg-sky-600 hover:bg-sky-500 text-white', disabled = false) => {
+        const ids = Array.isArray(taskIds) ? taskIds : [taskIds];
+        // If this task is currently active and uncompleted, suppress the instant-completion shortcut!
+        // The cadet must operate the physical controls in the interactive AstraActivities simulation.
+        if (targetTask && ids.includes(targetTask.id) && !isTaskAlreadyDone) {
+            return;
+        }
+        addActionBtn(label, subtext, onClick, styleClass, disabled);
+    };
+
+    if (targetTask && !isTaskAlreadyDone) {
+        const activeNotice = document.createElement('div');
+        activeNotice.className = 'p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl mb-2 text-left';
+        activeNotice.innerHTML = `
+            <div class="flex items-center gap-2 text-xs font-bold font-mono-tech text-amber-300">
+                <i class="fa-solid fa-gamepad animate-pulse"></i>
+                <span>HANDS-ON SIMULATION REQUIRED</span>
+            </div>
+            <div class="text-[11px] text-slate-300 mt-0.5">Operate the interactive equipment controls above to complete <strong>${targetTask.text}</strong>.</div>
+        `;
+        actionsEl.appendChild(activeNotice);
+    }
 
     if (obj.id === 'airlock_console') {
         badge.textContent = state.player.inSuit ? 'EVA Suit Pressurized' : 'IVA Nominal';
@@ -271,8 +357,9 @@ function openObjectModal(obj) {
             state.player.inSuit ? 'bg-amber-600 hover:bg-amber-500 text-white font-bold' : 'bg-sky-600 hover:bg-sky-500 text-white font-bold'
         );
 
-        // Button 2: Check Suit & Airlock Seal
-        addActionBtn(
+        // Button 2: Check Suit & Airlock Seal (Replaced by hands-on Airlock Cycling procedure during Mission 1 / 3 / 5)
+        addTaskActionBtn(
+            ['ch1_airlock', 'ch3_eva_prep', 'ch5_cycle_door'],
             state.player.suitChecked ? '✅ 2. Suit & Airlock Seal Verified' : '✅ 2. Check Suit & Airlock Seal',
             state.player.inSuit ? 'Electronic pressure integrity test (Required before opening outer door!)' : '⚠️ PUT ON SUIT FIRST BEFORE RUNNING PRESSURE CHECK!',
             () => {
@@ -285,7 +372,7 @@ function openObjectModal(obj) {
                 state.player.suitChecked = true;
                 completeTask('ch1_airlock');
                 if (state.chapterIdx === 2) completeTask('ch3_eva_prep');
-                if (state.chapterIdx === 4) completeTask('ch5_airlock_exit');
+                if (state.chapterIdx === 4) completeTask('ch5_cycle_door');
                 if (typeof sfx !== 'undefined' && sfx.success) sfx.success();
                 if (typeof spawnFloatingText === 'function') spawnFloatingText('SUIT & SEAL VERIFIED! PRESS [F] AT DOOR', state.player.x, state.player.y - 20, '#22c55e');
                 setAria('Suit Checked! Pressure nominal at 101.3 kPa. Now walk to the left door and press [F] (or click) to open the outer hatch!');
@@ -305,7 +392,8 @@ function openObjectModal(obj) {
 
         // Mission 1 Tools
         const hasCh1Tools = hasItem('Multi-Tool') && hasItem('HV Fuse');
-        addActionBtn(
+        addTaskActionBtn(
+            'ch1_tool',
             hasCh1Tools ? '✓ Multi-Tool & Spare HV Fuse in Pouch' : 'Collect Diagnostic Multi-Tool & Spare HV Fuse',
             'Required for initial habitat power & life-support inspection',
             () => {
@@ -321,7 +409,8 @@ function openObjectModal(obj) {
 
         // Mission 6: LiOH Filter Grab
         const hasFilter = hasItem('LiOH Filter');
-        addActionBtn(
+        addTaskActionBtn(
+            'ch6_filter_grab',
             hasFilter ? '✓ Fresh LiOH CO₂ Scrubber Cartridge in Pouch' : 'Collect Fresh LiOH CO₂ Scrubber Cartridge',
             'Required for Mission 6 ECLSS scrubber replacement',
             () => {
@@ -337,7 +426,8 @@ function openObjectModal(obj) {
 
         // Mission 8: Pipe Seal Kit Grab
         const hasSealKit = hasItem('Pipe Seal Kit');
-        addActionBtn(
+        addTaskActionBtn(
+            'ch8_pipe_seal',
             hasSealKit ? '✓ Plumbing Seal Kit & Bioreactor Filter in Pouch' : 'Collect Plumbing Seal Kit & Bioreactor Filter',
             'Required for Mission 8 graywater pipe repair',
             () => {
@@ -387,7 +477,8 @@ function openObjectModal(obj) {
         }
 
         // Mission 1: Verify Power Telemetry
-        addActionBtn(
+        addTaskActionBtn(
+            'ch1_power',
             'Inspect Habitat Power Telemetry & Bus Status',
             'Electronic verification of solar input, battery buffer, and load distribution',
             () => {
@@ -400,7 +491,8 @@ function openObjectModal(obj) {
 
         // Mission 2: Switch on Greenhouse LEDs
         if (state.chapterIdx === 1) {
-            addActionBtn(
+            addTaskActionBtn(
+                'ch2_greenhouse_power',
                 state.loads.greenhouse.on ? '✓ Greenhouse LED Circuit Active (+5 kW Load)' : 'Activate Greenhouse LED Array (+5 kW Load)',
                 'Energizes PAR grow lights to begin seed germination',
                 () => {
@@ -425,9 +517,10 @@ function openObjectModal(obj) {
             'bg-amber-500 hover:bg-amber-400 text-slate-950'
         );
 
-        // Mission 4: Replace Blown HV Fuse
+        // Mission 4/5: Replace Blown HV Fuse
         if (state.faults.hvJunctionBroken) {
-            addActionBtn(
+            addTaskActionBtn(
+                ['ch4_replace_fuse', 'ch5_repair_junction'],
                 'Replace Blown HV Junction Circuit (Requires HV Fuse)',
                 hasItem('HV Fuse') ? 'Ready in pouch — eliminates fault loss and restores array efficiency' : 'Requires HV Fuse from Storage Locker',
                 () => {
@@ -435,7 +528,7 @@ function openObjectModal(obj) {
                     state.solarOutputKW = 22;
                     if (typeof spawnFloatingText === 'function') spawnFloatingText('+4 kW EFFICIENCY RESTORED', state.player.x, state.player.y - 20, '#38bdf8');
                     completeTask('ch4_replace_fuse');
-                    completeTask('ch2_repair');
+                    completeTask('ch5_repair_junction');
                     awardBadge('power_saver');
                     setAria('HV Junction repaired! Efficiency restored and Power Saver badge earned!');
                     if (typeof updateUI === 'function') updateUI();
@@ -448,7 +541,8 @@ function openObjectModal(obj) {
 
         // Mission 4: Spin up Backup Generator
         if (state.chapterIdx === 3 || state.backupGenKW === 0) {
-            addActionBtn(
+            addTaskActionBtn(
+                'ch4_gen_backup',
                 state.backupGenKW > 0 ? '✓ Backup Generator Running (+10 kW)' : 'Spin Up Emergency Backup Generator (+10 kW)',
                 'Burns fuel at 0.25 kg/s to supply 10 kW emergency power during storm',
                 () => {
@@ -477,7 +571,8 @@ function openObjectModal(obj) {
             : 'Environmental Control and Life Support System (ECLSS) maintains breathable oxygen (21.2 kPa) and scrubs metabolically produced CO₂ below 600 ppm.';
 
         // Mission 1: Verify Life Support
-        addActionBtn(
+        addTaskActionBtn(
+            'ch1_life',
             'Verify Atmospheric Sensors & O₂ Processor',
             'Confirm cabin pressure (101.3 kPa) and oxygen partial pressure (21.2 kPa)',
             () => {
@@ -489,7 +584,8 @@ function openObjectModal(obj) {
 
         // Mission 6: Replace Saturated LiOH Filter
         if (state.faults.co2FilterClogged) {
-            addActionBtn(
+            addTaskActionBtn(
+                'ch6_filter_install',
                 'Replace Saturated LiOH Filter Cartridge (Recommended)',
                 hasItem('LiOH Filter') ? 'Installs fresh LiOH cassette — permanently restores CO₂ scrubbing' : 'Requires LiOH Filter from Maintenance Storage Locker',
                 () => {
@@ -510,7 +606,8 @@ function openObjectModal(obj) {
         }
 
         // Mission 6: Verify CO2 Below Safe Limit
-        addActionBtn(
+        addTaskActionBtn(
+            'ch6_co2_verify',
             'Verify Cabin CO₂ Scrubber Recovery (< 600 ppm)',
             'Check real-time air telemetry across all habitat compartments',
             () => {
@@ -571,7 +668,8 @@ function openObjectModal(obj) {
         desc.textContent = 'Hydroponic crop beds grow dwarf wheat, lettuce, and microgreens to supplement packaged rations. Plants require balanced nutrients, 21 °C temperature, and PAR spectrum grow lighting.';
 
         // Mission 2: Inspect Crop Beds
-        addActionBtn(
+        addTaskActionBtn(
+            'ch2_crop_inspect',
             'Inspect Hydroponic Seed Trays & Root Substrate',
             'Examine moisture retention and seed germination telemetry',
             () => {
@@ -584,7 +682,8 @@ function openObjectModal(obj) {
         // Mission 10: Harvest Mature Wheat & Cryo-Stash Seeds
         if (state.chapterIdx === 9 || state.cropGrowthStage >= 2) {
             const seedsDone = (typeof isTaskDone === 'function') ? isTaskDone('ch10_greenhouse_seeds') : false;
-            addActionBtn(
+            addTaskActionBtn(
+                'ch10_greenhouse_seeds',
                 seedsDone ? '✓ Generation-2 Seeds Cryo-Preserved in Storage Vault' : 'Harvest Mature Dwarf Wheat & Cryo-Stash Generation-2 Seeds',
                 seedsDone ? 'Genetically adapted seeds vaulted for return to Earth in ERV' : 'Preserves genetically adapted seeds for return to Earth in the ERV',
                 () => {
@@ -600,7 +699,8 @@ function openObjectModal(obj) {
         }
 
         // Toggle LEDs
-        addActionBtn(
+        addTaskActionBtn(
+            'ch2_greenhouse_power',
             state.loads.greenhouse.on ? 'Verify Greenhouse LEDs Active (5 kW)' : 'Switch ON Greenhouse LED Array (+5 kW)',
             'Allocates power to sustain ongoing plant growth and crew psychology',
             () => {
@@ -628,11 +728,12 @@ function openObjectModal(obj) {
 
         // Mission 2: Nutrient Mix
         if (state.chapterIdx === 1) {
-            addActionBtn(
+            addTaskActionBtn(
+                'ch2_flush_irrigation',
                 'Formulate Hydroponic N-P-K Mineral Nutrient Solution',
                 'Mixes nitrogen, phosphorus, and potassium trace minerals for greenhouse dosing',
                 () => {
-                    completeTask('ch2_nutrient_mix');
+                    completeTask('ch2_flush_irrigation');
                     setAria('Nutrient solution formulated and injected into hydroponic irrigation lines!');
                     openObjectModal(obj);
                 },
@@ -642,7 +743,8 @@ function openObjectModal(obj) {
 
         // Mission 8: Seal Pipe & Flush Loop
         if (state.faults.waterPipeLeaking || state.waterConductivity > 60) {
-            addActionBtn(
+            addTaskActionBtn(
+                'ch8_flush_bioreactor',
                 'Seal Cracked Pipe Coupling & Flush Bioreactor Filter Loop',
                 hasItem('Pipe Seal Kit') ? 'Stops leak and purifies water batch to 38 µS/cm' : 'Requires Pipe Seal Kit from Maintenance Storage Locker',
                 () => {
@@ -662,7 +764,8 @@ function openObjectModal(obj) {
                 !hasItem('Pipe Seal Kit')
             );
         } else {
-            addActionBtn(
+            addTaskActionBtn(
+                'ch8_conductivity_check',
                 'Verify Potable Water Purity Batch (< 60 µS/cm)',
                 'Confirm ionic purity and reserve level for crew & greenhouse',
                 () => {
@@ -683,7 +786,8 @@ function openObjectModal(obj) {
         desc.textContent = 'NASA Perseverance Rover and Ingenuity Mars Helicopter stationed outside the Astra-1 airlock for geological prospecting and delta exploration.';
 
         // Mission 3: Link Rover Telemetry
-        addActionBtn(
+        addTaskActionBtn(
+            'ch3_rover_link',
             'Establish Umbilical Telemetry Link with Perseverance Rover',
             'Synchronizes rover navigation, MMRTG thermal bus, and science instruments',
             () => {
@@ -695,7 +799,8 @@ function openObjectModal(obj) {
         );
 
         // Mission 3: Inspect Ingenuity
-        addActionBtn(
+        addTaskActionBtn(
+            'ch3_heli_inspect',
             'Execute Rotor Pre-Flight Diagnostics on Ingenuity Helicopter',
             'Spins coaxial carbon-fiber rotors to 2,400 RPM to verify aerodynamics in thin Martian air',
             () => {
@@ -708,7 +813,8 @@ function openObjectModal(obj) {
 
         // Mission 7: Drill Jezero Core Sample
         if (state.chapterIdx === 6 || !state.hasCoreSample) {
-            addActionBtn(
+            addTaskActionBtn(
+                'ch7_drill_core',
                 'Deploy Rotary-Percussive Coring Drill into Delta Basalt',
                 'Extracts a 6-centimeter cylindrical rock core for astrobiological analysis',
                 () => {
@@ -745,12 +851,13 @@ function openObjectModal(obj) {
 
         desc.textContent = 'External solar tracking arrays supply primary power to Astra-1. Severe dust accumulation and high wind shear require physical latch maintenance.';
 
-        // Mission 5: Secure Array Latches
-        addActionBtn(
+        // Mission 4/5: Secure Array Latches
+        addTaskActionBtn(
+            'ch4_dust_wipers',
             'Secure Heavy Mechanical Wind Latches Against Regolith Gale',
             'Prevents catastrophic array flutter and structural damage during the storm',
             () => {
-                completeTask('ch5_secure_latch');
+                completeTask('ch4_dust_wipers');
                 setAria('Wind latches clamped tight! Now inspect and re-anchor the external HV conduit.');
                 openObjectModal(obj);
             },
@@ -758,13 +865,14 @@ function openObjectModal(obj) {
         );
 
         // Mission 5: Verify External Conduit
-        addActionBtn(
+        addTaskActionBtn(
+            'ch5_repair_junction',
             'Re-Anchor & Verify External High-Voltage Solar Conduit',
             'Ensures all electrical lines from arrays feed reliably into the habitat bus',
             () => {
                 state.faults.externalConduitDamaged = false;
                 state.solarOutputKW = Math.max(state.solarOutputKW, 22);
-                completeTask('ch5_conduit_verify');
+                completeTask('ch5_repair_junction');
                 setAria('Conduit secured and signal integrity verified! Return inside through the Airlock.');
                 if (typeof updateUI === 'function') updateUI();
                 openObjectModal(obj);
@@ -781,26 +889,28 @@ function openObjectModal(obj) {
 
         desc.textContent = 'Astra-1 Science Laboratory & Medical Bay. Houses analytical instruments, deep-space communication uplinks, and hermetic sample vaults for Mars sample return.';
 
-        // Mission 7: Calibrate Mass Spec
-        addActionBtn(
+        // Mission 7: Calibrate Mass Spec / Raman Spec
+        addTaskActionBtn(
+            'ch7_raman_insert',
             'Calibrate Laboratory Mass Spectrometer & Raman Sensor',
             'Performs automated baseline scan for organic carbon and hydrous minerals',
             () => {
-                completeTask('ch7_lab_terminal');
+                completeTask('ch7_raman_insert');
                 setAria('Mass Spectrometer calibrated! Ready to analyze sediment cores.');
                 openObjectModal(obj);
             }
         );
 
-        // Mission 7: Seal Sample Canister
+        // Mission 7: Seal Sample Canister / Mineral Catalogue
         if (state.hasCoreSample || state.chapterIdx === 6) {
-            addActionBtn(
+            addTaskActionBtn(
+                'ch7_catalogue_mineral',
                 'Hermetically Seal Jezero Core Canister into Scientific Sample Vault',
                 'Creates double-brazed titanium seal to prevent terrestrial contamination',
                 () => {
                     state.hasCoreSample = true;
                     if (typeof spawnFloatingText === 'function') spawnFloatingText('CORE CANISTER SEALED', state.player.x, state.player.y - 20, '#2dd4bf');
-                    completeTask('ch7_seal_canister');
+                    completeTask('ch7_catalogue_mineral');
                     setAria('Sample canister hermetically sealed! Core preserved for Earth laboratory analysis.');
                     if (typeof updateUI === 'function') updateUI();
                     openObjectModal(obj);
@@ -815,7 +925,8 @@ function openObjectModal(obj) {
             const seedsDone = (typeof isTaskDone === 'function') ? isTaskDone('ch10_greenhouse_seeds') : false;
             const prereqsDone = coresDone && seedsDone;
 
-            addActionBtn(
+            addTaskActionBtn(
+                'ch10_package_cores',
                 coresDone ? '✓ Jezero Core Canisters Packaged in ERV Container' : 'Package Certified Core Canisters into Earth Return Vehicle (ERV) Container',
                 coresDone ? 'Verified and secured in transit shock harness' : 'Secures all sampled geological tubes in shock-absorbing transit harness',
                 () => {
@@ -835,7 +946,8 @@ function openObjectModal(obj) {
             if (!coresDone) remaining.push('Package Cores (Lab)');
             if (!seedsDone) remaining.push('Cryo-Seeds (Greenhouse)');
 
-            addActionBtn(
+            addTaskActionBtn(
+                'ch10_final_report',
                 prereqsDone
                     ? '★ Transmit Final 378-Sol Outpost Handover Debrief to Houston'
                     : `★ Transmit Handover (Locked: Complete ${remaining.join(' & ')})`,
@@ -884,7 +996,8 @@ function openObjectModal(obj) {
         desc.textContent = 'Radiation Shelter & Crew Quarters. Water storage tanks encase the compartment walls, creating a hydrogen-dense barrier that stops high-energy solar proton events (SPE).';
 
         // Mission 9: Alarm Siren
-        addActionBtn(
+        addTaskActionBtn(
+            'ch9_alarm_siren',
             'Sound Habitat-Wide Solar Particle Event (SPE) Emergency Siren',
             'Broadcasts alert chimes to all modules instructing astronauts to abandon stations',
             () => {
@@ -899,7 +1012,8 @@ function openObjectModal(obj) {
         );
 
         // Mission 9: Evacuate Crew
-        addActionBtn(
+        addTaskActionBtn(
+            'ch9_shelter_evac',
             'Evacuate All 5 Crew Members into Protected Quarters',
             'Accounts for every astronaut and secures compartment airtight pressure hatch',
             () => {
@@ -912,7 +1026,8 @@ function openObjectModal(obj) {
         );
 
         // Mission 9: Water Shield Flood
-        addActionBtn(
+        addTaskActionBtn(
+            'ch9_verify_shielding',
             'Deploy Water-Wall Protective Flood (420 L Hydrogen Shielding)',
             'Attenuates proton flux, dropping exposure from 3.20 mSv/h down to safe 0.04 mSv/h',
             () => {
@@ -920,7 +1035,7 @@ function openObjectModal(obj) {
                 state.faults.shelterProtocolActive = true;
                 state.radiationMSvH = 0.04;
                 if (typeof spawnFloatingText === 'function') spawnFloatingText('WATER-WALL FLOODED • 0.04 mSv/h', state.player.x, state.player.y - 20, '#38bdf8');
-                completeTask('ch9_water_shield');
+                completeTask('ch9_verify_shielding');
                 completeTask('ch5_shelter');
                 awardBadge('storm_survivor');
                 setAria('Water wall flooded! Crew dose rate reduced to 0.04 mSv/h. Storm Survivor badge earned!');
@@ -1295,14 +1410,47 @@ function updateUI() {
     if (taskListEl) {
         taskListEl.innerHTML = '';
         let allDone = true;
+        let foundFirstUndone = false;
         ch.tasks.forEach(t => {
             if (!t.done) allDone = false;
             const item = document.createElement('div');
-            item.className = `flex items-start gap-2 p-1.5 rounded-lg border ${t.done ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-300' : 'bg-slate-900/70 border-slate-800 text-slate-200'}`;
-            item.innerHTML = `
-                <i class="fa-solid ${t.done ? 'fa-circle-check text-emerald-400' : 'fa-circle-dot text-amber-400'} mt-0.5 text-[11px]"></i>
-                <span class="${t.done ? 'line-through opacity-75' : ''} leading-snug">${t.text}</span>
-            `;
+            
+            let status = 'not_started';
+            if (t.done) {
+                status = 'completed';
+            } else if (!foundFirstUndone) {
+                status = 'in_progress';
+                foundFirstUndone = true;
+            }
+
+            if (status === 'completed') {
+                item.className = 'flex items-start justify-between gap-2 p-1.5 rounded-lg border bg-emerald-950/30 border-emerald-500/40 text-emerald-300';
+                item.innerHTML = `
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-circle-check text-emerald-400 mt-0.5 text-[11px]"></i>
+                        <span class="line-through opacity-80 leading-snug">${t.text}</span>
+                    </div>
+                    <span class="text-[9px] font-mono-tech font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex-shrink-0">DONE</span>
+                `;
+            } else if (status === 'in_progress') {
+                item.className = 'flex items-start justify-between gap-2 p-1.5 rounded-lg border bg-amber-950/30 border-amber-500/50 text-amber-200 shadow-[0_0_10px_rgba(245,158,11,0.15)] animate-pulse';
+                item.innerHTML = `
+                    <div class="flex items-start gap-2">
+                        <i class="fa-solid fa-circle-dot text-amber-400 mt-0.5 text-[11px]"></i>
+                        <span class="font-medium leading-snug">${t.text}</span>
+                    </div>
+                    <span class="text-[9px] font-mono-tech font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex-shrink-0">ACTIVE</span>
+                `;
+            } else {
+                item.className = 'flex items-start justify-between gap-2 p-1.5 rounded-lg border bg-slate-900/60 border-slate-800 text-slate-400';
+                item.innerHTML = `
+                    <div class="flex items-start gap-2">
+                        <i class="fa-regular fa-circle text-slate-500 mt-0.5 text-[11px]"></i>
+                        <span class="leading-snug opacity-75">${t.text}</span>
+                    </div>
+                    <span class="text-[9px] font-mono-tech font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700/50 flex-shrink-0">STANDBY</span>
+                `;
+            }
             taskListEl.appendChild(item);
         });
 

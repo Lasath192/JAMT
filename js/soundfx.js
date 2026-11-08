@@ -219,6 +219,64 @@ class SoundFX {
         this.playTone(620, 'sine', 0.09, 0.07);
         setTimeout(() => this.playTone(940, 'sine', 0.12, 0.07), 70);
     }
+
+    click() {
+        this.startAmbientEngine();
+        this.playTone(1200, 'square', 0.03, 0.04);
+    }
+
+    valveRotate() {
+        this.startAmbientEngine();
+        this.playTone(480, 'triangle', 0.04, 0.05);
+    }
+
+    airlockHiss() {
+        this.startAmbientEngine();
+        try {
+            if (!this.ctx) return;
+            const bufferSize = this.ctx.sampleRate * 0.4;
+            const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
+            const whiteNoise = this.ctx.createBufferSource();
+            whiteNoise.buffer = noiseBuffer;
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(600, this.ctx.currentTime);
+            filter.frequency.exponentialRampToValueAtTime(180, this.ctx.currentTime + 0.35);
+            const gain = this.ctx.createGain();
+            gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.38);
+            whiteNoise.connect(filter);
+            filter.connect(gain);
+            gain.connect(this.ctx.destination);
+            whiteNoise.start();
+        } catch (e) {}
+    }
+
+    siren() {
+        this.startAmbientEngine();
+        this.playTone(720, 'sawtooth', 0.22, 0.1);
+        setTimeout(() => this.playTone(540, 'sawtooth', 0.22, 0.1), 180);
+    }
+
+    scan() {
+        this.startAmbientEngine();
+        this.playTone(950, 'sine', 0.08, 0.05);
+        setTimeout(() => this.playTone(1350, 'sine', 0.1, 0.06), 70);
+    }
+
+    cableSnap() {
+        this.startAmbientEngine();
+        this.playTone(280, 'sine', 0.06, 0.08);
+        setTimeout(() => this.playTone(720, 'triangle', 0.08, 0.07), 40);
+    }
+
+    waterFlow() {
+        this.startAmbientEngine();
+        this.playTone(340, 'sine', 0.14, 0.05);
+        setTimeout(() => this.playTone(420, 'triangle', 0.16, 0.05), 80);
+    }
 }
 
 const sfx = new SoundFX();

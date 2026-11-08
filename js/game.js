@@ -44,11 +44,7 @@ window.addEventListener('keydown', (e) => {
     if (k === 'a' || k === 'arrowleft') { keys.left = true; if (state.player) state.player.targetX = null; }
     if (k === 'd' || k === 'arrowright') { keys.right = true; if (state.player) state.player.targetX = null; }
     
-    if (k === 'f') {
-        toggleOuterAirlockDoor();
-        return;
-    }
-    if (k === 'e') {
+    if (k === 'f' || k === 'e') {
         const dlgModal = document.getElementById('modal-dialogue');
         if (dlgModal && !dlgModal.classList.contains('hidden')) {
             if (typeof advanceDialogueStep === 'function') advanceDialogueStep();
@@ -65,6 +61,7 @@ window.addEventListener('keydown', (e) => {
             }
         }
         if (typeof triggerNearestObjectInteraction === 'function') triggerNearestObjectInteraction();
+        return;
     }
     
     if (k === 'q') {
@@ -619,20 +616,20 @@ function updateGame(dt) {
     if (promptEl && titleEl && subEl) {
         if (inAirlockHatchArea) {
             promptEl.classList.remove('hidden');
-            if (kbdEl) kbdEl.textContent = 'E';
+            if (kbdEl) kbdEl.textContent = 'F';
             if (!state.player.inSuit || !state.player.suitChecked) {
                 titleEl.textContent = '🔒 AIRLOCK DOOR: LOCKED';
-                subEl.textContent = 'Don EVA Suit & Check Seal at Console [E] first';
+                subEl.textContent = 'Don EVA Suit & Check Seal at Console [F] first';
                 promptEl.style.borderColor = '#ef4444';
                 if (kbdEl) kbdEl.className = 'bg-rose-500 text-white font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
             } else if (!state.player.outerDoorOpen) {
                 titleEl.textContent = '🚪 AIRLOCK DOOR: UNLOCK & OPEN';
-                subEl.textContent = 'Click button or Press [E] / [F] to Open Door';
+                subEl.textContent = 'Click button or Press [F] to Open Door';
                 promptEl.style.borderColor = '#38bdf8';
                 if (kbdEl) kbdEl.className = 'bg-sky-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md animate-pulse';
             } else {
                 titleEl.textContent = '💨 AIRLOCK DOOR: CLOSE & LOCK';
-                subEl.textContent = 'Click button or Press [E] / [F] to Close Door';
+                subEl.textContent = 'Click button or Press [F] to Close Door';
                 promptEl.style.borderColor = '#22c55e';
                 if (kbdEl) kbdEl.className = 'bg-emerald-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
             }
@@ -640,20 +637,20 @@ function updateGame(dt) {
             promptEl.classList.remove('hidden');
             promptEl.style.borderColor = '#f59e0b';
             if (kbdEl) {
-                kbdEl.textContent = 'E';
-                kbdEl.className = 'bg-amber-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
+                kbdEl.textContent = 'F';
+                kbdEl.className = 'bg-amber-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md animate-pulse';
             }
             titleEl.textContent = nearestObj.name;
-            subEl.textContent = 'Click or Press [E] to interact';
+            subEl.textContent = 'Press [F] to interact';
         } else if (nearestNPC) {
             promptEl.classList.remove('hidden');
             promptEl.style.borderColor = '#22c55e';
             if (kbdEl) {
-                kbdEl.textContent = 'E';
+                kbdEl.textContent = 'F';
                 kbdEl.className = 'bg-emerald-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
             }
             titleEl.textContent = `Talk to ${nearestNPC.name} (${nearestNPC.role})`;
-            subEl.textContent = 'Click or Press [E] for Crew Dialogue';
+            subEl.textContent = 'Press [F] for Crew Dialogue';
         } else {
             promptEl.classList.add('hidden');
         }

@@ -290,7 +290,7 @@ function createCompactInteractPrompt(obj) {
     ctx.strokeStyle = themeCol;
     ctx.stroke();
 
-    // Left Keycap Badge: [E]
+    // Left Keycap Badge: [F]
     ctx.fillStyle = themeCol;
     ctx.beginPath();
     ctx.roundRect(20, 20, 104, 104, 20);
@@ -300,7 +300,7 @@ function createCompactInteractPrompt(obj) {
     ctx.font = '900 64px "Orbitron", "JetBrains Mono", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('E', 72, 72);
+    ctx.fillText('F', 72, 72);
 
     // Right label: "INTERACT" in large, bold Orbitron typography
     ctx.fillStyle = '#ffffff';

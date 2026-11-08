@@ -459,7 +459,7 @@
 
     <!-- EQUIPMENT DIAGNOSTIC & INTERACTION MODAL -->
     <div id="modal-console" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm overflow-y-auto p-2 sm:p-4 flex flex-col items-center justify-start sm:justify-center">
-        <div class="hud-panel w-full max-w-xl rounded-2xl border border-sky-500/40 overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+        <div class="hud-panel w-full max-w-3xl rounded-2xl border border-sky-500/40 overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
             <!-- Modal Header -->
             <div class="bg-slate-900/95 px-4 py-3 border-b border-slate-700/80 flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
@@ -487,6 +487,11 @@
                 <!-- Illustrated Equipment Schematic Banner -->
                 <div id="console-illustration" class="w-full h-28 rounded-xl bg-slate-950 border border-sky-500/30 overflow-hidden flex items-center justify-center relative shadow-inner">
                     <!-- Dynamic SVG equipment illustration injected via JS -->
+                </div>
+
+                <!-- Hands-On Interactive Gameplay Activity Mount Area -->
+                <div id="console-activity-mount" class="space-y-3">
+                    <!-- Interactive mini-games rendered dynamically by AstraActivities -->
                 </div>
 
                 <!-- Live Telemetry Readout Grid -->
@@ -812,41 +817,49 @@
     <div id="printable-certificate" class="hidden">
         <div style="border: 4px solid #b45309; padding: 24px; text-align: center; font-family: 'Orbitron', 'Inter', sans-serif; background: #ffffff; color: #0f172a; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
             <div>
-                <div style="font-size: 11px; letter-spacing: 3px; font-weight: bold; color: #b45309; margin-bottom: 6px;">2026 NASA SPACE APPS CHALLENGE • JUNIOR ASTRONAUT MISSION TRAINER</div>
-                <h1 style="font-size: 26px; font-weight: 900; margin: 0; color: #0f172a; letter-spacing: 2px;">CERTIFICATE OF MARTIAN EXPEDITION HANDOVER</h1>
-                <div style="font-size: 12px; color: #475569; margin-top: 4px;">Outpost ASTRA-1 • Arcadia Planitia, Mars (18.38°N, 77.58°E) • Sols 01 - 30</div>
+                <div style="font-size: 11px; letter-spacing: 3px; font-weight: bold; color: #b45309; margin-bottom: 6px;">ASTRA-1 MISSION TRAINER • 2026 NASA SPACE APPS CHALLENGE</div>
+                <h1 style="font-size: 26px; font-weight: 900; margin: 0; color: #0f172a; letter-spacing: 2px;">JUNIOR ASTRONAUT MISSION TRAINER</h1>
+                <div style="font-size: 13px; font-weight: bold; color: #c2410c; margin-top: 4px; letter-spacing: 1px;">CERTIFICATE OF 378-SOL EXPEDITION HANDOVER</div>
+                <div style="font-size: 11px; color: #475569; margin-top: 2px;">Outpost ASTRA-1 • Arcadia Planitia, Mars (18.38°N, 77.58°E) • Sols 01 - 378</div>
             </div>
 
-            <div style="margin: 20px 0;">
-                <p style="font-size: 13px; color: #334155; margin: 0;">This official NASA Space Apps Challenge credential certifies that</p>
-                <div id="cert-display-name" style="font-size: 28px; font-weight: 800; color: #c2410c; margin: 10px 0; border-bottom: 2px solid #fdba74; display: inline-block; padding: 0 30px;">CADET NOVA</div>
-                <p style="font-size: 13px; color: #334155; max-width: 650px; margin: 0 auto; line-height: 1.5;">
-                    has demonstrated outstanding scientific rigor in ECLSS life-support engineering, continuous power budgeting, DONKI space radiation shielding, and bioregenerative closed-loop hydroponics, achieving:
+            <div style="margin: 16px 0;">
+                <p style="font-size: 12px; color: #334155; margin: 0;">This educational simulation credential certifies that</p>
+                <div id="cert-display-name" style="font-size: 28px; font-weight: 800; color: #c2410c; margin: 8px 0; border-bottom: 2px solid #fdba74; display: inline-block; padding: 0 30px;">CADET NOVA</div>
+                <p style="font-size: 12px; color: #334155; max-width: 650px; margin: 0 auto; line-height: 1.5;">
+                    has demonstrated outstanding scientific rigor in hands-on ECLSS life-support engineering, power grid load-shedding, space weather shelter operations, and hydroponic bioregenerative agriculture across all 10 mission chapters, earning the awarded rank of:
                 </p>
-                <div id="cert-display-tier" style="margin-top: 10px; font-size: 18px; font-weight: 800; color: #b45309; letter-spacing: 1px;">
-                    ★ COMMANDER TIER: THRIVING MARTIAN BIOSPHERE ★
+                <div id="cert-display-tier" style="margin-top: 8px; font-size: 18px; font-weight: 900; color: #b45309; letter-spacing: 1px;">
+                    ★ COMMANDER TIER: CADET COMMANDER ★
+                </div>
+                <div id="cert-display-score" style="margin-top: 4px; font-size: 12px; font-family: 'JetBrains Mono', monospace; font-weight: bold; color: #0284c7;">
+                    EXPEDITION PERFORMANCE SCORE: 960 / 1000 POINTS
                 </div>
             </div>
 
-            <div style="display: flex; justify-content: space-around; border-top: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; padding: 12px 0; font-family: 'JetBrains Mono', monospace; font-size: 11px;">
+            <div style="display: flex; justify-content: space-around; border-top: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; padding: 10px 0; font-family: 'JetBrains Mono', monospace; font-size: 10px;">
                 <div><strong>MISSION TELEMETRY:</strong> <span id="cert-pwr">100% Net Surplus</span></div>
-                <div><strong>WATER QUALITY:</strong> <span id="cert-water">42 µS/cm Potable</span></div>
-                <div><strong>ATMOSPHERE:</strong> <span id="cert-atmo">420 ppm CO₂ Nominal</span></div>
-                <div><strong>SPE SHIELDING:</strong> <span id="cert-rad">Safe / Shielded</span></div>
+                <div><strong>WATER QUALITY:</strong> <span id="cert-water">38 µS/cm Potable</span></div>
+                <div><strong>ATMOSPHERE:</strong> <span id="cert-atmo">440 ppm CO₂ Nominal</span></div>
+                <div><strong>SPE SHIELDING:</strong> <span id="cert-rad">0.04 mSv/h Shielded</span></div>
             </div>
 
-            <div style="display: flex; justify-content: space-around; align-items: flex-end; margin-top: 25px; padding: 0 40px; font-size: 11px; color: #475569;">
+            <div style="margin-top: 8px; font-size: 9px; color: #64748b; font-style: italic; max-width: 650px; margin-left: auto; margin-right: auto;">
+                Educational Disclaimer: This certificate recognizes outstanding student achievement in the ASTRA-1 Junior Astronaut Mission Trainer simulation (inspired by NASA CHAPEA and Artemis missions) and does not represent an official NASA qualification or NASA-issued credential.
+            </div>
+
+            <div style="display: flex; justify-content: space-around; align-items: flex-end; margin-top: 16px; padding: 0 40px; font-size: 11px; color: #475569;">
                 <div style="text-align: center;">
-                    <div style="font-weight: bold; border-top: 1px solid #0f172a; padding-top: 4px; width: 180px;">Dr. Sarah Lin</div>
+                    <div style="font-weight: bold; border-top: 1px solid #0f172a; padding-top: 4px; width: 180px;">Cadet Nova & Team</div>
                     <div style="font-size: 10px;">Commander, Mars Outpost Astra-1</div>
                 </div>
                 <div style="text-align: center;">
-                    <div style="font-weight: bold; color: #b45309; font-size: 14px; margin-bottom: 2px;">★ NASA SPACE APPS 2026 ★</div>
-                    <div style="font-size: 9px; letter-spacing: 1px;">OFFICIAL MISSION SIMULATION</div>
+                    <div style="font-weight: bold; color: #b45309; font-size: 13px; margin-bottom: 2px;">★ ASTRA-1 EXPEDITION ★</div>
+                    <div id="cert-completion-date" style="font-size: 9px; letter-spacing: 1px;">SOL 378 COMPLETED</div>
                 </div>
                 <div style="text-align: center;">
                     <div style="font-weight: bold; border-top: 1px solid #0f172a; padding-top: 4px; width: 180px;">Flight Operations Director</div>
-                    <div style="font-size: 10px;">NASA Space Apps Challenge</div>
+                    <div style="font-size: 10px;">Junior Astronaut Mission Trainer</div>
                 </div>
             </div>
         </div>
@@ -1020,6 +1033,7 @@
     <script src="js/simulation.js"></script>
     <script src="js/render.js"></script>
     <script src="js/render3d.js"></script>
+    <script src="js/activities.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/game.js"></script>
 

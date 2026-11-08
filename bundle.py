@@ -18,6 +18,7 @@ JS_FILES = [
     "js/simulation.js",
     "js/render.js",
     "js/render3d.js",
+    "js/activities.js",
     "js/ui.js",
     "js/game.js"
 ]

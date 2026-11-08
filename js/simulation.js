@@ -398,36 +398,99 @@ function calculateMissionLegacy() {
     const food = state.foodCrewDays;
     const health = state.crewHealth;
     const cores = state.hasCoreSample;
+    const hearts = state.hearts || 3;
 
-    if (bat >= 45 && water >= 280 && food >= 18 && health >= 80 && cores) {
+    // Transparent scoring criteria (1,000 Points Maximum):
+    // 1. Mission Completion: 10 Missions x 50 = 500 pts
+    let missionScore = 0;
+    if (typeof CHAPTERS !== 'undefined') {
+        CHAPTERS.forEach(ch => {
+            const done = ch.tasks.filter(t => t.done).length;
+            missionScore += (done / ch.tasks.length) * 50;
+        });
+    }
+    missionScore = Math.round(missionScore);
+
+    // 2. Interactive Systems Accuracy & Procedure Mastery (up to 300 pts)
+    const accuracyBase = (state.interactiveScore !== undefined) ? state.interactiveScore : 275;
+    const accuracyScore = Math.max(150, Math.min(300, accuracyBase));
+
+    // 3. Emergency Resilience & Resource Health (up to 200 pts)
+    const heartScore = Math.round((hearts / 3) * 100);
+    const resourceScore = Math.round((Math.min(bat, 80) / 80 * 40) + (Math.min(water, 350) / 350 * 30) + (health / 100 * 30));
+    const resilienceScore = Math.max(50, Math.min(200, heartScore + resourceScore));
+
+    const totalScore = Math.min(1000, missionScore + accuracyScore + resilienceScore);
+    state.finalExpeditionScore = totalScore;
+
+    if (totalScore >= 850) {
         return {
             tier: "COMMANDER TIER",
+            rankTier: "Commander Tier",
+            rank: "Cadet Commander",
+            rankTitle: "Cadet Commander",
             title: "Thriving Martian Biosphere",
             badgeClass: "bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/20",
             icon: "fa-award",
-            headline: "Exceptional Outpost Stewardship • Full 378 Sols Achieved",
-            summary: "Cadet Nova, your engineering leadership has guided Astra-1 through the full 378-day NASA CHAPEA Mars simulation! The Earth Return Vehicle receives pristine Jezero Delta core samples, thriving dwarf wheat cultivars, and fully charged battery banks. Houston Flight Directors have certified your performance as the gold standard for human Mars exploration.",
-            rating: "5.0 / 5.0 (Commander Distinction)"
+            headline: "Exceptional Outpost Leadership • Sol 378 Handover Complete",
+            summary: "Cadet Nova, your engineering leadership has guided Astra-1 through the full 378-day Mars expedition! The Earth Return Vehicle receives pristine Jezero Delta core samples, thriving dwarf wheat cultivars, and fully operational life support. Houston Flight Directors have awarded you the highest distinction: Commander Tier.",
+            rating: `${totalScore} / 1000 Pts (Commander Distinction)`,
+            totalScore: totalScore,
+            breakdown: {
+                campaignCompletion: missionScore,
+                procedureMastery: accuracyScore,
+                resourceSurplus: resilienceScore,
+                badgeHonor: Math.min(100, (state.earnedBadges ? state.earnedBadges.length : 0) * 20),
+                missions: `${missionScore}/500`,
+                accuracy: `${accuracyScore}/300`,
+                resilience: `${resilienceScore}/200`
+            }
         };
-    } else if (bat >= 25 && health >= 65) {
+    } else if (totalScore >= 700) {
         return {
-            tier: "PIONEER TIER",
+            tier: "OFFICER TIER",
+            rankTier: "Officer Tier",
+            rank: "Mission Systems Officer",
+            rankTitle: "Mission Systems Officer",
             title: "Resilient Outpost Handover",
             badgeClass: "bg-sky-400 text-slate-950 shadow-lg shadow-sky-400/20",
             icon: "fa-shield-halved",
             headline: "Sturdy Expedition Handover • Crew Safe Across 378 Sols",
-            summary: "Cadet Nova, your disciplined balance of habitat breakers and life-support scrubbers safely delivered all 5 astronauts through severe dust storms, SPE radiation bursts, and hardware anomalies across 378 Sols. Life support held firm, and mission handover was successfully achieved.",
-            rating: "4.2 / 5.0 (Pioneer Commendation)"
+            summary: "Cadet Nova, your disciplined balance of habitat power grids, airlock cycles, and life-support scrubbers delivered all 5 astronauts safely through severe dust storms, SPE radiation alerts, and hardware anomalies across 378 Sols. Outpost systems held firm and handover was certified.",
+            rating: `${totalScore} / 1000 Pts (Officer Commendation)`,
+            totalScore: totalScore,
+            breakdown: {
+                campaignCompletion: missionScore,
+                procedureMastery: accuracyScore,
+                resourceSurplus: resilienceScore,
+                badgeHonor: Math.min(100, (state.earnedBadges ? state.earnedBadges.length : 0) * 20),
+                missions: `${missionScore}/500`,
+                accuracy: `${accuracyScore}/300`,
+                resilience: `${resilienceScore}/200`
+            }
         };
     } else {
         return {
-            tier: "SURVIVOR TIER",
-            title: "Emergency Extraction & Resupply",
+            tier: "SPECIALIST TIER",
+            rankTier: "Specialist Tier",
+            rank: "Mission Operations Specialist",
+            rankTitle: "Mission Operations Specialist",
+            title: "Emergency Handover & Resupply",
             badgeClass: "bg-orange-500 text-slate-950 shadow-lg shadow-orange-500/20",
-            icon: "fa-triangle-exclamation",
-            headline: "Critical Red-Frontier Survival • Handover Complete",
-            summary: "Cadet Nova, the harsh Martian frontier pushed Astra-1 to its absolute threshold. Tight water margins and depleted power banks forced severe rationing. Yet through grit and adherence to emergency checklists, you kept all five crew members alive through Sol 378. A testament to why every watt and litre counts on Mars!",
-            rating: "3.5 / 5.0 (Survivor Citation)"
+            icon: "fa-wrench",
+            headline: "Critical Red-Frontier Operation • Handover Complete",
+            summary: "Cadet Nova, the harsh Martian frontier pushed Astra-1 to its threshold. Yet through systematic troubleshooting and adherence to emergency checklists, you maintained life support and delivered the outpost to the relief crew through Sol 378.",
+            rating: `${totalScore} / 1000 Pts (Specialist Citation)`,
+            totalScore: totalScore,
+            breakdown: {
+                campaignCompletion: missionScore,
+                procedureMastery: accuracyScore,
+                resourceSurplus: resilienceScore,
+                badgeHonor: Math.min(100, (state.earnedBadges ? state.earnedBadges.length : 0) * 20),
+                missions: `${missionScore}/500`,
+                accuracy: `${accuracyScore}/300`,
+                resilience: `${resilienceScore}/200`
+            }
         };
     }
 }
@@ -516,7 +579,16 @@ function showVictoryModal() {
     }
     const certDisplayTier = document.getElementById('cert-display-tier');
     if (certDisplayTier) {
-        certDisplayTier.textContent = `★ ${legacy.tier}: ${legacy.title.toUpperCase()} ★`;
+        certDisplayTier.textContent = `★ ${legacy.tier}: ${legacy.rankTitle ? legacy.rankTitle.toUpperCase() : legacy.title.toUpperCase()} ★`;
+    }
+    const certScore = document.getElementById('cert-display-score');
+    if (certScore && legacy.totalScore !== undefined) {
+        certScore.textContent = `EXPEDITION PERFORMANCE SCORE: ${legacy.totalScore} / 1000 POINTS (${legacy.tier})`;
+    }
+    const certDate = document.getElementById('cert-completion-date');
+    if (certDate) {
+        const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        certDate.textContent = `SOL 378 COMPLETED • ${today.toUpperCase()}`;
     }
     const certPwr = document.getElementById('cert-pwr');
     if (certPwr) certPwr.textContent = `${Math.round(state.batteryKWh)} kWh (${pwr.net >= 0 ? '+' : ''}${pwr.net} kW Net)`;
@@ -549,7 +621,9 @@ function syncTasksWithState() {
     };
 
     // Ch 0 (Mission 1) auto-sync
-    if (hasItem('Multi-Tool') && hasItem('HV Fuse')) markDone('ch1_tool');
+    if (state.chapterIdx === 0) {
+        if (hasItem('Multi-Tool')) markDone('ch1_tool');
+    }
 
     // Ch 1 (Mission 2) auto-sync
     if (state.chapterIdx === 1) {
@@ -558,53 +632,56 @@ function syncTasksWithState() {
 
     // Ch 2 (Mission 3) auto-sync
     if (state.chapterIdx === 2) {
-        if (state.player.inSuit) markDone('ch3_eva_prep');
+        if (state.player.inSuit && state.player.suitChecked) markDone('ch3_eva_prep');
     }
 
     // Ch 3 (Mission 4) auto-sync
     if (state.chapterIdx === 3) {
-        if (!state.faults.hvJunctionBroken) markDone('ch4_replace_fuse');
         if (state.backupGenKW > 0) markDone('ch4_gen_backup');
         if (pwr.net >= 0) markDone('ch4_shed_load');
+        if (state.dustWiped) markDone('ch4_dust_wipers');
     }
 
     // Ch 4 (Mission 5) auto-sync
     if (state.chapterIdx === 4) {
-        if (state.player.inSuit) markDone('ch5_airlock_exit');
-        if (!state.faults.externalConduitDamaged) markDone('ch5_conduit_verify');
+        if (state.player.inSuit) markDone('ch5_eva_suit');
+        if (state.player.outerDoorOpen) markDone('ch5_cycle_door');
+        if (!state.faults.externalConduitDamaged) markDone('ch5_repair_junction');
     }
 
     // Ch 5 (Mission 6) auto-sync
-    if (hasItem('LiOH Filter')) markDone('ch6_filter_grab');
     if (state.chapterIdx === 5) {
-        if (!state.faults.co2FilterClogged || state.loads.backupScrub.on) markDone('ch6_filter_install');
-        if (state.co2PPM <= 650) markDone('ch6_co2_verify');
+        if (hasItem('LiOH Filter')) markDone('ch6_filter_grab');
+        if (!state.faults.co2FilterClogged) markDone('ch6_filter_install');
+        if (state.co2PPM <= 500) markDone('ch6_co2_verify');
     }
 
     // Ch 6 (Mission 7) auto-sync
     if (state.chapterIdx === 6) {
-        if (state.hasCoreSample) {
-            markDone('ch7_drill_core');
-        }
+        if (state.hasCoreSample) markDone('ch7_drill_core');
+        if (state.ramanScanned) markDone('ch7_raman_insert');
+        if (state.mineralCatalogued) markDone('ch7_catalogue_mineral');
     }
 
     // Ch 7 (Mission 8) auto-sync
-    if (hasItem('Pipe Seal Kit')) markDone('ch8_pipe_seal');
     if (state.chapterIdx === 7) {
+        if (hasItem('Pipe Seal Kit')) markDone('ch8_pipe_seal');
         if (!state.faults.waterPipeLeaking) markDone('ch8_flush_bioreactor');
-        if (state.waterConductivity <= 60) markDone('ch8_conductivity_check');
+        if (state.waterConductivity <= 50) markDone('ch8_conductivity_check');
     }
 
     // Ch 8 (Mission 9) auto-sync
     if (state.chapterIdx === 8) {
-        if (state.faults.shelterProtocolActive) {
-            markDone('ch9_water_shield');
-        }
+        if (state.alarmSounded) markDone('ch9_alarm_siren');
+        if (state.faults.shelterProtocolActive) markDone('ch9_verify_shielding');
+        if (state.crewSheltered) markDone('ch9_shelter_evac');
     }
 
     // Ch 9 (Mission 10) auto-sync
     if (state.chapterIdx === 9) {
         if (state.coresPackaged) markDone('ch10_package_cores');
+        if (state.cropsHarvested) markDone('ch10_greenhouse_seeds');
+        if (state.finalReportSent) markDone('ch10_final_report');
     }
 }
 
