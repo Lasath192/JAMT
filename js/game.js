@@ -1,32 +1,70 @@
+function isPlayerOutside() {
+    if (!state || !state.player) return false;
+    return state.player.x <= 276;
+}
+window.isPlayerOutside = isPlayerOutside;
+
 function toggleOuterAirlockDoor() {
     if (!state || !state.player) return;
     const distToDoor = Math.hypot(state.player.x - 276, state.player.y - 380);
     if (distToDoor > 85) {
-        setAria('Walk closer to the Airlock outer door at the left entrance to cycle the outer hatch.');
+        setAria('Walk closer to the Airlock outer door at the left entrance to operate the hatch.');
         if (typeof spawnFloatingText === 'function') {
             spawnFloatingText('🚪 WALK CLOSER TO AIRLOCK DOOR', state.player.x, state.player.y - 25, '#f59e0b');
         }
         return;
     }
 
-    if (!state.player.inSuit || !state.player.suitChecked) {
-        if (window.sfx && typeof sfx.alert === 'function') sfx.alert();
-        if (typeof triggerCameraShake === 'function') triggerCameraShake(3.0);
-        if (typeof spawnFloatingText === 'function') {
-            spawnFloatingText('🔒 PUT ON SUIT & CHECK SEAL FIRST!', state.player.x, state.player.y - 25, '#ef4444');
+    const outside = isPlayerOutside();
+
+    if (outside) {
+        // A. PLAYER APPROACHING MAIN HABITAT ENTRANCE FROM OUTSIDE
+        // Opens directly into habitat without air-pressure check, valve requirement, or equalization delay!
+        if (!state.player.outerDoorOpen) {
+            state.player.outerDoorOpen = true;
+            if (window.sfx && typeof sfx.pickup === 'function') sfx.pickup();
+            if (typeof triggerCameraShake === 'function') triggerCameraShake(2.0);
+            if (typeof spawnFloatingText === 'function') {
+                spawnFloatingText('🚪 HABITAT ENTRANCE OPENED', state.player.x, state.player.y - 25, '#22c55e');
+            }
+            setAria('Main habitat entrance opened directly. Welcome back inside Astra-1.');
+        } else {
+            state.player.outerDoorOpen = false;
+            if (window.sfx && typeof sfx.pickup === 'function') sfx.pickup();
+            if (typeof spawnFloatingText === 'function') {
+                spawnFloatingText('🚪 HABITAT ENTRANCE CLOSED', state.player.x, state.player.y - 25, '#94a3b8');
+            }
+            setAria('Main habitat entrance closed.');
         }
-        setAria('LOCKED! Inspect Airlock Console [E] to don and pressure-check your spacesuit before opening the outer hatch.');
+        if (typeof updateUI === 'function') updateUI();
         return;
     }
 
-    state.player.outerDoorOpen = !state.player.outerDoorOpen;
-    if (window.sfx && typeof sfx.pickup === 'function') sfx.pickup();
-    if (typeof triggerCameraShake === 'function') triggerCameraShake(2.0);
-    if (typeof spawnFloatingText === 'function') {
-        spawnFloatingText(state.player.outerDoorOpen ? '💨 OUTER HATCH UNLOCKED & OPEN' : '🔒 OUTER HATCH SEALED', state.player.x, state.player.y - 25, state.player.outerDoorOpen ? '#22c55e' : '#f59e0b');
+    // B. PLAYER APPROACHING MAIN HABITAT DOOR FROM INSIDE (EXITING TO MARS)
+    // If door is already open, pressing F closes and locks it
+    if (state.player.outerDoorOpen) {
+        state.player.outerDoorOpen = false;
+        if (window.sfx && typeof sfx.pickup === 'function') sfx.pickup();
+        if (typeof triggerCameraShake === 'function') triggerCameraShake(2.0);
+        if (typeof spawnFloatingText === 'function') {
+            spawnFloatingText('🔒 AIRLOCK OUTER HATCH SEALED', state.player.x, state.player.y - 25, '#f59e0b');
+        }
+        setAria('Airlock outer hatch sealed and locked.');
+        if (typeof updateUI === 'function') updateUI();
+        return;
     }
-    setAria(state.player.outerDoorOpen ? 'Outer airlock hatch unsealed and opened! Safe to conduct EVA excursion on Martian surface.' : 'Outer airlock hatch sealed and locked.');
-    if (typeof updateUI === 'function') updateUI();
+
+    // Door is closed and player is inside: Strict EVA Safety Protocol!
+    // Must complete hands-on rotary valve depressurization to 0.6 kPa before hatch unlocks.
+    if (typeof openAirlockExitProcedure === 'function') {
+        openAirlockExitProcedure();
+    } else {
+        // Fallback safety unlock
+        state.player.outerDoorOpen = true;
+        state.player.inSuit = true;
+        state.player.suitChecked = true;
+        if (typeof updateUI === 'function') updateUI();
+    }
 }
 window.toggleOuterAirlockDoor = toggleOuterAirlockDoor;
 /**
@@ -602,6 +640,16 @@ function updateGame(dt) {
     cam.y += (state.player.y - cam.y) * 0.08;
     window.camera = cam;
 
+    // Auto-close outer door when player walks away from the doorway
+    if (state.player.outerDoorOpen) {
+        const distFromDoor = Math.hypot(state.player.x - 276, state.player.y - 380);
+        if (distFromDoor > 95) {
+            state.player.outerDoorOpen = false;
+            if (window.sfx && typeof sfx.chime === 'function') sfx.chime();
+            if (typeof updateUI === 'function') updateUI();
+        }
+    }
+
     // Floating interaction prompt update
     const distToDoor = (state && state.player) ? Math.hypot(state.player.x - 276, state.player.y - 380) : 999;
     const inAirlockHatchArea = (distToDoor <= 75);
@@ -617,21 +665,34 @@ function updateGame(dt) {
         if (inAirlockHatchArea) {
             promptEl.classList.remove('hidden');
             if (kbdEl) kbdEl.textContent = 'F';
-            if (!state.player.inSuit || !state.player.suitChecked) {
-                titleEl.textContent = '🔒 AIRLOCK DOOR: LOCKED';
-                subEl.textContent = 'Don EVA Suit & Check Seal at Console [F] first';
-                promptEl.style.borderColor = '#ef4444';
-                if (kbdEl) kbdEl.className = 'bg-rose-500 text-white font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
-            } else if (!state.player.outerDoorOpen) {
-                titleEl.textContent = '🚪 AIRLOCK DOOR: UNLOCK & OPEN';
-                subEl.textContent = 'Click button or Press [F] to Open Door';
-                promptEl.style.borderColor = '#38bdf8';
-                if (kbdEl) kbdEl.className = 'bg-sky-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md animate-pulse';
+            const outside = isPlayerOutside();
+
+            if (outside) {
+                // Approaching habitat door from OUTSIDE: Direct entrance
+                if (!state.player.outerDoorOpen) {
+                    titleEl.textContent = '🚪 MAIN HABITAT ENTRANCE';
+                    subEl.textContent = 'Press [F] to Open Door';
+                    promptEl.style.borderColor = '#38bdf8';
+                    if (kbdEl) kbdEl.className = 'bg-sky-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md animate-pulse';
+                } else {
+                    titleEl.textContent = '🚪 HABITAT ENTRANCE (OPEN)';
+                    subEl.textContent = 'Press [F] to Close Door';
+                    promptEl.style.borderColor = '#22c55e';
+                    if (kbdEl) kbdEl.className = 'bg-emerald-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
+                }
             } else {
-                titleEl.textContent = '💨 AIRLOCK DOOR: CLOSE & LOCK';
-                subEl.textContent = 'Click button or Press [F] to Close Door';
-                promptEl.style.borderColor = '#22c55e';
-                if (kbdEl) kbdEl.className = 'bg-emerald-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
+                // Approaching habitat door from INSIDE: EVA Safety Procedure required
+                if (!state.player.outerDoorOpen) {
+                    titleEl.textContent = '🔒 AIRLOCK OUTER HATCH';
+                    subEl.textContent = 'Press [F] to Prepare for EVA';
+                    promptEl.style.borderColor = '#f59e0b';
+                    if (kbdEl) kbdEl.className = 'bg-amber-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md animate-pulse';
+                } else {
+                    titleEl.textContent = '💨 AIRLOCK OUTER HATCH (UNLOCKED)';
+                    subEl.textContent = 'Press [F] to Close Hatch';
+                    promptEl.style.borderColor = '#22c55e';
+                    if (kbdEl) kbdEl.className = 'bg-emerald-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
+                }
             }
         } else if (nearestObj) {
             promptEl.classList.remove('hidden');
@@ -689,7 +750,8 @@ function initGame() {
     if (typeof initThreeScene === 'function') initThreeScene();
     if (typeof onThreeResize === 'function') onThreeResize();
     if (typeof resizeCanvas === 'function') resizeCanvas();
-    if (typeof loadChapter === 'function') loadChapter(0, true);
+    const startChapter = (typeof state !== 'undefined' && typeof state.chapterIdx === 'number' && state.chapterIdx <= state.maxUnlockedChapter) ? state.chapterIdx : 0;
+    if (typeof loadChapter === 'function') loadChapter(startChapter, true);
     requestAnimationFrame(gameLoop);
 }
 

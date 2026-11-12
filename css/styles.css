@@ -363,3 +363,34 @@ canvas {
 #console-activity-mount::-webkit-scrollbar-thumb:hover {
     background: #475569;
 }
+
+/* Sequential Mission Unlock Glow & Celebration Effects */
+@keyframes missionUnlockGlow {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.35), inset 0 0 15px rgba(245, 158, 11, 0.12);
+        border-color: rgba(56, 189, 248, 0.6);
+    }
+    50% {
+        box-shadow: 0 0 28px rgba(56, 189, 248, 0.65), inset 0 0 22px rgba(245, 158, 11, 0.28);
+        border-color: rgba(245, 158, 11, 0.85);
+    }
+}
+
+.mission-unlock-glow {
+    animation: missionUnlockGlow 3s ease-in-out infinite;
+}
+
+@keyframes scaleUpAnim {
+    0% {
+        transform: scale(0.92);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.animate-scale-up {
+    animation: scaleUpAnim 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

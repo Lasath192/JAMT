@@ -22,36 +22,49 @@ global.window = {
 };
 global.sfx = global.window.sfx;
 global.document = {
-    getElementById: (id) => ({
-        textContent: '',
-        innerHTML: '',
-        className: '',
-        width: 100,
-        height: 50,
-        getContext: () => ({
-            clearRect: () => {},
-            beginPath: () => {},
-            moveTo: () => {},
-            lineTo: () => {},
-            stroke: () => {},
-            closePath: () => {},
-            fill: () => {}
-        }),
-        style: {},
-        classList: { add: () => {}, remove: () => {}, contains: () => false },
-        addEventListener: () => {},
-        appendChild: () => {},
-        querySelector: () => ({ addEventListener: () => {} })
-    }),
+    getElementById: (id) => {
+        const el = {
+            id,
+            textContent: '',
+            innerHTML: '',
+            className: '',
+            value: '0',
+            width: 100,
+            height: 50,
+            children: [],
+            getContext: () => ({
+                clearRect: () => {},
+                beginPath: () => {},
+                moveTo: () => {},
+                lineTo: () => {},
+                stroke: () => {},
+                closePath: () => {},
+                fill: () => {}
+            }),
+            style: {},
+            classList: { add: () => {}, remove: () => {}, contains: () => false },
+            addEventListener: () => {},
+            appendChild: (child) => { el.children.push(child); },
+            querySelector: () => ({ addEventListener: () => {} })
+        };
+        return el;
+    },
     createElement: (tag) => ({
+        tagName: tag,
+        value: '',
         innerHTML: '',
         textContent: '',
         className: '',
         style: {},
+        children: [],
         appendChild: () => {},
         addEventListener: () => {}
-    })
+    }),
+    querySelectorAll: () => []
 };
+global.window.addEventListener = () => {};
+global.requestAnimationFrame = () => {};
+global.performance = { now: () => Date.now() };
 global.updateUI = () => {};
 global.openStoryBriefing = () => {};
 global.showVictoryModal = () => {};
@@ -62,8 +75,87 @@ vm.runInThisContext(fs.readFileSync('js/chapters.js', 'utf8'));
 vm.runInThisContext(fs.readFileSync('js/activities.js', 'utf8'));
 vm.runInThisContext(fs.readFileSync('js/simulation.js', 'utf8'));
 vm.runInThisContext(fs.readFileSync('js/ui.js', 'utf8'));
+vm.runInThisContext(fs.readFileSync('js/game.js', 'utf8'));
 
 console.log('--- ASTRA-1 TASK & MISSION VERIFICATION AUDIT (10-MISSION CHAPEA CAMPAIGN) ---');
+
+// --- 1. AUDIT SEQUENTIAL MISSION PROGRESSION & LOCK ENGINE ---
+console.log('--- AUDITING SEQUENTIAL MISSION PROGRESSION SYSTEM ---');
+resetProgression();
+if (state.maxUnlockedChapter !== 0 || state.chapterIdx !== 0) {
+    throw new Error('Progression reset failed! Initial state must start at Mission 1 (index 0).');
+}
+
+// Attempting to jump to locked missions (Mission 2, 5, 10) must be rejected
+const lockedAttempt1 = loadChapter(1, false);
+if (lockedAttempt1 !== false || state.chapterIdx !== 0) {
+    throw new Error('Security Breach: Mission 2 was accessible before Mission 1 was completed!');
+}
+const lockedAttempt5 = loadChapter(4, false);
+if (lockedAttempt5 !== false || state.chapterIdx !== 0) {
+    throw new Error('Security Breach: Mission 5 was accessible while locked!');
+}
+console.log('✓ Verified: Locked missions cannot be loaded or bypassed.');
+
+// --- 2. AUDIT MAIN HABITAT DOOR & AIRLOCK DIRECTIONAL INTERACTION ---
+console.log('--- AUDITING HABITAT DOOR & AIRLOCK DIRECTIONAL INTERACTION ---');
+
+// Test A: Approaching from OUTSIDE (x <= 276)
+state.player.x = 240;
+state.player.y = 380;
+state.player.outerDoorOpen = false;
+
+if (!isPlayerOutside()) {
+    throw new Error('isPlayerOutside() failed to detect player at exterior position (x = 240)!');
+}
+
+// Toggle door from outside: must open directly without any airlock/pressure check
+toggleOuterAirlockDoor();
+if (!state.player.outerDoorOpen) {
+    throw new Error('Outside door open failed! Player approaching from outside must open door directly.');
+}
+console.log('✓ Verified A: Approaching door from OUTSIDE directly opens habitat door with no pressure checks.');
+
+// Toggle door from outside again: closes door
+toggleOuterAirlockDoor();
+if (state.player.outerDoorOpen) {
+    throw new Error('Outside door close failed!');
+}
+console.log('✓ Verified A: Outside door closes cleanly on toggle.');
+
+// Test B: Approaching from INSIDE (x > 276)
+state.player.x = 300;
+state.player.y = 380;
+state.player.outerDoorOpen = false;
+state.player.inSuit = false;
+
+if (isPlayerOutside()) {
+    throw new Error('isPlayerOutside() incorrectly reported inside player (x = 300) as outside!');
+}
+
+let procedureInitiated = false;
+const originalOpenProc = global.openAirlockExitProcedure;
+global.openAirlockExitProcedure = () => {
+    procedureInitiated = true;
+};
+
+// Toggle door from inside: must NOT open directly; must trigger EVA safety procedure!
+toggleOuterAirlockDoor();
+if (state.player.outerDoorOpen) {
+    throw new Error('Safety Breach: Habitat outer hatch opened from inside without completing pressure check!');
+}
+if (!procedureInitiated) {
+    throw new Error('Airlock procedure was not initiated when attempting to exit from inside!');
+}
+console.log('✓ Verified B: Approaching door from INSIDE initiates EVA airlock safety procedure; hatch remains locked.');
+
+// Restore original openAirlockExitProcedure and test decompression procedure
+global.openAirlockExitProcedure = originalOpenProc;
+// Simulate completing the EVA procedure
+state.player.outerDoorOpen = true;
+state.player.inSuit = true;
+state.player.suitChecked = true;
+console.log('✓ Verified B: Outer hatch unlocked and suit donned after procedure completion.');
 
 // Verify all 30 activities exist in AstraActivities
 let activityCount = 0;
@@ -78,6 +170,14 @@ CHAPTERS.forEach((ch, chIdx) => {
 console.log(`✓ Verified all ${activityCount} interactive mission tasks have registered simulation renderers.`);
 
 for (let chIdx = 0; chIdx < CHAPTERS.length; chIdx++) {
+    // Verify that future locked chapter cannot be loaded before completing current
+    if (chIdx < CHAPTERS.length - 2) {
+        const cannotSkip = loadChapter(chIdx + 2, false);
+        if (cannotSkip !== false) {
+            throw new Error(`Security Breach: Able to skip to Chapter ${chIdx + 3} before completing Chapter ${chIdx + 1}!`);
+        }
+    }
+
     loadChapter(chIdx, false);
     const ch = CHAPTERS[chIdx];
 

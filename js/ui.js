@@ -58,6 +58,8 @@ function isAnyModalOpen() {
     const gameOverModal = document.getElementById('modal-gameover');
     const dilemmaModal = document.getElementById('modal-storm-dilemma');
     const donkiModal = document.getElementById('modal-donki-weather');
+    const completeModal = document.getElementById('modal-mission-complete');
+    const airlockExitModal = document.getElementById('modal-airlock-exit');
 
     return (consoleModal && !consoleModal.classList.contains('hidden')) ||
            (powerModal && !powerModal.classList.contains('hidden')) ||
@@ -71,11 +73,13 @@ function isAnyModalOpen() {
            (outroSlidesModal && !outroSlidesModal.classList.contains('hidden')) ||
            (gameOverModal && !gameOverModal.classList.contains('hidden')) ||
            (dilemmaModal && !dilemmaModal.classList.contains('hidden')) ||
-           (donkiModal && !donkiModal.classList.contains('hidden'));
+           (donkiModal && !donkiModal.classList.contains('hidden')) ||
+           (completeModal && !completeModal.classList.contains('hidden')) ||
+           (airlockExitModal && !airlockExitModal.classList.contains('hidden'));
 }
 
 function closeAllModals() {
-    ['modal-console', 'modal-power', 'modal-codex', 'modal-dialogue', 'modal-story', 'modal-victory'].forEach(id => {
+    ['modal-console', 'modal-power', 'modal-codex', 'modal-dialogue', 'modal-story', 'modal-victory', 'modal-mission-complete', 'modal-airlock-exit'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     });
@@ -1196,6 +1200,275 @@ function openCodexModal() {
     if (codexModal) codexModal.classList.remove('hidden');
 }
 
+// --- SEQUENTIAL MISSION PROGRESSION & CHAPTER SELECT UI ---
+function updateChapterSelectUI() {
+    const chapterSelect = document.getElementById('chapter-select');
+    if (!chapterSelect || typeof CHAPTERS === 'undefined') return;
+
+    const maxUnlocked = (typeof state.maxUnlockedChapter === 'number') ? state.maxUnlockedChapter : 0;
+    const expectedVal = String(state.chapterIdx);
+
+    // Only render missions from 0 through maxUnlocked.
+    // Locked missions (index > maxUnlocked) are strictly omitted from the dropdown!
+    const children = chapterSelect.children ? Array.from(chapterSelect.children) : [];
+    let countMatch = (children.length === (maxUnlocked + 1));
+    let valuesMatch = true;
+    if (countMatch) {
+        for (let i = 0; i <= maxUnlocked; i++) {
+            if (!children[i] || children[i].value !== String(i)) {
+                valuesMatch = false;
+                break;
+            }
+        }
+    }
+
+    if (!countMatch || !valuesMatch) {
+        chapterSelect.innerHTML = '';
+        for (let idx = 0; idx <= maxUnlocked && idx < CHAPTERS.length; idx++) {
+            const c = CHAPTERS[idx];
+            const opt = document.createElement('option');
+            opt.value = String(idx);
+            const isCurrent = (idx === state.chapterIdx);
+            opt.textContent = `Ch ${idx + 1}: ${c.title.split('—')[0].trim()} (${c.solRange})${isCurrent ? ' ★ ACTIVE' : ''}`;
+            chapterSelect.appendChild(opt);
+        }
+    } else {
+        // Refresh label text including active indicator
+        for (let idx = 0; idx <= maxUnlocked && idx < CHAPTERS.length; idx++) {
+            const opt = children[idx];
+            if (opt) {
+                const c = CHAPTERS[idx];
+                const isCurrent = (idx === state.chapterIdx);
+                opt.textContent = `Ch ${idx + 1}: ${c.title.split('—')[0].trim()} (${c.solRange})${isCurrent ? ' ★ ACTIVE' : ''}`;
+            }
+        }
+    }
+
+    if (chapterSelect.value !== expectedVal) {
+        chapterSelect.value = expectedVal;
+    }
+}
+window.updateChapterSelectUI = updateChapterSelectUI;
+
+function showMissionCompletionModal(chapterIdx, newlyUnlocked) {
+    if (typeof closeAllModals === 'function') closeAllModals();
+    const modal = document.getElementById('modal-mission-complete');
+    if (!modal || typeof CHAPTERS === 'undefined') return;
+
+    const ch = CHAPTERS[chapterIdx];
+    if (!ch) return;
+
+    const titleEl = document.getElementById('complete-modal-title');
+    if (titleEl) {
+        titleEl.textContent = `Mission ${chapterIdx + 1} Completed!`;
+    }
+
+    const narrEl = document.getElementById('complete-modal-narrative');
+    if (narrEl) {
+        narrEl.textContent = `Cadet Nova, all required operational checklists and scientific protocols for ${ch.title} (${ch.solRange}) have been successfully executed and logged. Environmental and life-support telemetry verified nominal!`;
+    }
+
+    const unlockCard = document.getElementById('complete-unlock-card');
+    const btnNext = document.getElementById('btn-complete-next');
+    const btnNextLabel = document.getElementById('btn-complete-next-label');
+    const btnStay = document.getElementById('btn-complete-stay');
+
+    if (chapterIdx < CHAPTERS.length - 1) {
+        const nextCh = CHAPTERS[chapterIdx + 1];
+        if (unlockCard) {
+            unlockCard.classList.remove('hidden');
+            const actEl = document.getElementById('complete-unlock-act');
+            if (actEl) actEl.textContent = nextCh.act || 'MISSION UNLOCKED';
+            const unlockTitle = document.getElementById('complete-unlock-title');
+            if (unlockTitle) unlockTitle.textContent = `Mission ${chapterIdx + 2}: ${nextCh.title}`;
+            const unlockDesc = document.getElementById('complete-unlock-desc');
+            if (unlockDesc) unlockDesc.textContent = `${nextCh.solRange} • ${nextCh.tasks.length} Mission Objectives ready for deployment.`;
+        }
+        if (btnNextLabel) btnNextLabel.textContent = `Commence Mission ${chapterIdx + 2} (${nextCh.solRange})`;
+        if (btnNext) {
+            btnNext.onclick = () => {
+                modal.classList.add('hidden');
+                if (typeof loadChapter === 'function') loadChapter(chapterIdx + 1, true);
+            };
+        }
+    } else {
+        if (unlockCard) {
+            unlockCard.classList.remove('hidden');
+            const actEl = document.getElementById('complete-unlock-act');
+            if (actEl) actEl.textContent = 'EXPEDITION COMPLETE';
+            const unlockTitle = document.getElementById('complete-unlock-title');
+            if (unlockTitle) unlockTitle.textContent = 'Mars Dune Alpha Expedition Handover';
+            const unlockDesc = document.getElementById('complete-unlock-desc');
+            if (unlockDesc) unlockDesc.textContent = 'All 10 missions completed across 378 Sols. Outpost handover certified.';
+        }
+        if (btnNextLabel) btnNextLabel.textContent = 'View Expedition Legacy Report ★';
+        if (btnNext) {
+            btnNext.onclick = () => {
+                modal.classList.add('hidden');
+                if (typeof showVictoryModal === 'function') showVictoryModal();
+            };
+        }
+    }
+
+    if (btnStay) {
+        btnStay.onclick = () => {
+            modal.classList.add('hidden');
+        };
+    }
+
+    modal.classList.remove('hidden');
+    if (typeof sfx !== 'undefined' && sfx.success) sfx.success();
+}
+window.showMissionCompletionModal = showMissionCompletionModal;
+
+// --- INTERACTIVE AIRLOCK EVA EXIT DEPRESSURIZATION PROCEDURE ---
+function openAirlockExitProcedure() {
+    if (typeof closeAllModals === 'function') closeAllModals();
+    const modal = document.getElementById('modal-airlock-exit');
+    if (!modal) return;
+
+    let chamberKPa = 101.3;
+    let isEqualized = false;
+
+    const needle = document.getElementById('eva-airlock-needle');
+    const digital = document.getElementById('eva-airlock-digital-val');
+    const statusTxt = document.getElementById('eva-airlock-status-txt');
+    const wheel = document.getElementById('eva-valve-wheel');
+    const btnStep = document.getElementById('btn-eva-turn-step');
+    const successCard = document.getElementById('eva-airlock-success');
+    const btnProceed = document.getElementById('btn-eva-proceed-out');
+    const btnClose = document.getElementById('btn-close-airlock-exit');
+
+    if (successCard) successCard.classList.add('hidden');
+    if (btnStep) {
+        btnStep.disabled = false;
+        btnStep.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+
+    function updateGauge(val) {
+        chamberKPa = Math.max(0.6, Math.min(101.3, val));
+        // Gauge needle rotates across 270 degree arc (-135deg at 0 kPa to +135deg at 120 kPa)
+        const angle = -135 + (chamberKPa / 120) * 270;
+        if (needle) needle.style.transform = `rotate(${angle}deg)`;
+        if (digital) digital.textContent = `${chamberKPa.toFixed(1)} kPa`;
+
+        if (chamberKPa <= 1.0) {
+            chamberKPa = 0.6;
+            if (digital) digital.textContent = '0.6 kPa (Mars Surface Ambient)';
+            if (statusTxt) {
+                statusTxt.textContent = '● EQUALIZED WITH MARS SURFACE (0.6 kPa)';
+                statusTxt.className = 'text-[10px] font-mono-tech text-emerald-400 font-bold';
+            }
+            if (!isEqualized) {
+                isEqualized = true;
+                if (typeof sfx !== 'undefined') {
+                    if (sfx.airlockHiss) sfx.airlockHiss();
+                    if (sfx.success) sfx.success();
+                }
+                if (state && state.player) {
+                    state.player.inSuit = true;
+                    state.player.suitChecked = true;
+                    state.player.outerDoorOpen = true;
+                }
+                syncTasksWithState();
+                if (typeof completeTask === 'function') {
+                    completeTask('ch5_cycle_door');
+                    completeTask('ch3_eva_prep');
+                }
+                if (successCard) successCard.classList.remove('hidden');
+                if (btnStep) {
+                    btnStep.disabled = true;
+                    btnStep.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+                if (typeof updateUI === 'function') updateUI();
+            }
+        } else {
+            if (statusTxt) {
+                statusTxt.textContent = `● EVACUATING CHAMBER... (${chamberKPa.toFixed(1)} kPa)`;
+                statusTxt.className = 'text-[10px] font-mono-tech text-sky-400 font-bold';
+            }
+        }
+    }
+
+    // Initialize gauge
+    updateGauge(101.3);
+
+    // Turn valve step button (-15.0 kPa per click)
+    if (btnStep) {
+        btnStep.onclick = () => {
+            if (isEqualized) return;
+            if (typeof sfx !== 'undefined') {
+                if (sfx.valveRotate) sfx.valveRotate();
+                if (sfx.airlockHiss) sfx.airlockHiss();
+            }
+            updateGauge(chamberKPa - 15.0);
+        };
+    }
+
+    // Rotary valve wheel drag interaction
+    if (wheel) {
+        let isDragging = false;
+        let lastAngle = 0;
+
+        const onWheelStart = (e) => {
+            if (isEqualized) return;
+            isDragging = true;
+            const rect = wheel.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            lastAngle = Math.atan2(clientY - cy, clientX - cx);
+        };
+
+        const onWheelMove = (e) => {
+            if (!isDragging || isEqualized) return;
+            const rect = wheel.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            const currentAngle = Math.atan2(clientY - cy, clientX - cx);
+            let delta = currentAngle - lastAngle;
+            if (delta > Math.PI) delta -= Math.PI * 2;
+            if (delta < -Math.PI) delta += Math.PI * 2;
+            lastAngle = currentAngle;
+
+            const absDelta = Math.abs(delta);
+            if (absDelta > 0.05) {
+                if (typeof sfx !== 'undefined' && sfx.valveRotate) sfx.valveRotate();
+                updateGauge(chamberKPa - absDelta * 14);
+            }
+        };
+
+        const onWheelEnd = () => { isDragging = false; };
+
+        wheel.onpointerdown = onWheelStart;
+        window.addEventListener('pointermove', onWheelMove);
+        window.addEventListener('pointerup', onWheelEnd);
+    }
+
+    if (btnProceed) {
+        btnProceed.onclick = () => {
+            modal.classList.add('hidden');
+            if (typeof sfx !== 'undefined' && sfx.pickup) sfx.pickup();
+            if (typeof spawnFloatingText === 'function' && state.player) {
+                spawnFloatingText('💨 OUTER HATCH UNLOCKED & OPEN', state.player.x, state.player.y - 25, '#22c55e');
+            }
+        };
+    }
+
+    if (btnClose) {
+        btnClose.onclick = () => {
+            modal.classList.add('hidden');
+        };
+    }
+
+    modal.classList.remove('hidden');
+    if (typeof sfx !== 'undefined' && sfx.beep) sfx.beep();
+}
+window.openAirlockExitProcedure = openAirlockExitProcedure;
+
 // --- UI & TELEMETRY HUD UPDATER ---
 function updateUI() {
     syncTasksWithState();
@@ -1208,10 +1481,7 @@ function updateUI() {
     const hudSol = document.getElementById('hud-sol');
     if (hudSol) hudSol.textContent = `SOL ${String(state.sol).padStart(2, '0')} / 378`;
 
-    const chSel = document.getElementById('chapter-select');
-    if (chSel && chSel.value !== String(state.chapterIdx)) {
-        chSel.value = String(state.chapterIdx);
-    }
+    updateChapterSelectUI();
 
     const hudTag = document.getElementById('hud-chapter-tag');
     if (hudTag) hudTag.textContent = ch.title.split('—')[0].trim().toUpperCase();
@@ -1458,6 +1728,18 @@ function updateUI() {
         if (advContainer) {
             if (allDone) advContainer.classList.remove('hidden');
             else advContainer.classList.add('hidden');
+        }
+
+        const btnAdvance = document.getElementById('btn-advance-chapter');
+        if (btnAdvance && allDone) {
+            if (state.chapterIdx < CHAPTERS.length - 1) {
+                const nextCh = CHAPTERS[state.chapterIdx + 1];
+                btnAdvance.innerHTML = `<i class="fa-solid fa-angles-right"></i> Advance to Mission ${state.chapterIdx + 2} (${nextCh ? nextCh.solRange : ''})`;
+                btnAdvance.className = "w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded-lg text-xs font-mono-tech transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 animate-pulse cursor-pointer";
+            } else {
+                btnAdvance.innerHTML = `<i class="fa-solid fa-trophy text-amber-300"></i> View Final Expedition Legacy Report ★`;
+                btnAdvance.className = "w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 px-3 rounded-lg text-xs font-mono-tech transition flex items-center justify-center gap-2 shadow-lg shadow-amber-600/30 cursor-pointer";
+            }
         }
 
         // Active Objective Pill (1-line focus for younger students)
@@ -1963,30 +2245,38 @@ function initUIEventListeners() {
         });
     }
 
-    // Chapter Select & Advance Handlers
+    // Chapter Select & Sequential Progression Handlers
     const chapterSelect = document.getElementById('chapter-select');
     if (chapterSelect) {
-        if (typeof CHAPTERS !== 'undefined' && CHAPTERS.length > 0) {
-            chapterSelect.innerHTML = '';
-            CHAPTERS.forEach((ch, idx) => {
-                const opt = document.createElement('option');
-                opt.value = String(idx);
-                opt.textContent = `Ch ${idx + 1}: ${ch.title} (${ch.solRange})`;
-                chapterSelect.appendChild(opt);
-            });
-            chapterSelect.value = String(state.chapterIdx);
-        }
+        updateChapterSelectUI();
         chapterSelect.addEventListener('change', (e) => {
+            const targetIdx = parseInt(e.target.value, 10);
+            const maxUnlocked = (typeof state.maxUnlockedChapter === 'number') ? state.maxUnlockedChapter : 0;
+            if (targetIdx > maxUnlocked) {
+                if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+                chapterSelect.value = String(state.chapterIdx);
+                return;
+            }
             if (typeof sfx !== 'undefined' && sfx.beep) sfx.beep();
-            loadChapter(parseInt(e.target.value, 10), true);
+            loadChapter(targetIdx, true);
         });
     }
 
     const btnAdvance = document.getElementById('btn-advance-chapter');
     if (btnAdvance) {
         btnAdvance.addEventListener('click', () => {
-            if (window.sfx && typeof sfx.success === 'function') sfx.success();
-            if (state.chapterIdx < CHAPTERS.length - 1) {
+            const ch = (typeof CHAPTERS !== 'undefined') ? CHAPTERS[state.chapterIdx] : null;
+            const allDone = ch && ch.tasks && ch.tasks.every(t => t.done);
+            if (!allDone) {
+                if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+                if (typeof spawnFloatingText === 'function' && state.player) {
+                    spawnFloatingText('🔒 COMPLETE MISSION TASKS FIRST!', state.player.x, state.player.y - 25, '#ef4444');
+                }
+                return;
+            }
+            if (typeof advanceToNextChapter === 'function') {
+                advanceToNextChapter();
+            } else if (state.chapterIdx < CHAPTERS.length - 1) {
                 loadChapter(state.chapterIdx + 1, true);
             } else {
                 showVictoryModal();

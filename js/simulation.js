@@ -6,6 +6,8 @@
 // --- GLOBAL MISSION & TELEMETRY STATE ---
 const state = {
     chapterIdx: 0,
+    maxUnlockedChapter: 0,
+    completedChapters: [],
     sol: 1,
     solarOutputKW: 20,
     backupGenKW: 0,
@@ -65,6 +67,79 @@ const state = {
         targetY: null
     }
 };
+
+// --- MISSION PROGRESSION PERSISTENCE & SEQUENTIAL LOCK ENGINE ---
+const STORAGE_KEY_PROGRESSION = 'astra1_mission_progression_v2';
+
+function saveProgression() {
+    try {
+        if (typeof localStorage !== 'undefined') {
+            const data = {
+                maxUnlockedChapter: (typeof state.maxUnlockedChapter === 'number') ? state.maxUnlockedChapter : 0,
+                currentChapterIdx: (typeof state.chapterIdx === 'number') ? state.chapterIdx : 0,
+                completedChapters: Array.isArray(state.completedChapters) ? state.completedChapters : []
+            };
+            localStorage.setItem(STORAGE_KEY_PROGRESSION, JSON.stringify(data));
+        }
+    } catch (e) {
+        console.warn('Could not save progression to localStorage:', e);
+    }
+}
+
+function loadProgression() {
+    try {
+        if (typeof localStorage !== 'undefined') {
+            const raw = localStorage.getItem(STORAGE_KEY_PROGRESSION);
+            if (raw) {
+                const data = JSON.parse(raw);
+                if (typeof data.maxUnlockedChapter === 'number') {
+                    const maxCh = (typeof CHAPTERS !== 'undefined') ? CHAPTERS.length - 1 : 9;
+                    state.maxUnlockedChapter = Math.max(0, Math.min(maxCh, data.maxUnlockedChapter));
+                }
+                if (Array.isArray(data.completedChapters)) {
+                    state.completedChapters = data.completedChapters.filter(c => typeof c === 'number');
+                }
+                if (typeof data.currentChapterIdx === 'number') {
+                    state.chapterIdx = Math.max(0, Math.min(state.maxUnlockedChapter, data.currentChapterIdx));
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Could not load progression from localStorage:', e);
+    }
+}
+
+function resetProgression() {
+    state.maxUnlockedChapter = 0;
+    state.completedChapters = [];
+    state.chapterIdx = 0;
+    try {
+        if (typeof localStorage !== 'undefined') {
+            localStorage.removeItem(STORAGE_KEY_PROGRESSION);
+        }
+    } catch (e) {}
+    loadChapter(0, true);
+}
+
+function advanceToNextChapter() {
+    if (typeof CHAPTERS === 'undefined') return;
+    if (state.chapterIdx < CHAPTERS.length - 1) {
+        const nextIdx = state.chapterIdx + 1;
+        if (nextIdx <= state.maxUnlockedChapter) {
+            loadChapter(nextIdx, true);
+        } else {
+            if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+            if (typeof spawnFloatingText === 'function' && state.player) {
+                spawnFloatingText(`🔒 MISSION ${nextIdx + 1} LOCKED!`, state.player.x, state.player.y - 25, '#ef4444');
+            }
+        }
+    } else {
+        showVictoryModal();
+    }
+}
+
+// Initialise progression from storage
+loadProgression();
 
 function loseHeart(reasonText) {
     if (state.hearts <= 0) return;
@@ -190,9 +265,22 @@ function applyDilemmaChoice(chapterIdx, choiceId) {
 }
 
 function loadChapter(idx, showBriefing = true) {
+    if (typeof CHAPTERS === 'undefined' || !CHAPTERS[idx]) return false;
+
+    // Strict sequential mission progression: locked missions cannot be loaded!
+    const maxUnlocked = (typeof state.maxUnlockedChapter === 'number') ? state.maxUnlockedChapter : 0;
+    if (idx > maxUnlocked) {
+        console.warn(`[Astra-1 Security] Mission ${idx + 1} is locked! Cadet Nova must complete Mission ${maxUnlocked + 1} first.`);
+        if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+        if (typeof spawnFloatingText === 'function' && state.player) {
+            spawnFloatingText(`🔒 MISSION ${idx + 1} LOCKED!`, state.player.x, state.player.y - 25, '#ef4444');
+        }
+        return false;
+    }
+
     state.chapterIdx = idx;
+    saveProgression();
     const ch = CHAPTERS[idx];
-    if (!ch) return;
     state.sol = ch.solStart;
     const sel = document.getElementById('chapter-select');
     if (sel) sel.value = String(idx);
@@ -683,6 +771,19 @@ function syncTasksWithState() {
         if (state.cropsHarvested) markDone('ch10_greenhouse_seeds');
         if (state.finalReportSent) markDone('ch10_final_report');
     }
+
+    // Check if all tasks in the current chapter are satisfied
+    const activeCh = CHAPTERS[state.chapterIdx];
+    if (activeCh && activeCh.tasks && activeCh.tasks.every(item => item.done)) {
+        if (!state.completedChapters) state.completedChapters = [];
+        if (!state.completedChapters.includes(state.chapterIdx)) {
+            state.completedChapters.push(state.chapterIdx);
+        }
+        if (state.chapterIdx === state.maxUnlockedChapter && state.maxUnlockedChapter < CHAPTERS.length - 1) {
+            state.maxUnlockedChapter = state.chapterIdx + 1;
+            saveProgression();
+        }
+    }
 }
 
 function isTaskDone(taskId) {
@@ -700,6 +801,30 @@ function completeTask(taskId) {
     if (t && !t.done) {
         t.done = true;
         if (typeof sfx !== 'undefined' && sfx.success) sfx.success();
+
+        // Check if this task completion completes the whole mission!
+        const allDone = ch.tasks.every(item => item.done);
+        if (allDone) {
+            if (!state.completedChapters) state.completedChapters = [];
+            if (!state.completedChapters.includes(state.chapterIdx)) {
+                state.completedChapters.push(state.chapterIdx);
+            }
+
+            let newlyUnlocked = false;
+            if (state.chapterIdx === state.maxUnlockedChapter && state.maxUnlockedChapter < CHAPTERS.length - 1) {
+                state.maxUnlockedChapter = state.chapterIdx + 1;
+                newlyUnlocked = true;
+            }
+            saveProgression();
+
+            // Trigger mission completion celebratory feedback & unlock sequence
+            setTimeout(() => {
+                if (typeof showMissionCompletionModal === 'function') {
+                    showMissionCompletionModal(state.chapterIdx, newlyUnlocked);
+                }
+            }, 350);
+        }
+
         if (typeof updateUI === 'function') updateUI();
     }
 }
@@ -811,7 +936,11 @@ if (typeof module !== 'undefined') {
         triggerGameOver,
         isTaskDone,
         unlockFact,
-        awardBadge
+        awardBadge,
+        saveProgression,
+        loadProgression,
+        resetProgression,
+        advanceToNextChapter
     };
 }
 
@@ -827,4 +956,8 @@ if (typeof window !== 'undefined') {
     window.calculateMissionLegacy = calculateMissionLegacy;
     window.showVictoryModal = showVictoryModal;
     window.getPowerStats = getPowerStats;
+    window.saveProgression = saveProgression;
+    window.loadProgression = loadProgression;
+    window.resetProgression = resetProgression;
+    window.advanceToNextChapter = advanceToNextChapter;
 }

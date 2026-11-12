@@ -272,16 +272,7 @@
                     <div class="flex items-center justify-between text-[11px] pt-1">
                         <span class="text-slate-400">Chapter</span>
                         <select id="chapter-select" class="bg-slate-900 border border-slate-700 text-sky-300 rounded px-1.5 py-0.5 text-[10px] font-mono-tech focus:outline-none">
-                            <option value="0">Ch 1: The First Breath (Sol 01–03)</option>
-                            <option value="1">Ch 2: First Seeds in Red Soil (Sol 07–12)</option>
-                            <option value="2">Ch 3: Perseverance & Ingenuity (Sol 20–25)</option>
-                            <option value="3">Ch 4: Rising Sky of Copper (Sol 45–50)</option>
-                            <option value="4">Ch 5: Zero-Visibility EVA (Sol 72–75)</option>
-                            <option value="5">Ch 6: Scrubber Saturation (Sol 95–100)</option>
-                            <option value="6">Ch 7: Jezero Delta Core (Sol 140–150)</option>
-                            <option value="7">Ch 8: Graywater Biofilm Crisis (Sol 185–190)</option>
-                            <option value="8">Ch 9: Solar Particle Event (Sol 290–295)</option>
-                            <option value="9">Ch 10: Outpost Handover (Sol 378)</option>
+                            <option value="0">Ch 1: The First Breath (Sol 01–03) ★ ACTIVE</option>
                         </select>
                     </div>
                     <div class="text-[10px] text-slate-400 pt-0.5 flex items-center justify-between">
@@ -676,6 +667,173 @@
                 <button id="btn-start-chapter" class="btn-tech bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold px-5 py-2 rounded-xl text-xs sm:text-sm font-display tracking-wide shadow-lg shadow-amber-500/20">
                     Start Crew Story & Deploy
                 </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MISSION COMPLETION & NEXT MISSION UNLOCK CELEBRATION MODAL -->
+    <div id="modal-mission-complete" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md overflow-y-auto p-2 sm:p-4 flex flex-col items-center justify-start sm:justify-center">
+        <div class="hud-panel w-full max-w-xl rounded-2xl border-2 border-emerald-500/60 overflow-hidden shadow-2xl flex flex-col my-auto animate-scale-up">
+            <!-- Header Banner -->
+            <div class="bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-950 px-5 py-4 border-b border-emerald-500/40 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border-2 border-emerald-400/60 flex items-center justify-center text-emerald-400 text-lg shadow-lg shadow-emerald-500/20">
+                        <i class="fa-solid fa-award"></i>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-mono-tech uppercase tracking-widest text-emerald-400 font-bold">MISSION SUCCESS • ASTRO-FLIGHT CERTIFIED</div>
+                        <h3 id="complete-modal-title" class="text-base sm:text-lg font-bold font-display text-white">Mission Completed!</h3>
+                    </div>
+                </div>
+                <span class="text-xs font-mono-tech font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                    100% COMPLETE
+                </span>
+            </div>
+
+            <!-- Body Content -->
+            <div class="p-5 space-y-4 text-xs sm:text-sm">
+                <!-- Mission Summary Narrative -->
+                <div class="bg-slate-900/80 border border-slate-700/80 rounded-xl p-3.5 space-y-1.5">
+                    <div class="text-[10px] font-mono-tech uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-clipboard-check text-emerald-400"></i>
+                        <span>Flight Director Debrief</span>
+                    </div>
+                    <p id="complete-modal-narrative" class="text-slate-200 leading-relaxed font-sans text-xs">
+                        All checklist procedures for this sol cycle have been completed with zero safety breaches. Outpost telemetry remains nominal.
+                    </p>
+                </div>
+
+                <!-- Next Mission Unlock Reveal Card (Animated) -->
+                <div id="complete-unlock-card" class="bg-gradient-to-br from-sky-950/80 via-slate-900/90 to-amber-950/40 border-2 border-sky-400/50 rounded-xl p-4 space-y-2 relative overflow-hidden mission-unlock-glow">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="text-amber-400 text-sm animate-bounce"><i class="fa-solid fa-unlock-keyhole"></i></span>
+                            <span class="text-[11px] font-mono-tech font-bold uppercase tracking-wider text-amber-300">NEW MISSION UNLOCKED!</span>
+                        </div>
+                        <span id="complete-unlock-act" class="text-[10px] font-mono-tech px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">ACT I</span>
+                    </div>
+                    <h4 id="complete-unlock-title" class="text-sm sm:text-base font-bold text-white font-display">Mission 2: First Seeds in Red Soil</h4>
+                    <p id="complete-unlock-desc" class="text-xs text-slate-300 font-sans leading-relaxed">
+                        Prepare greenhouse germination trays and balance nutrient irrigation.
+                    </p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="pt-2 flex flex-col sm:flex-row gap-2.5">
+                    <button id="btn-complete-next" class="flex-1 bg-gradient-to-r from-emerald-600 to-sky-600 hover:from-emerald-500 hover:to-sky-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs sm:text-sm font-mono-tech transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 cursor-pointer">
+                        <span id="btn-complete-next-label">Commence Next Mission</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    <button id="btn-complete-stay" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 py-2.5 px-4 rounded-xl text-xs font-mono-tech transition cursor-pointer">
+                        Stay in Habitat
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- INTERACTIVE AIRLOCK EVA EXIT DEPRESSURIZATION MODAL -->
+    <div id="modal-airlock-exit" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md overflow-y-auto p-2 sm:p-4 flex flex-col items-center justify-start sm:justify-center">
+        <div class="hud-panel w-full max-w-2xl rounded-2xl border-2 border-sky-500/50 overflow-hidden shadow-2xl flex flex-col my-auto animate-scale-up">
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-slate-900 via-slate-950 to-sky-950 px-4 py-3 border-b border-sky-500/40 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-sky-500/20 border border-sky-400/50 flex items-center justify-center text-sky-400 text-base shadow-md">
+                        <i class="fa-solid fa-door-open"></i>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-mono-tech uppercase tracking-widest text-sky-400 font-bold">AIRLOCK INTERLOCK PROTOCOL</div>
+                        <h3 class="text-sm sm:text-base font-bold font-display text-white">EVA Depressurization to Mars Ambient</h3>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="btn-close-airlock-exit" class="px-3 py-1.5 rounded-lg bg-red-950/90 hover:bg-red-800 border-2 border-red-500/80 text-red-100 hover:text-white text-xs font-bold flex items-center gap-1.5 shadow-lg cursor-pointer transition-all" title="Abort & Return to Habitat [ESC]">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>ABORT [ESC]</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-4 sm:p-5 overflow-y-auto space-y-4 text-xs sm:text-sm">
+                <!-- Educational Context Banner -->
+                <div class="bg-sky-950/30 border border-sky-500/30 rounded-xl p-3 flex items-start gap-2.5 text-slate-300">
+                    <i class="fa-solid fa-circle-info text-sky-400 mt-0.5 text-sm"></i>
+                    <div class="text-xs leading-relaxed font-sans">
+                        <strong class="text-white">Airlock Safety Interlock:</strong> Habitat cabin pressure is <strong>101.3 kPa</strong>, while the Martian surface is a near-vacuum at <strong>0.6 kPa</strong>. The outer hatch is interlocked until you rotate the depressurization valve and evacuate chamber atmosphere down to surface pressure.
+                    </div>
+                </div>
+
+                <!-- Interactive Gauge & Rotary Valve Area -->
+                <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-around gap-6">
+                    <!-- Analog Gauge -->
+                    <div class="flex flex-col items-center">
+                        <div class="relative w-44 h-44 rounded-full border-4 border-slate-700 bg-gradient-to-b from-slate-900 to-slate-950 shadow-inner flex items-center justify-center">
+                            <svg viewBox="0 0 100 100" class="w-full h-full absolute inset-0">
+                                <circle cx="50" cy="50" r="40" fill="none" stroke="#1e293b" stroke-width="6" stroke-dasharray="188" stroke-dashoffset="47" transform="rotate(135 50 50)"/>
+                                <!-- Green target vacuum zone at 0.6 kPa (start of arc at -135deg) -->
+                                <circle cx="50" cy="50" r="40" fill="none" stroke="#22c55e" stroke-width="7" stroke-dasharray="16" stroke-dashoffset="0" transform="rotate(135 50 50)" opacity="0.9"/>
+                            </svg>
+                            <!-- Needle (Starts at 101.3 kPa: +93 deg) -->
+                            <div id="eva-airlock-needle" class="absolute w-1 h-18 bg-sky-400 origin-bottom rounded-full transition-transform duration-75 shadow-[0_0_8px_#38bdf8]" style="bottom: 50%; transform: rotate(93deg);"></div>
+                            <div class="w-5 h-5 rounded-full bg-slate-200 border-2 border-slate-700 z-10 shadow"></div>
+                            <span class="absolute bottom-6 text-[10px] font-mono-tech text-slate-400 font-bold">kPa ATM</span>
+                        </div>
+                        <div class="mt-2 text-center">
+                            <div id="eva-airlock-digital-val" class="font-mono-tech font-bold text-lg text-sky-300">101.3 kPa</div>
+                            <div id="eva-airlock-status-txt" class="text-[10px] font-mono-tech text-amber-400 font-semibold">● CABIN PRESSURE (101.3 kPa)</div>
+                        </div>
+                    </div>
+
+                    <!-- Rotary Valve Wheel -->
+                    <div class="flex flex-col items-center">
+                        <div id="eva-valve-wheel" class="w-36 h-36 rounded-full border-4 border-sky-500/80 bg-gradient-to-tr from-sky-950 via-slate-900 to-slate-950 shadow-2xl flex items-center justify-center cursor-grab active:cursor-grabbing relative select-none hover:scale-105 transition-transform" title="Click and drag around center to rotate valve">
+                            <div class="absolute w-full h-2 bg-sky-400/70 rounded"></div>
+                            <div class="absolute w-2 h-full bg-sky-400/70 rounded"></div>
+                            <div class="w-12 h-12 rounded-full bg-slate-950 border-2 border-sky-400 flex items-center justify-center text-sky-300 text-xs font-mono-tech font-black z-10 shadow">
+                                EVAC
+                            </div>
+                        </div>
+                        <div class="mt-3 flex items-center gap-2">
+                            <button id="btn-eva-turn-step" class="btn-tech bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded-lg text-xs font-mono-tech text-slate-200 flex items-center gap-1.5 cursor-pointer">
+                                <i class="fa-solid fa-rotate-left text-sky-400"></i>
+                                <span>Turn Depress Valve (-15 kPa)</span>
+                            </button>
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-mono-tech mt-1">Rotate valve with mouse or click step button</span>
+                    </div>
+                </div>
+
+                <!-- Suit Status Check Indicator -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-person-military-pointing text-emerald-400 text-base"></i>
+                        <div>
+                            <div class="font-bold text-white text-xs">Orion Advanced EVA Spacesuit</div>
+                            <div class="text-[10px] text-slate-400 font-mono-tech">Internal suit pressurized: 30.0 kPa pure O₂ | CO₂ scrubber active</div>
+                        </div>
+                    </div>
+                    <span class="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono-tech font-bold">
+                        VERIFIED READY
+                    </span>
+                </div>
+
+                <!-- Unlocked Banner & Exit Button (Hidden initially, shown when 0.6 kPa reached) -->
+                <div id="eva-airlock-success" class="hidden bg-emerald-950/40 border border-emerald-500/50 rounded-xl p-4 space-y-2 text-center">
+                    <div class="flex items-center justify-center gap-2 text-emerald-400 font-bold text-sm font-display">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>CHAMBER EQUALIZED (0.6 kPa) — OUTER HATCH UNLOCKED!</span>
+                    </div>
+                    <p class="text-xs text-slate-300">
+                        Atmospheric evacuation complete. Outer hatch seal is released. Proceed onto the Martian surface.
+                    </p>
+                    <button id="btn-eva-proceed-out" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs font-mono-tech transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 cursor-pointer">
+                        <span>Exit Through Outer Hatch to Mars Surface</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

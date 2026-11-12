@@ -374,6 +374,37 @@ canvas {
     background: #475569;
 }
 
+/* Sequential Mission Unlock Glow & Celebration Effects */
+@keyframes missionUnlockGlow {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.35), inset 0 0 15px rgba(245, 158, 11, 0.12);
+        border-color: rgba(56, 189, 248, 0.6);
+    }
+    50% {
+        box-shadow: 0 0 28px rgba(56, 189, 248, 0.65), inset 0 0 22px rgba(245, 158, 11, 0.28);
+        border-color: rgba(245, 158, 11, 0.85);
+    }
+}
+
+.mission-unlock-glow {
+    animation: missionUnlockGlow 3s ease-in-out infinite;
+}
+
+@keyframes scaleUpAnim {
+    0% {
+        transform: scale(0.92);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.animate-scale-up {
+    animation: scaleUpAnim 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 </style>
     <script src="js/three.min.js"></script>
     <script>if (typeof THREE === 'undefined') document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
@@ -639,16 +670,7 @@ canvas {
                     <div class="flex items-center justify-between text-[11px] pt-1">
                         <span class="text-slate-400">Chapter</span>
                         <select id="chapter-select" class="bg-slate-900 border border-slate-700 text-sky-300 rounded px-1.5 py-0.5 text-[10px] font-mono-tech focus:outline-none">
-                            <option value="0">Ch 1: The First Breath (Sol 01–03)</option>
-                            <option value="1">Ch 2: First Seeds in Red Soil (Sol 07–12)</option>
-                            <option value="2">Ch 3: Perseverance & Ingenuity (Sol 20–25)</option>
-                            <option value="3">Ch 4: Rising Sky of Copper (Sol 45–50)</option>
-                            <option value="4">Ch 5: Zero-Visibility EVA (Sol 72–75)</option>
-                            <option value="5">Ch 6: Scrubber Saturation (Sol 95–100)</option>
-                            <option value="6">Ch 7: Jezero Delta Core (Sol 140–150)</option>
-                            <option value="7">Ch 8: Graywater Biofilm Crisis (Sol 185–190)</option>
-                            <option value="8">Ch 9: Solar Particle Event (Sol 290–295)</option>
-                            <option value="9">Ch 10: Outpost Handover (Sol 378)</option>
+                            <option value="0">Ch 1: The First Breath (Sol 01–03) ★ ACTIVE</option>
                         </select>
                     </div>
                     <div class="text-[10px] text-slate-400 pt-0.5 flex items-center justify-between">
@@ -1043,6 +1065,173 @@ canvas {
                 <button id="btn-start-chapter" class="btn-tech bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold px-5 py-2 rounded-xl text-xs sm:text-sm font-display tracking-wide shadow-lg shadow-amber-500/20">
                     Start Crew Story & Deploy
                 </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MISSION COMPLETION & NEXT MISSION UNLOCK CELEBRATION MODAL -->
+    <div id="modal-mission-complete" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md overflow-y-auto p-2 sm:p-4 flex flex-col items-center justify-start sm:justify-center">
+        <div class="hud-panel w-full max-w-xl rounded-2xl border-2 border-emerald-500/60 overflow-hidden shadow-2xl flex flex-col my-auto animate-scale-up">
+            <!-- Header Banner -->
+            <div class="bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-950 px-5 py-4 border-b border-emerald-500/40 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border-2 border-emerald-400/60 flex items-center justify-center text-emerald-400 text-lg shadow-lg shadow-emerald-500/20">
+                        <i class="fa-solid fa-award"></i>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-mono-tech uppercase tracking-widest text-emerald-400 font-bold">MISSION SUCCESS • ASTRO-FLIGHT CERTIFIED</div>
+                        <h3 id="complete-modal-title" class="text-base sm:text-lg font-bold font-display text-white">Mission Completed!</h3>
+                    </div>
+                </div>
+                <span class="text-xs font-mono-tech font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                    100% COMPLETE
+                </span>
+            </div>
+
+            <!-- Body Content -->
+            <div class="p-5 space-y-4 text-xs sm:text-sm">
+                <!-- Mission Summary Narrative -->
+                <div class="bg-slate-900/80 border border-slate-700/80 rounded-xl p-3.5 space-y-1.5">
+                    <div class="text-[10px] font-mono-tech uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-clipboard-check text-emerald-400"></i>
+                        <span>Flight Director Debrief</span>
+                    </div>
+                    <p id="complete-modal-narrative" class="text-slate-200 leading-relaxed font-sans text-xs">
+                        All checklist procedures for this sol cycle have been completed with zero safety breaches. Outpost telemetry remains nominal.
+                    </p>
+                </div>
+
+                <!-- Next Mission Unlock Reveal Card (Animated) -->
+                <div id="complete-unlock-card" class="bg-gradient-to-br from-sky-950/80 via-slate-900/90 to-amber-950/40 border-2 border-sky-400/50 rounded-xl p-4 space-y-2 relative overflow-hidden mission-unlock-glow">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="text-amber-400 text-sm animate-bounce"><i class="fa-solid fa-unlock-keyhole"></i></span>
+                            <span class="text-[11px] font-mono-tech font-bold uppercase tracking-wider text-amber-300">NEW MISSION UNLOCKED!</span>
+                        </div>
+                        <span id="complete-unlock-act" class="text-[10px] font-mono-tech px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">ACT I</span>
+                    </div>
+                    <h4 id="complete-unlock-title" class="text-sm sm:text-base font-bold text-white font-display">Mission 2: First Seeds in Red Soil</h4>
+                    <p id="complete-unlock-desc" class="text-xs text-slate-300 font-sans leading-relaxed">
+                        Prepare greenhouse germination trays and balance nutrient irrigation.
+                    </p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="pt-2 flex flex-col sm:flex-row gap-2.5">
+                    <button id="btn-complete-next" class="flex-1 bg-gradient-to-r from-emerald-600 to-sky-600 hover:from-emerald-500 hover:to-sky-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs sm:text-sm font-mono-tech transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 cursor-pointer">
+                        <span id="btn-complete-next-label">Commence Next Mission</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    <button id="btn-complete-stay" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 py-2.5 px-4 rounded-xl text-xs font-mono-tech transition cursor-pointer">
+                        Stay in Habitat
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- INTERACTIVE AIRLOCK EVA EXIT DEPRESSURIZATION MODAL -->
+    <div id="modal-airlock-exit" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md overflow-y-auto p-2 sm:p-4 flex flex-col items-center justify-start sm:justify-center">
+        <div class="hud-panel w-full max-w-2xl rounded-2xl border-2 border-sky-500/50 overflow-hidden shadow-2xl flex flex-col my-auto animate-scale-up">
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-slate-900 via-slate-950 to-sky-950 px-4 py-3 border-b border-sky-500/40 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-sky-500/20 border border-sky-400/50 flex items-center justify-center text-sky-400 text-base shadow-md">
+                        <i class="fa-solid fa-door-open"></i>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-mono-tech uppercase tracking-widest text-sky-400 font-bold">AIRLOCK INTERLOCK PROTOCOL</div>
+                        <h3 class="text-sm sm:text-base font-bold font-display text-white">EVA Depressurization to Mars Ambient</h3>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="btn-close-airlock-exit" class="px-3 py-1.5 rounded-lg bg-red-950/90 hover:bg-red-800 border-2 border-red-500/80 text-red-100 hover:text-white text-xs font-bold flex items-center gap-1.5 shadow-lg cursor-pointer transition-all" title="Abort & Return to Habitat [ESC]">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>ABORT [ESC]</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-4 sm:p-5 overflow-y-auto space-y-4 text-xs sm:text-sm">
+                <!-- Educational Context Banner -->
+                <div class="bg-sky-950/30 border border-sky-500/30 rounded-xl p-3 flex items-start gap-2.5 text-slate-300">
+                    <i class="fa-solid fa-circle-info text-sky-400 mt-0.5 text-sm"></i>
+                    <div class="text-xs leading-relaxed font-sans">
+                        <strong class="text-white">Airlock Safety Interlock:</strong> Habitat cabin pressure is <strong>101.3 kPa</strong>, while the Martian surface is a near-vacuum at <strong>0.6 kPa</strong>. The outer hatch is interlocked until you rotate the depressurization valve and evacuate chamber atmosphere down to surface pressure.
+                    </div>
+                </div>
+
+                <!-- Interactive Gauge & Rotary Valve Area -->
+                <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-around gap-6">
+                    <!-- Analog Gauge -->
+                    <div class="flex flex-col items-center">
+                        <div class="relative w-44 h-44 rounded-full border-4 border-slate-700 bg-gradient-to-b from-slate-900 to-slate-950 shadow-inner flex items-center justify-center">
+                            <svg viewBox="0 0 100 100" class="w-full h-full absolute inset-0">
+                                <circle cx="50" cy="50" r="40" fill="none" stroke="#1e293b" stroke-width="6" stroke-dasharray="188" stroke-dashoffset="47" transform="rotate(135 50 50)"/>
+                                <!-- Green target vacuum zone at 0.6 kPa (start of arc at -135deg) -->
+                                <circle cx="50" cy="50" r="40" fill="none" stroke="#22c55e" stroke-width="7" stroke-dasharray="16" stroke-dashoffset="0" transform="rotate(135 50 50)" opacity="0.9"/>
+                            </svg>
+                            <!-- Needle (Starts at 101.3 kPa: +93 deg) -->
+                            <div id="eva-airlock-needle" class="absolute w-1 h-18 bg-sky-400 origin-bottom rounded-full transition-transform duration-75 shadow-[0_0_8px_#38bdf8]" style="bottom: 50%; transform: rotate(93deg);"></div>
+                            <div class="w-5 h-5 rounded-full bg-slate-200 border-2 border-slate-700 z-10 shadow"></div>
+                            <span class="absolute bottom-6 text-[10px] font-mono-tech text-slate-400 font-bold">kPa ATM</span>
+                        </div>
+                        <div class="mt-2 text-center">
+                            <div id="eva-airlock-digital-val" class="font-mono-tech font-bold text-lg text-sky-300">101.3 kPa</div>
+                            <div id="eva-airlock-status-txt" class="text-[10px] font-mono-tech text-amber-400 font-semibold">● CABIN PRESSURE (101.3 kPa)</div>
+                        </div>
+                    </div>
+
+                    <!-- Rotary Valve Wheel -->
+                    <div class="flex flex-col items-center">
+                        <div id="eva-valve-wheel" class="w-36 h-36 rounded-full border-4 border-sky-500/80 bg-gradient-to-tr from-sky-950 via-slate-900 to-slate-950 shadow-2xl flex items-center justify-center cursor-grab active:cursor-grabbing relative select-none hover:scale-105 transition-transform" title="Click and drag around center to rotate valve">
+                            <div class="absolute w-full h-2 bg-sky-400/70 rounded"></div>
+                            <div class="absolute w-2 h-full bg-sky-400/70 rounded"></div>
+                            <div class="w-12 h-12 rounded-full bg-slate-950 border-2 border-sky-400 flex items-center justify-center text-sky-300 text-xs font-mono-tech font-black z-10 shadow">
+                                EVAC
+                            </div>
+                        </div>
+                        <div class="mt-3 flex items-center gap-2">
+                            <button id="btn-eva-turn-step" class="btn-tech bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded-lg text-xs font-mono-tech text-slate-200 flex items-center gap-1.5 cursor-pointer">
+                                <i class="fa-solid fa-rotate-left text-sky-400"></i>
+                                <span>Turn Depress Valve (-15 kPa)</span>
+                            </button>
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-mono-tech mt-1">Rotate valve with mouse or click step button</span>
+                    </div>
+                </div>
+
+                <!-- Suit Status Check Indicator -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-person-military-pointing text-emerald-400 text-base"></i>
+                        <div>
+                            <div class="font-bold text-white text-xs">Orion Advanced EVA Spacesuit</div>
+                            <div class="text-[10px] text-slate-400 font-mono-tech">Internal suit pressurized: 30.0 kPa pure O₂ | CO₂ scrubber active</div>
+                        </div>
+                    </div>
+                    <span class="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono-tech font-bold">
+                        VERIFIED READY
+                    </span>
+                </div>
+
+                <!-- Unlocked Banner & Exit Button (Hidden initially, shown when 0.6 kPa reached) -->
+                <div id="eva-airlock-success" class="hidden bg-emerald-950/40 border border-emerald-500/50 rounded-xl p-4 space-y-2 text-center">
+                    <div class="flex items-center justify-center gap-2 text-emerald-400 font-bold text-sm font-display">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>CHAMBER EQUALIZED (0.6 kPa) — OUTER HATCH UNLOCKED!</span>
+                    </div>
+                    <p class="text-xs text-slate-300">
+                        Atmospheric evacuation complete. Outer hatch seal is released. Proceed onto the Martian surface.
+                    </p>
+                    <button id="btn-eva-proceed-out" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs font-mono-tech transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 cursor-pointer">
+                        <span>Exit Through Outer Hatch to Mars Surface</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -2614,6 +2803,8 @@ if (typeof window !== 'undefined') {
 // --- GLOBAL MISSION & TELEMETRY STATE ---
 const state = {
     chapterIdx: 0,
+    maxUnlockedChapter: 0,
+    completedChapters: [],
     sol: 1,
     solarOutputKW: 20,
     backupGenKW: 0,
@@ -2673,6 +2864,79 @@ const state = {
         targetY: null
     }
 };
+
+// --- MISSION PROGRESSION PERSISTENCE & SEQUENTIAL LOCK ENGINE ---
+const STORAGE_KEY_PROGRESSION = 'astra1_mission_progression_v2';
+
+function saveProgression() {
+    try {
+        if (typeof localStorage !== 'undefined') {
+            const data = {
+                maxUnlockedChapter: (typeof state.maxUnlockedChapter === 'number') ? state.maxUnlockedChapter : 0,
+                currentChapterIdx: (typeof state.chapterIdx === 'number') ? state.chapterIdx : 0,
+                completedChapters: Array.isArray(state.completedChapters) ? state.completedChapters : []
+            };
+            localStorage.setItem(STORAGE_KEY_PROGRESSION, JSON.stringify(data));
+        }
+    } catch (e) {
+        console.warn('Could not save progression to localStorage:', e);
+    }
+}
+
+function loadProgression() {
+    try {
+        if (typeof localStorage !== 'undefined') {
+            const raw = localStorage.getItem(STORAGE_KEY_PROGRESSION);
+            if (raw) {
+                const data = JSON.parse(raw);
+                if (typeof data.maxUnlockedChapter === 'number') {
+                    const maxCh = (typeof CHAPTERS !== 'undefined') ? CHAPTERS.length - 1 : 9;
+                    state.maxUnlockedChapter = Math.max(0, Math.min(maxCh, data.maxUnlockedChapter));
+                }
+                if (Array.isArray(data.completedChapters)) {
+                    state.completedChapters = data.completedChapters.filter(c => typeof c === 'number');
+                }
+                if (typeof data.currentChapterIdx === 'number') {
+                    state.chapterIdx = Math.max(0, Math.min(state.maxUnlockedChapter, data.currentChapterIdx));
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('Could not load progression from localStorage:', e);
+    }
+}
+
+function resetProgression() {
+    state.maxUnlockedChapter = 0;
+    state.completedChapters = [];
+    state.chapterIdx = 0;
+    try {
+        if (typeof localStorage !== 'undefined') {
+            localStorage.removeItem(STORAGE_KEY_PROGRESSION);
+        }
+    } catch (e) {}
+    loadChapter(0, true);
+}
+
+function advanceToNextChapter() {
+    if (typeof CHAPTERS === 'undefined') return;
+    if (state.chapterIdx < CHAPTERS.length - 1) {
+        const nextIdx = state.chapterIdx + 1;
+        if (nextIdx <= state.maxUnlockedChapter) {
+            loadChapter(nextIdx, true);
+        } else {
+            if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+            if (typeof spawnFloatingText === 'function' && state.player) {
+                spawnFloatingText(`🔒 MISSION ${nextIdx + 1} LOCKED!`, state.player.x, state.player.y - 25, '#ef4444');
+            }
+        }
+    } else {
+        showVictoryModal();
+    }
+}
+
+// Initialise progression from storage
+loadProgression();
 
 function loseHeart(reasonText) {
     if (state.hearts <= 0) return;
@@ -2798,9 +3062,22 @@ function applyDilemmaChoice(chapterIdx, choiceId) {
 }
 
 function loadChapter(idx, showBriefing = true) {
+    if (typeof CHAPTERS === 'undefined' || !CHAPTERS[idx]) return false;
+
+    // Strict sequential mission progression: locked missions cannot be loaded!
+    const maxUnlocked = (typeof state.maxUnlockedChapter === 'number') ? state.maxUnlockedChapter : 0;
+    if (idx > maxUnlocked) {
+        console.warn(`[Astra-1 Security] Mission ${idx + 1} is locked! Cadet Nova must complete Mission ${maxUnlocked + 1} first.`);
+        if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+        if (typeof spawnFloatingText === 'function' && state.player) {
+            spawnFloatingText(`🔒 MISSION ${idx + 1} LOCKED!`, state.player.x, state.player.y - 25, '#ef4444');
+        }
+        return false;
+    }
+
     state.chapterIdx = idx;
+    saveProgression();
     const ch = CHAPTERS[idx];
-    if (!ch) return;
     state.sol = ch.solStart;
     const sel = document.getElementById('chapter-select');
     if (sel) sel.value = String(idx);
@@ -3291,6 +3568,19 @@ function syncTasksWithState() {
         if (state.cropsHarvested) markDone('ch10_greenhouse_seeds');
         if (state.finalReportSent) markDone('ch10_final_report');
     }
+
+    // Check if all tasks in the current chapter are satisfied
+    const activeCh = CHAPTERS[state.chapterIdx];
+    if (activeCh && activeCh.tasks && activeCh.tasks.every(item => item.done)) {
+        if (!state.completedChapters) state.completedChapters = [];
+        if (!state.completedChapters.includes(state.chapterIdx)) {
+            state.completedChapters.push(state.chapterIdx);
+        }
+        if (state.chapterIdx === state.maxUnlockedChapter && state.maxUnlockedChapter < CHAPTERS.length - 1) {
+            state.maxUnlockedChapter = state.chapterIdx + 1;
+            saveProgression();
+        }
+    }
 }
 
 function isTaskDone(taskId) {
@@ -3308,6 +3598,30 @@ function completeTask(taskId) {
     if (t && !t.done) {
         t.done = true;
         if (typeof sfx !== 'undefined' && sfx.success) sfx.success();
+
+        // Check if this task completion completes the whole mission!
+        const allDone = ch.tasks.every(item => item.done);
+        if (allDone) {
+            if (!state.completedChapters) state.completedChapters = [];
+            if (!state.completedChapters.includes(state.chapterIdx)) {
+                state.completedChapters.push(state.chapterIdx);
+            }
+
+            let newlyUnlocked = false;
+            if (state.chapterIdx === state.maxUnlockedChapter && state.maxUnlockedChapter < CHAPTERS.length - 1) {
+                state.maxUnlockedChapter = state.chapterIdx + 1;
+                newlyUnlocked = true;
+            }
+            saveProgression();
+
+            // Trigger mission completion celebratory feedback & unlock sequence
+            setTimeout(() => {
+                if (typeof showMissionCompletionModal === 'function') {
+                    showMissionCompletionModal(state.chapterIdx, newlyUnlocked);
+                }
+            }, 350);
+        }
+
         if (typeof updateUI === 'function') updateUI();
     }
 }
@@ -3419,7 +3733,11 @@ if (typeof module !== 'undefined') {
         triggerGameOver,
         isTaskDone,
         unlockFact,
-        awardBadge
+        awardBadge,
+        saveProgression,
+        loadProgression,
+        resetProgression,
+        advanceToNextChapter
     };
 }
 
@@ -3435,6 +3753,10 @@ if (typeof window !== 'undefined') {
     window.calculateMissionLegacy = calculateMissionLegacy;
     window.showVictoryModal = showVictoryModal;
     window.getPowerStats = getPowerStats;
+    window.saveProgression = saveProgression;
+    window.loadProgression = loadProgression;
+    window.resetProgression = resetProgression;
+    window.advanceToNextChapter = advanceToNextChapter;
 }
 
 
@@ -10721,6 +11043,7 @@ window.AstraActivities = (function () {
 })();
 
 
+
 /* ===== BUNDLE: js/ui.js ===== */
 
 // --- ROLLING TELEMETRY SPARKLINES ---
@@ -10782,6 +11105,8 @@ function isAnyModalOpen() {
     const gameOverModal = document.getElementById('modal-gameover');
     const dilemmaModal = document.getElementById('modal-storm-dilemma');
     const donkiModal = document.getElementById('modal-donki-weather');
+    const completeModal = document.getElementById('modal-mission-complete');
+    const airlockExitModal = document.getElementById('modal-airlock-exit');
 
     return (consoleModal && !consoleModal.classList.contains('hidden')) ||
            (powerModal && !powerModal.classList.contains('hidden')) ||
@@ -10795,11 +11120,13 @@ function isAnyModalOpen() {
            (outroSlidesModal && !outroSlidesModal.classList.contains('hidden')) ||
            (gameOverModal && !gameOverModal.classList.contains('hidden')) ||
            (dilemmaModal && !dilemmaModal.classList.contains('hidden')) ||
-           (donkiModal && !donkiModal.classList.contains('hidden'));
+           (donkiModal && !donkiModal.classList.contains('hidden')) ||
+           (completeModal && !completeModal.classList.contains('hidden')) ||
+           (airlockExitModal && !airlockExitModal.classList.contains('hidden'));
 }
 
 function closeAllModals() {
-    ['modal-console', 'modal-power', 'modal-codex', 'modal-dialogue', 'modal-story', 'modal-victory'].forEach(id => {
+    ['modal-console', 'modal-power', 'modal-codex', 'modal-dialogue', 'modal-story', 'modal-victory', 'modal-mission-complete', 'modal-airlock-exit'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     });
@@ -11920,6 +12247,275 @@ function openCodexModal() {
     if (codexModal) codexModal.classList.remove('hidden');
 }
 
+// --- SEQUENTIAL MISSION PROGRESSION & CHAPTER SELECT UI ---
+function updateChapterSelectUI() {
+    const chapterSelect = document.getElementById('chapter-select');
+    if (!chapterSelect || typeof CHAPTERS === 'undefined') return;
+
+    const maxUnlocked = (typeof state.maxUnlockedChapter === 'number') ? state.maxUnlockedChapter : 0;
+    const expectedVal = String(state.chapterIdx);
+
+    // Only render missions from 0 through maxUnlocked.
+    // Locked missions (index > maxUnlocked) are strictly omitted from the dropdown!
+    const children = chapterSelect.children ? Array.from(chapterSelect.children) : [];
+    let countMatch = (children.length === (maxUnlocked + 1));
+    let valuesMatch = true;
+    if (countMatch) {
+        for (let i = 0; i <= maxUnlocked; i++) {
+            if (!children[i] || children[i].value !== String(i)) {
+                valuesMatch = false;
+                break;
+            }
+        }
+    }
+
+    if (!countMatch || !valuesMatch) {
+        chapterSelect.innerHTML = '';
+        for (let idx = 0; idx <= maxUnlocked && idx < CHAPTERS.length; idx++) {
+            const c = CHAPTERS[idx];
+            const opt = document.createElement('option');
+            opt.value = String(idx);
+            const isCurrent = (idx === state.chapterIdx);
+            opt.textContent = `Ch ${idx + 1}: ${c.title.split('—')[0].trim()} (${c.solRange})${isCurrent ? ' ★ ACTIVE' : ''}`;
+            chapterSelect.appendChild(opt);
+        }
+    } else {
+        // Refresh label text including active indicator
+        for (let idx = 0; idx <= maxUnlocked && idx < CHAPTERS.length; idx++) {
+            const opt = children[idx];
+            if (opt) {
+                const c = CHAPTERS[idx];
+                const isCurrent = (idx === state.chapterIdx);
+                opt.textContent = `Ch ${idx + 1}: ${c.title.split('—')[0].trim()} (${c.solRange})${isCurrent ? ' ★ ACTIVE' : ''}`;
+            }
+        }
+    }
+
+    if (chapterSelect.value !== expectedVal) {
+        chapterSelect.value = expectedVal;
+    }
+}
+window.updateChapterSelectUI = updateChapterSelectUI;
+
+function showMissionCompletionModal(chapterIdx, newlyUnlocked) {
+    if (typeof closeAllModals === 'function') closeAllModals();
+    const modal = document.getElementById('modal-mission-complete');
+    if (!modal || typeof CHAPTERS === 'undefined') return;
+
+    const ch = CHAPTERS[chapterIdx];
+    if (!ch) return;
+
+    const titleEl = document.getElementById('complete-modal-title');
+    if (titleEl) {
+        titleEl.textContent = `Mission ${chapterIdx + 1} Completed!`;
+    }
+
+    const narrEl = document.getElementById('complete-modal-narrative');
+    if (narrEl) {
+        narrEl.textContent = `Cadet Nova, all required operational checklists and scientific protocols for ${ch.title} (${ch.solRange}) have been successfully executed and logged. Environmental and life-support telemetry verified nominal!`;
+    }
+
+    const unlockCard = document.getElementById('complete-unlock-card');
+    const btnNext = document.getElementById('btn-complete-next');
+    const btnNextLabel = document.getElementById('btn-complete-next-label');
+    const btnStay = document.getElementById('btn-complete-stay');
+
+    if (chapterIdx < CHAPTERS.length - 1) {
+        const nextCh = CHAPTERS[chapterIdx + 1];
+        if (unlockCard) {
+            unlockCard.classList.remove('hidden');
+            const actEl = document.getElementById('complete-unlock-act');
+            if (actEl) actEl.textContent = nextCh.act || 'MISSION UNLOCKED';
+            const unlockTitle = document.getElementById('complete-unlock-title');
+            if (unlockTitle) unlockTitle.textContent = `Mission ${chapterIdx + 2}: ${nextCh.title}`;
+            const unlockDesc = document.getElementById('complete-unlock-desc');
+            if (unlockDesc) unlockDesc.textContent = `${nextCh.solRange} • ${nextCh.tasks.length} Mission Objectives ready for deployment.`;
+        }
+        if (btnNextLabel) btnNextLabel.textContent = `Commence Mission ${chapterIdx + 2} (${nextCh.solRange})`;
+        if (btnNext) {
+            btnNext.onclick = () => {
+                modal.classList.add('hidden');
+                if (typeof loadChapter === 'function') loadChapter(chapterIdx + 1, true);
+            };
+        }
+    } else {
+        if (unlockCard) {
+            unlockCard.classList.remove('hidden');
+            const actEl = document.getElementById('complete-unlock-act');
+            if (actEl) actEl.textContent = 'EXPEDITION COMPLETE';
+            const unlockTitle = document.getElementById('complete-unlock-title');
+            if (unlockTitle) unlockTitle.textContent = 'Mars Dune Alpha Expedition Handover';
+            const unlockDesc = document.getElementById('complete-unlock-desc');
+            if (unlockDesc) unlockDesc.textContent = 'All 10 missions completed across 378 Sols. Outpost handover certified.';
+        }
+        if (btnNextLabel) btnNextLabel.textContent = 'View Expedition Legacy Report ★';
+        if (btnNext) {
+            btnNext.onclick = () => {
+                modal.classList.add('hidden');
+                if (typeof showVictoryModal === 'function') showVictoryModal();
+            };
+        }
+    }
+
+    if (btnStay) {
+        btnStay.onclick = () => {
+            modal.classList.add('hidden');
+        };
+    }
+
+    modal.classList.remove('hidden');
+    if (typeof sfx !== 'undefined' && sfx.success) sfx.success();
+}
+window.showMissionCompletionModal = showMissionCompletionModal;
+
+// --- INTERACTIVE AIRLOCK EVA EXIT DEPRESSURIZATION PROCEDURE ---
+function openAirlockExitProcedure() {
+    if (typeof closeAllModals === 'function') closeAllModals();
+    const modal = document.getElementById('modal-airlock-exit');
+    if (!modal) return;
+
+    let chamberKPa = 101.3;
+    let isEqualized = false;
+
+    const needle = document.getElementById('eva-airlock-needle');
+    const digital = document.getElementById('eva-airlock-digital-val');
+    const statusTxt = document.getElementById('eva-airlock-status-txt');
+    const wheel = document.getElementById('eva-valve-wheel');
+    const btnStep = document.getElementById('btn-eva-turn-step');
+    const successCard = document.getElementById('eva-airlock-success');
+    const btnProceed = document.getElementById('btn-eva-proceed-out');
+    const btnClose = document.getElementById('btn-close-airlock-exit');
+
+    if (successCard) successCard.classList.add('hidden');
+    if (btnStep) {
+        btnStep.disabled = false;
+        btnStep.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+
+    function updateGauge(val) {
+        chamberKPa = Math.max(0.6, Math.min(101.3, val));
+        // Gauge needle rotates across 270 degree arc (-135deg at 0 kPa to +135deg at 120 kPa)
+        const angle = -135 + (chamberKPa / 120) * 270;
+        if (needle) needle.style.transform = `rotate(${angle}deg)`;
+        if (digital) digital.textContent = `${chamberKPa.toFixed(1)} kPa`;
+
+        if (chamberKPa <= 1.0) {
+            chamberKPa = 0.6;
+            if (digital) digital.textContent = '0.6 kPa (Mars Surface Ambient)';
+            if (statusTxt) {
+                statusTxt.textContent = '● EQUALIZED WITH MARS SURFACE (0.6 kPa)';
+                statusTxt.className = 'text-[10px] font-mono-tech text-emerald-400 font-bold';
+            }
+            if (!isEqualized) {
+                isEqualized = true;
+                if (typeof sfx !== 'undefined') {
+                    if (sfx.airlockHiss) sfx.airlockHiss();
+                    if (sfx.success) sfx.success();
+                }
+                if (state && state.player) {
+                    state.player.inSuit = true;
+                    state.player.suitChecked = true;
+                    state.player.outerDoorOpen = true;
+                }
+                syncTasksWithState();
+                if (typeof completeTask === 'function') {
+                    completeTask('ch5_cycle_door');
+                    completeTask('ch3_eva_prep');
+                }
+                if (successCard) successCard.classList.remove('hidden');
+                if (btnStep) {
+                    btnStep.disabled = true;
+                    btnStep.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+                if (typeof updateUI === 'function') updateUI();
+            }
+        } else {
+            if (statusTxt) {
+                statusTxt.textContent = `● EVACUATING CHAMBER... (${chamberKPa.toFixed(1)} kPa)`;
+                statusTxt.className = 'text-[10px] font-mono-tech text-sky-400 font-bold';
+            }
+        }
+    }
+
+    // Initialize gauge
+    updateGauge(101.3);
+
+    // Turn valve step button (-15.0 kPa per click)
+    if (btnStep) {
+        btnStep.onclick = () => {
+            if (isEqualized) return;
+            if (typeof sfx !== 'undefined') {
+                if (sfx.valveRotate) sfx.valveRotate();
+                if (sfx.airlockHiss) sfx.airlockHiss();
+            }
+            updateGauge(chamberKPa - 15.0);
+        };
+    }
+
+    // Rotary valve wheel drag interaction
+    if (wheel) {
+        let isDragging = false;
+        let lastAngle = 0;
+
+        const onWheelStart = (e) => {
+            if (isEqualized) return;
+            isDragging = true;
+            const rect = wheel.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            lastAngle = Math.atan2(clientY - cy, clientX - cx);
+        };
+
+        const onWheelMove = (e) => {
+            if (!isDragging || isEqualized) return;
+            const rect = wheel.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            const currentAngle = Math.atan2(clientY - cy, clientX - cx);
+            let delta = currentAngle - lastAngle;
+            if (delta > Math.PI) delta -= Math.PI * 2;
+            if (delta < -Math.PI) delta += Math.PI * 2;
+            lastAngle = currentAngle;
+
+            const absDelta = Math.abs(delta);
+            if (absDelta > 0.05) {
+                if (typeof sfx !== 'undefined' && sfx.valveRotate) sfx.valveRotate();
+                updateGauge(chamberKPa - absDelta * 14);
+            }
+        };
+
+        const onWheelEnd = () => { isDragging = false; };
+
+        wheel.onpointerdown = onWheelStart;
+        window.addEventListener('pointermove', onWheelMove);
+        window.addEventListener('pointerup', onWheelEnd);
+    }
+
+    if (btnProceed) {
+        btnProceed.onclick = () => {
+            modal.classList.add('hidden');
+            if (typeof sfx !== 'undefined' && sfx.pickup) sfx.pickup();
+            if (typeof spawnFloatingText === 'function' && state.player) {
+                spawnFloatingText('💨 OUTER HATCH UNLOCKED & OPEN', state.player.x, state.player.y - 25, '#22c55e');
+            }
+        };
+    }
+
+    if (btnClose) {
+        btnClose.onclick = () => {
+            modal.classList.add('hidden');
+        };
+    }
+
+    modal.classList.remove('hidden');
+    if (typeof sfx !== 'undefined' && sfx.beep) sfx.beep();
+}
+window.openAirlockExitProcedure = openAirlockExitProcedure;
+
 // --- UI & TELEMETRY HUD UPDATER ---
 function updateUI() {
     syncTasksWithState();
@@ -11932,10 +12528,7 @@ function updateUI() {
     const hudSol = document.getElementById('hud-sol');
     if (hudSol) hudSol.textContent = `SOL ${String(state.sol).padStart(2, '0')} / 378`;
 
-    const chSel = document.getElementById('chapter-select');
-    if (chSel && chSel.value !== String(state.chapterIdx)) {
-        chSel.value = String(state.chapterIdx);
-    }
+    updateChapterSelectUI();
 
     const hudTag = document.getElementById('hud-chapter-tag');
     if (hudTag) hudTag.textContent = ch.title.split('—')[0].trim().toUpperCase();
@@ -12182,6 +12775,18 @@ function updateUI() {
         if (advContainer) {
             if (allDone) advContainer.classList.remove('hidden');
             else advContainer.classList.add('hidden');
+        }
+
+        const btnAdvance = document.getElementById('btn-advance-chapter');
+        if (btnAdvance && allDone) {
+            if (state.chapterIdx < CHAPTERS.length - 1) {
+                const nextCh = CHAPTERS[state.chapterIdx + 1];
+                btnAdvance.innerHTML = `<i class="fa-solid fa-angles-right"></i> Advance to Mission ${state.chapterIdx + 2} (${nextCh ? nextCh.solRange : ''})`;
+                btnAdvance.className = "w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded-lg text-xs font-mono-tech transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 animate-pulse cursor-pointer";
+            } else {
+                btnAdvance.innerHTML = `<i class="fa-solid fa-trophy text-amber-300"></i> View Final Expedition Legacy Report ★`;
+                btnAdvance.className = "w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 px-3 rounded-lg text-xs font-mono-tech transition flex items-center justify-center gap-2 shadow-lg shadow-amber-600/30 cursor-pointer";
+            }
         }
 
         // Active Objective Pill (1-line focus for younger students)
@@ -12687,30 +13292,38 @@ function initUIEventListeners() {
         });
     }
 
-    // Chapter Select & Advance Handlers
+    // Chapter Select & Sequential Progression Handlers
     const chapterSelect = document.getElementById('chapter-select');
     if (chapterSelect) {
-        if (typeof CHAPTERS !== 'undefined' && CHAPTERS.length > 0) {
-            chapterSelect.innerHTML = '';
-            CHAPTERS.forEach((ch, idx) => {
-                const opt = document.createElement('option');
-                opt.value = String(idx);
-                opt.textContent = `Ch ${idx + 1}: ${ch.title} (${ch.solRange})`;
-                chapterSelect.appendChild(opt);
-            });
-            chapterSelect.value = String(state.chapterIdx);
-        }
+        updateChapterSelectUI();
         chapterSelect.addEventListener('change', (e) => {
+            const targetIdx = parseInt(e.target.value, 10);
+            const maxUnlocked = (typeof state.maxUnlockedChapter === 'number') ? state.maxUnlockedChapter : 0;
+            if (targetIdx > maxUnlocked) {
+                if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+                chapterSelect.value = String(state.chapterIdx);
+                return;
+            }
             if (typeof sfx !== 'undefined' && sfx.beep) sfx.beep();
-            loadChapter(parseInt(e.target.value, 10), true);
+            loadChapter(targetIdx, true);
         });
     }
 
     const btnAdvance = document.getElementById('btn-advance-chapter');
     if (btnAdvance) {
         btnAdvance.addEventListener('click', () => {
-            if (window.sfx && typeof sfx.success === 'function') sfx.success();
-            if (state.chapterIdx < CHAPTERS.length - 1) {
+            const ch = (typeof CHAPTERS !== 'undefined') ? CHAPTERS[state.chapterIdx] : null;
+            const allDone = ch && ch.tasks && ch.tasks.every(t => t.done);
+            if (!allDone) {
+                if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+                if (typeof spawnFloatingText === 'function' && state.player) {
+                    spawnFloatingText('🔒 COMPLETE MISSION TASKS FIRST!', state.player.x, state.player.y - 25, '#ef4444');
+                }
+                return;
+            }
+            if (typeof advanceToNextChapter === 'function') {
+                advanceToNextChapter();
+            } else if (state.chapterIdx < CHAPTERS.length - 1) {
                 loadChapter(state.chapterIdx + 1, true);
             } else {
                 showVictoryModal();
@@ -13129,35 +13742,73 @@ window.prevOutroStorySlide = prevOutroStorySlide;
 
 
 /* ===== BUNDLE: js/game.js ===== */
+function isPlayerOutside() {
+    if (!state || !state.player) return false;
+    return state.player.x <= 276;
+}
+window.isPlayerOutside = isPlayerOutside;
+
 function toggleOuterAirlockDoor() {
     if (!state || !state.player) return;
     const distToDoor = Math.hypot(state.player.x - 276, state.player.y - 380);
     if (distToDoor > 85) {
-        setAria('Walk closer to the Airlock outer door at the left entrance to cycle the outer hatch.');
+        setAria('Walk closer to the Airlock outer door at the left entrance to operate the hatch.');
         if (typeof spawnFloatingText === 'function') {
             spawnFloatingText('🚪 WALK CLOSER TO AIRLOCK DOOR', state.player.x, state.player.y - 25, '#f59e0b');
         }
         return;
     }
 
-    if (!state.player.inSuit || !state.player.suitChecked) {
-        if (window.sfx && typeof sfx.alert === 'function') sfx.alert();
-        if (typeof triggerCameraShake === 'function') triggerCameraShake(3.0);
-        if (typeof spawnFloatingText === 'function') {
-            spawnFloatingText('🔒 PUT ON SUIT & CHECK SEAL FIRST!', state.player.x, state.player.y - 25, '#ef4444');
+    const outside = isPlayerOutside();
+
+    if (outside) {
+        // A. PLAYER APPROACHING MAIN HABITAT ENTRANCE FROM OUTSIDE
+        // Opens directly into habitat without air-pressure check, valve requirement, or equalization delay!
+        if (!state.player.outerDoorOpen) {
+            state.player.outerDoorOpen = true;
+            if (window.sfx && typeof sfx.pickup === 'function') sfx.pickup();
+            if (typeof triggerCameraShake === 'function') triggerCameraShake(2.0);
+            if (typeof spawnFloatingText === 'function') {
+                spawnFloatingText('🚪 HABITAT ENTRANCE OPENED', state.player.x, state.player.y - 25, '#22c55e');
+            }
+            setAria('Main habitat entrance opened directly. Welcome back inside Astra-1.');
+        } else {
+            state.player.outerDoorOpen = false;
+            if (window.sfx && typeof sfx.pickup === 'function') sfx.pickup();
+            if (typeof spawnFloatingText === 'function') {
+                spawnFloatingText('🚪 HABITAT ENTRANCE CLOSED', state.player.x, state.player.y - 25, '#94a3b8');
+            }
+            setAria('Main habitat entrance closed.');
         }
-        setAria('LOCKED! Inspect Airlock Console [E] to don and pressure-check your spacesuit before opening the outer hatch.');
+        if (typeof updateUI === 'function') updateUI();
         return;
     }
 
-    state.player.outerDoorOpen = !state.player.outerDoorOpen;
-    if (window.sfx && typeof sfx.pickup === 'function') sfx.pickup();
-    if (typeof triggerCameraShake === 'function') triggerCameraShake(2.0);
-    if (typeof spawnFloatingText === 'function') {
-        spawnFloatingText(state.player.outerDoorOpen ? '💨 OUTER HATCH UNLOCKED & OPEN' : '🔒 OUTER HATCH SEALED', state.player.x, state.player.y - 25, state.player.outerDoorOpen ? '#22c55e' : '#f59e0b');
+    // B. PLAYER APPROACHING MAIN HABITAT DOOR FROM INSIDE (EXITING TO MARS)
+    // If door is already open, pressing F closes and locks it
+    if (state.player.outerDoorOpen) {
+        state.player.outerDoorOpen = false;
+        if (window.sfx && typeof sfx.pickup === 'function') sfx.pickup();
+        if (typeof triggerCameraShake === 'function') triggerCameraShake(2.0);
+        if (typeof spawnFloatingText === 'function') {
+            spawnFloatingText('🔒 AIRLOCK OUTER HATCH SEALED', state.player.x, state.player.y - 25, '#f59e0b');
+        }
+        setAria('Airlock outer hatch sealed and locked.');
+        if (typeof updateUI === 'function') updateUI();
+        return;
     }
-    setAria(state.player.outerDoorOpen ? 'Outer airlock hatch unsealed and opened! Safe to conduct EVA excursion on Martian surface.' : 'Outer airlock hatch sealed and locked.');
-    if (typeof updateUI === 'function') updateUI();
+
+    // Door is closed and player is inside: Strict EVA Safety Protocol!
+    // Must complete hands-on rotary valve depressurization to 0.6 kPa before hatch unlocks.
+    if (typeof openAirlockExitProcedure === 'function') {
+        openAirlockExitProcedure();
+    } else {
+        // Fallback safety unlock
+        state.player.outerDoorOpen = true;
+        state.player.inSuit = true;
+        state.player.suitChecked = true;
+        if (typeof updateUI === 'function') updateUI();
+    }
 }
 window.toggleOuterAirlockDoor = toggleOuterAirlockDoor;
 /**
@@ -13733,6 +14384,16 @@ function updateGame(dt) {
     cam.y += (state.player.y - cam.y) * 0.08;
     window.camera = cam;
 
+    // Auto-close outer door when player walks away from the doorway
+    if (state.player.outerDoorOpen) {
+        const distFromDoor = Math.hypot(state.player.x - 276, state.player.y - 380);
+        if (distFromDoor > 95) {
+            state.player.outerDoorOpen = false;
+            if (window.sfx && typeof sfx.chime === 'function') sfx.chime();
+            if (typeof updateUI === 'function') updateUI();
+        }
+    }
+
     // Floating interaction prompt update
     const distToDoor = (state && state.player) ? Math.hypot(state.player.x - 276, state.player.y - 380) : 999;
     const inAirlockHatchArea = (distToDoor <= 75);
@@ -13748,21 +14409,34 @@ function updateGame(dt) {
         if (inAirlockHatchArea) {
             promptEl.classList.remove('hidden');
             if (kbdEl) kbdEl.textContent = 'F';
-            if (!state.player.inSuit || !state.player.suitChecked) {
-                titleEl.textContent = '🔒 AIRLOCK DOOR: LOCKED';
-                subEl.textContent = 'Don EVA Suit & Check Seal at Console [F] first';
-                promptEl.style.borderColor = '#ef4444';
-                if (kbdEl) kbdEl.className = 'bg-rose-500 text-white font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
-            } else if (!state.player.outerDoorOpen) {
-                titleEl.textContent = '🚪 AIRLOCK DOOR: UNLOCK & OPEN';
-                subEl.textContent = 'Click button or Press [F] to Open Door';
-                promptEl.style.borderColor = '#38bdf8';
-                if (kbdEl) kbdEl.className = 'bg-sky-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md animate-pulse';
+            const outside = isPlayerOutside();
+
+            if (outside) {
+                // Approaching habitat door from OUTSIDE: Direct entrance
+                if (!state.player.outerDoorOpen) {
+                    titleEl.textContent = '🚪 MAIN HABITAT ENTRANCE';
+                    subEl.textContent = 'Press [F] to Open Door';
+                    promptEl.style.borderColor = '#38bdf8';
+                    if (kbdEl) kbdEl.className = 'bg-sky-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md animate-pulse';
+                } else {
+                    titleEl.textContent = '🚪 HABITAT ENTRANCE (OPEN)';
+                    subEl.textContent = 'Press [F] to Close Door';
+                    promptEl.style.borderColor = '#22c55e';
+                    if (kbdEl) kbdEl.className = 'bg-emerald-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
+                }
             } else {
-                titleEl.textContent = '💨 AIRLOCK DOOR: CLOSE & LOCK';
-                subEl.textContent = 'Click button or Press [F] to Close Door';
-                promptEl.style.borderColor = '#22c55e';
-                if (kbdEl) kbdEl.className = 'bg-emerald-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
+                // Approaching habitat door from INSIDE: EVA Safety Procedure required
+                if (!state.player.outerDoorOpen) {
+                    titleEl.textContent = '🔒 AIRLOCK OUTER HATCH';
+                    subEl.textContent = 'Press [F] to Prepare for EVA';
+                    promptEl.style.borderColor = '#f59e0b';
+                    if (kbdEl) kbdEl.className = 'bg-amber-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md animate-pulse';
+                } else {
+                    titleEl.textContent = '💨 AIRLOCK OUTER HATCH (UNLOCKED)';
+                    subEl.textContent = 'Press [F] to Close Hatch';
+                    promptEl.style.borderColor = '#22c55e';
+                    if (kbdEl) kbdEl.className = 'bg-emerald-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
+                }
             }
         } else if (nearestObj) {
             promptEl.classList.remove('hidden');
@@ -13820,7 +14494,8 @@ function initGame() {
     if (typeof initThreeScene === 'function') initThreeScene();
     if (typeof onThreeResize === 'function') onThreeResize();
     if (typeof resizeCanvas === 'function') resizeCanvas();
-    if (typeof loadChapter === 'function') loadChapter(0, true);
+    const startChapter = (typeof state !== 'undefined' && typeof state.chapterIdx === 'number' && state.chapterIdx <= state.maxUnlockedChapter) ? state.chapterIdx : 0;
+    if (typeof loadChapter === 'function') loadChapter(startChapter, true);
     requestAnimationFrame(gameLoop);
 }
 
