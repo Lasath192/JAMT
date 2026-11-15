@@ -317,7 +317,8 @@ body {
 }
 
 .btn-compact {
-    min-height: 34px !important;
+    height: 36px !important;
+    min-height: 36px !important;
     padding-top: 4px !important;
     padding-bottom: 4px !important;
 }
@@ -760,20 +761,26 @@ canvas {
 
 #hud-hearts-container {
     height: 36px !important;
+    min-height: 36px !important;
     display: inline-flex !important;
     flex-direction: row !important;
+    flex-wrap: nowrap !important;
     align-items: center !important;
     justify-content: center !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
     box-sizing: border-box !important;
+    width: auto !important;
+    min-width: 84px !important;
 }
 
 #crew-hearts {
     display: inline-flex !important;
     flex-direction: row !important;
+    flex-wrap: nowrap !important;
     align-items: center !important;
-    gap: 5px !important;
+    justify-content: center !important;
+    gap: 6px !important;
     white-space: nowrap !important;
     line-height: 1 !important;
     flex-shrink: 0 !important;
@@ -786,6 +793,14 @@ canvas {
     flex-shrink: 0 !important;
     white-space: nowrap !important;
     line-height: 1 !important;
+    width: 18px !important;
+    height: 18px !important;
+}
+
+.heart-glyph svg {
+    width: 16px !important;
+    height: 16px !important;
+    display: block !important;
 }
 
 /* ==========================================================================

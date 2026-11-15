@@ -327,7 +327,8 @@ body {
 }
 
 .btn-compact {
-    min-height: 34px !important;
+    height: 36px !important;
+    min-height: 36px !important;
     padding-top: 4px !important;
     padding-bottom: 4px !important;
 }
@@ -770,20 +771,26 @@ canvas {
 
 #hud-hearts-container {
     height: 36px !important;
+    min-height: 36px !important;
     display: inline-flex !important;
     flex-direction: row !important;
+    flex-wrap: nowrap !important;
     align-items: center !important;
     justify-content: center !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
     box-sizing: border-box !important;
+    width: auto !important;
+    min-width: 84px !important;
 }
 
 #crew-hearts {
     display: inline-flex !important;
     flex-direction: row !important;
+    flex-wrap: nowrap !important;
     align-items: center !important;
-    gap: 5px !important;
+    justify-content: center !important;
+    gap: 6px !important;
     white-space: nowrap !important;
     line-height: 1 !important;
     flex-shrink: 0 !important;
@@ -796,6 +803,14 @@ canvas {
     flex-shrink: 0 !important;
     white-space: nowrap !important;
     line-height: 1 !important;
+    width: 18px !important;
+    height: 18px !important;
+}
+
+.heart-glyph svg {
+    width: 16px !important;
+    height: 16px !important;
+    display: block !important;
 }
 
 /* ==========================================================================
@@ -1143,23 +1158,23 @@ details.nasa-telemetry-drawer summary::-webkit-details-marker {
                 </div>
             </div>
 
-            <!-- 3-Heart Life System (Custom Pink SVG Hearts) -->
-            <div id="hud-hearts-container" class="pill border-[#DA6556]/70 px-2.5 min-w-[82px] cursor-pointer" title="Cadet Nova Lives: 3 Hearts Max (Click for details)">
-                <div id="crew-hearts" class="flex flex-row items-center justify-center gap-1 select-none">
-                    <span class="heart-glyph"><svg viewBox="0 0 24 22" class="w-4 h-4"><path d="M12 20.5S2 14.1 2 7.2C2 3.8 4.7 1.5 7.8 1.5c1.8 0 3.4.9 4.2 2.2.8-1.3 2.4-2.2 4.2-2.2 3.1 0 5.8 2.3 5.8 5.7 0 6.9-10 13.3-10 13.3z" fill="#DA6556" stroke="#2d1212" stroke-width="2"/></svg></span>
-                    <span class="heart-glyph"><svg viewBox="0 0 24 22" class="w-4 h-4"><path d="M12 20.5S2 14.1 2 7.2C2 3.8 4.7 1.5 7.8 1.5c1.8 0 3.4.9 4.2 2.2.8-1.3 2.4-2.2 4.2-2.2 3.1 0 5.8 2.3 5.8 5.7 0 6.9-10 13.3-10 13.3z" fill="#DA6556" stroke="#2d1212" stroke-width="2"/></svg></span>
-                    <span class="heart-glyph"><svg viewBox="0 0 24 22" class="w-4 h-4"><path d="M12 20.5S2 14.1 2 7.2C2 3.8 4.7 1.5 7.8 1.5c1.8 0 3.4.9 4.2 2.2.8-1.3 2.4-2.2 4.2-2.2 3.1 0 5.8 2.3 5.8 5.7 0 6.9-10 13.3-10 13.3z" fill="#DA6556" stroke="#2d1212" stroke-width="2"/></svg></span>
+            <!-- 3-Heart Life System (Strict Horizontal Pink SVG Hearts) -->
+            <div id="hud-hearts-container" class="pill h-9 border-[#DA6556]/70 px-2.5 min-w-[84px] cursor-pointer flex flex-row items-center justify-center shrink-0" title="Cadet Nova Lives: 3 Hearts Max (Click for details)">
+                <div id="crew-hearts" class="flex flex-row items-center justify-center gap-1.5 select-none whitespace-nowrap">
+                    <span class="heart-glyph inline-flex items-center justify-center shrink-0"><svg viewBox="0 0 24 22" class="w-4 h-4"><path d="M12 20.5S2 14.1 2 7.2C2 3.8 4.7 1.5 7.8 1.5c1.8 0 3.4.9 4.2 2.2.8-1.3 2.4-2.2 4.2-2.2 3.1 0 5.8 2.3 5.8 5.7 0 6.9-10 13.3-10 13.3z" fill="#DA6556" stroke="#2d1212" stroke-width="2"/></svg></span>
+                    <span class="heart-glyph inline-flex items-center justify-center shrink-0"><svg viewBox="0 0 24 22" class="w-4 h-4"><path d="M12 20.5S2 14.1 2 7.2C2 3.8 4.7 1.5 7.8 1.5c1.8 0 3.4.9 4.2 2.2.8-1.3 2.4-2.2 4.2-2.2 3.1 0 5.8 2.3 5.8 5.7 0 6.9-10 13.3-10 13.3z" fill="#DA6556" stroke="#2d1212" stroke-width="2"/></svg></span>
+                    <span class="heart-glyph inline-flex items-center justify-center shrink-0"><svg viewBox="0 0 24 22" class="w-4 h-4"><path d="M12 20.5S2 14.1 2 7.2C2 3.8 4.7 1.5 7.8 1.5c1.8 0 3.4.9 4.2 2.2.8-1.3 2.4-2.2 4.2-2.2 3.1 0 5.8 2.3 5.8 5.7 0 6.9-10 13.3-10 13.3z" fill="#DA6556" stroke="#2d1212" stroke-width="2"/></svg></span>
                 </div>
             </div>
 
             <!-- Utility Action Buttons (Clean 2-Button Header: Grid + Menu) -->
             <div id="hud-utility-drawer" class="flex items-center gap-1.5 shrink-0">
-                <button id="btn-power-grid" class="btn-primary btn-compact px-2.5 text-xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0" title="Open Power Load &amp; Telemetry Allocation">
+                <button id="btn-power-grid" class="btn-primary btn-compact h-9 px-2.5 text-xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0" title="Open Power Load &amp; Telemetry Allocation">
                     <i class="fa-solid fa-bolt text-xs"></i>
                     <span class="hidden sm:inline">Grid</span>
                 </button>
 
-                <button id="btn-settings" class="btn-secondary btn-compact px-2.5 text-xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0" title="Mission Menu: Badges, Space Weather, Telemetry &amp; Audio" aria-label="Mission Menu">
+                <button id="btn-settings" class="btn-secondary btn-compact h-9 px-2.5 text-xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0" title="Mission Menu: Badges, Space Weather, Telemetry &amp; Audio" aria-label="Mission Menu">
                     <i class="fa-solid fa-gear text-[#FDB773] text-xs"></i>
                     <span class="hidden sm:inline">Menu</span>
                 </button>
@@ -3111,7 +3126,7 @@ const CHAPTERS = [
         solStart: 1,
         role: "Flight Commander",
         title: "MISSION 1: Station Activation",
-        story: "Pressurize the airlock, unpack your toolkit, and stabilize cabin oxygen.",
+        story: "Step into the airlock from outside, stabilize pressure to 101.3 kPa, unpack your toolkit, and check cabin oxygen.",
         science: "Humans need 101.3 kPa pressure and 21% O₂—just like sea level on Earth.",
         scienceMore: "Mars outside pressure is under 1 kPa. Modeled on NASA's Orion ECLSS and CHAPEA, verifying pressure (101.3 kPa), oxygen partial pressure, and comms alignment first prevents decompression hazards.",
         dilemma: "Cycle Airlock Slowly or Fast?",
@@ -3123,7 +3138,7 @@ const CHAPTERS = [
             { id: 'opt_fast', label: '⚡ Fast 90s Vent', pros: 'Instant Entry', tag: '-3 kPa Buffer', tone: 'amber', outcome: 'Quick entry, but expended 120L nitrogen buffer. Cabin pressure set to 98 kPa.', effect: { pressureLoss: 3 } }
         ],
         tasks: [
-            { id: 'ch1_airlock', text: 'Cycle Airlock Pressure (Airlock)', room: '🚪 Airlock Bay', shortAction: 'Equalize cabin to 101.3 kPa', done: false },
+            { id: 'ch1_airlock', text: 'Stabilize Airlock Pressure (Airlock)', room: '🚪 Airlock Bay', shortAction: 'Step in & equalize to 101.3 kPa', done: false },
             { id: 'ch1_tool', text: 'Unpack Multi-Tool & Fuse (Storage)', room: '🧰 Storage Bay', shortAction: 'Grab Multi-Tool & HV Fuse', done: false },
             { id: 'ch1_life', text: 'Verify Cabin Oxygen & ECLSS (Life Support)', room: '💨 Life Support', shortAction: 'Check 5 life-support channels', done: false }
         ]
@@ -4296,6 +4311,7 @@ const state = {
     weatherMutator: 'baseline',
     batteryKWh: 68,
     cabinPressureKPa: 101.3,
+    airlockPressureKPa: 101.3,
     oxygenKPa: 21.2,
     co2PPM: 420,
     waterLitres: 420,
@@ -4546,18 +4562,22 @@ function applyDilemmaChoice(chapterIdx, choiceId) {
     if (typeof updateUI === 'function') if (typeof updateUI === 'function') updateUI();
 }
 
-function loadChapter(idx, showBriefing = true) {
+function loadChapter(idx, showBriefing = true, bypassLock = false) {
     if (typeof CHAPTERS === 'undefined' || !CHAPTERS[idx]) return false;
 
-    // Strict sequential mission progression: locked missions cannot be loaded!
-    const maxUnlocked = (typeof state.maxUnlockedChapter === 'number') ? state.maxUnlockedChapter : 0;
-    if (idx > maxUnlocked) {
-        console.warn(`[Astra-1 Security] Mission ${idx + 1} is locked! Cadet Nova must complete Mission ${maxUnlocked + 1} first.`);
-        if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
-        if (typeof spawnFloatingText === 'function' && state.player) {
-            spawnFloatingText(`🔒 MISSION ${idx + 1} LOCKED!`, state.player.x, state.player.y - 25, '#ef4444');
+    // Strict sequential mission progression: locked missions cannot be loaded (can be bypassed for pitching session)
+    if (!bypassLock) {
+        const maxUnlocked = (typeof state.maxUnlockedChapter === 'number') ? state.maxUnlockedChapter : 0;
+        if (idx > maxUnlocked) {
+            console.warn(`[Astra-1 Security] Mission ${idx + 1} is locked! Cadet Nova must complete Mission ${maxUnlocked + 1} first.`);
+            if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+            if (typeof spawnFloatingText === 'function' && state.player) {
+                spawnFloatingText(`🔒 MISSION ${idx + 1} LOCKED!`, state.player.x, state.player.y - 25, '#ef4444');
+            }
+            return false;
         }
-        return false;
+    } else {
+        state.maxUnlockedChapter = Math.max(state.maxUnlockedChapter || 0, idx);
     }
 
     state.chapterIdx = idx;
@@ -4627,9 +4647,19 @@ function loadChapter(idx, showBriefing = true) {
         state.co2PPM = 425;
         state.waterConductivity = 42;
         state.radiationMSvH = 0.08;
-        setAria("Welcome to Astra-1, Cadet Nova! Verify Airlock pressure, grab your tools from Central Storage, and inspect the Power & Life-Support consoles.");
+        state.airlockPressureKPa = 0.6;
+        state.cabinPressureKPa = 101.3;
+        if (state.player) {
+            state.player.x = 215;
+            state.player.y = 385;
+            state.player.inSuit = true;
+            state.player.suitChecked = true;
+            state.player.outerDoorOpen = false;
+        }
+        setAria("Welcome to Astra-1, Cadet Nova! You are currently outside in your EVA suit. Seal the outer airlock hatch and equalize pressure to 101.3 kPa to enter the habitat.");
     } else if (idx === 1) {
         // ACT I - MISSION 2: First Seeds in Red Soil (Sol 07-12)
+        state.airlockPressureKPa = 101.3;
         state.solarOutputKW = 24;
         state.backupGenKW = 0;
         state.loads.greenhouse.on = false;
@@ -7064,7 +7094,9 @@ function renderGame(now) {
 
         const distToDoor = (typeof state !== 'undefined' && state && state.player) ? Math.hypot(state.player.x - cx, state.player.y - cy) : 999;
         const isOuterAirlock = (d.id === 'door_airlock_eva');
-        const isOpen = isOuterAirlock ? !!(state && state.player && state.player.outerDoorOpen) : (distToDoor <= 55);
+        const isInnerAirlock = (d.id === 'door_airlock_iva');
+        const isInnerLocked = isInnerAirlock && (typeof window !== 'undefined' && typeof window.isInnerAirlockLocked === 'function' && window.isInnerAirlockLocked());
+        const isOpen = isOuterAirlock ? !!(state && state.player && state.player.outerDoorOpen) : (isInnerLocked ? false : (distToDoor <= 55));
 
         // Outer doorframe
         ctx.fillStyle = '#090d16';
@@ -7104,8 +7136,8 @@ function renderGame(now) {
             } else {
                 ctx.fillRect(x + 2, cy - 10, d.w - 4, 20);
             }
-            // Status LEDs (Red for locked outer door, Amber for internal sealed)
-            ctx.fillStyle = isOuterAirlock ? '#ef4444' : '#f59e0b';
+            // Status LEDs (Red for locked outer or locked inner door, Amber for internal sealed)
+            ctx.fillStyle = (isOuterAirlock || isInnerLocked) ? '#ef4444' : '#f59e0b';
             ctx.fillRect(x + 1, y + 1, 3, 3);
             ctx.fillRect(x + d.w - 4, y + d.h - 4, 3, 3);
 
@@ -9718,11 +9750,13 @@ function renderGame3D(now) {
             const d = habitatDoor3DMeshes[i];
             const dist = Math.hypot(px - d.x, py - d.y);
             const isOuterAirlock = (d.id === 'door_airlock_eva');
-            const isOpen = isOuterAirlock ? !!(state.player && state.player.outerDoorOpen) : (dist <= 65);
+            const isInnerAirlock = (d.id === 'door_airlock_iva');
+            const isInnerLocked = isInnerAirlock && (typeof window !== 'undefined' && typeof window.isInnerAirlockLocked === 'function' && window.isInnerAirlockLocked());
+            const isOpen = isOuterAirlock ? !!(state.player && state.player.outerDoorOpen) : (isInnerLocked ? false : (dist <= 65));
             const targetY = isOpen ? d.openY : d.closedY;
             d.hatchGroup.position.y += (targetY - d.hatchGroup.position.y) * 0.18;
             if (d.ledMat) {
-                const targetCol = isOpen ? 0x22c55e : (isOuterAirlock ? 0xef4444 : 0xf59e0b);
+                const targetCol = isOpen ? 0x22c55e : ((isOuterAirlock || isInnerLocked) ? 0xef4444 : 0xf59e0b);
                 if (d.ledMat.color.getHex() !== targetCol) {
                     d.ledMat.color.setHex(targetCol);
                     d.ledMat.emissive.setHex(targetCol);
@@ -10099,21 +10133,40 @@ window.AstraActivities = (function () {
      * MISSION 1: THE FIRST BREATH (Sol 1–2)
      * ========================================================================= */
 
-    // Task 1: Cycle Airlock Pressure (Rotary Valve + Animated Chamber + Needle Gauge to 101.3 kPa)
+    // Task 1: Cycle Airlock Pressure (Bidirectional: Entry Pressurization 0.6->101.3 kPa & Exit Depressurization 101.3->0.6 kPa)
     function renderM1T1_AirlockPressure(container, onComplete) {
-        let currentKPa = 0.6;
+        const startKPa = (window.state && typeof window.state.airlockPressureKPa === 'number')
+            ? window.state.airlockPressureKPa
+            : 0.6;
+        const isExitMode = startKPa >= 50.0;
+        let currentKPa = startKPa;
         let isDone = false;
         let displayWheelDeg = 0;
         let targetWheelDeg = 0;
         let gasFlowIntensity = 0;
         let lastSoundTime = 0;
 
+        const needOuterSeal = !isExitMode && !!(window.state && window.state.player && window.state.player.outerDoorOpen);
+        const needSuit = isExitMode && !!(window.state && window.state.player && !window.state.player.inSuit);
+
         container.innerHTML = `
             ${createActivityHeader(
-                'Airlock Depress/Pressurize System',
-                'Click and drag the rotary brass valve wheel clockwise to pressurize the chamber from 0.6 kPa up to nominal habitat pressure (101.3 kPa). Equalizing pressure unlocks the inner hatch.',
-                'Rotate the valve clockwise until gas fills the airlock and the inner habitat hatch slides open at 101.3 kPa!'
+                isExitMode ? 'EVA Exit Airlock Depressurization' : 'Airlock Entry Equalization',
+                isExitMode
+                    ? '1) Put on your EVA Spacesuit. 2) Turn the valve counter-clockwise to lower airlock pressure from 101.3 kPa down to 0.6 kPa and open the outer Mars door.'
+                    : '1) Close the outer Mars door to seal the chamber. 2) Turn the valve clockwise to raise pressure from 0.6 kPa to 101.3 kPa, remove your suit, and open the inside door.',
+                isExitMode
+                    ? 'Wear EVA Suit first, then vent airlock down to 0.6 kPa to open the outer door!'
+                    : 'Close the outer door first, then pressurize to 101.3 kPa to unlock the inside door!'
             )}
+            <div id="airlock-outer-seal-bar" class="${needOuterSeal ? '' : 'hidden'} mb-3 bg-[#4a1d1d] border-2 border-[#DA6556] rounded-xl p-2.5 flex items-center justify-between gap-2">
+                <span class="text-xs font-extrabold text-[#FDB773]">⚠ Outer Mars door is still OPEN! Close it before pressurizing.</span>
+                <button id="btn-seal-outer-hatch" class="btn-primary btn-compact px-3 text-xs font-extrabold !text-[#2d1212] shrink-0 cursor-pointer">🔒 Close Outer Door</button>
+            </div>
+            <div id="airlock-suit-bar" class="${needSuit ? '' : 'hidden'} mb-3 bg-[#4a1d1d] border-2 border-[#FDB773] rounded-xl p-2.5 flex items-center justify-between gap-2">
+                <span class="text-xs font-extrabold text-[#FDB773]">⚠ Put on your EVA Spacesuit before lowering airlock pressure!</span>
+                <button id="btn-wear-eva-suit" class="btn-primary btn-compact px-3 text-xs font-extrabold !text-[#2d1212] shrink-0 cursor-pointer">🧑‍🚀 Put On EVA Suit</button>
+            </div>
             <div class="bg-[#4a1d1d] border-2 border-[#DA6556] rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 items-stretch">
                 <!-- 1. Analog Gauge (Lavender & Cream Dial + Sky Needle + Mint Target Arc) -->
                 <div class="card-row flex-col justify-center p-3">
@@ -10231,8 +10284,8 @@ window.AstraActivities = (function () {
                     </div>
                     <div class="mt-3 flex items-center gap-2">
                         <button id="btn-turn-valve-step" class="btn-primary btn-compact px-3.5 text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                            <i class="fa-solid fa-rotate-right text-[#2d1212]"></i>
-                            <span>Turn Valve (+15 kPa)</span>
+                            <i class="fa-solid ${isExitMode ? 'fa-rotate-left' : 'fa-rotate-right'} text-[#2d1212]"></i>
+                            <span>${isExitMode ? 'Vent Valve (-15 kPa)' : 'Turn Valve (+15 kPa)'}</span>
                         </button>
                     </div>
                     <span class="text-[11px] text-[#f7cbb0] font-bold mt-1 text-center">Drag wheel or click step button</span>
@@ -10259,6 +10312,39 @@ window.AstraActivities = (function () {
         const habitatLabel = container.querySelector('#habitat-label');
         const pipeFlow = container.querySelector('#pipe-flow');
         const fxCanvas = container.querySelector('#chamber-fx');
+        const outerSealBar = container.querySelector('#airlock-outer-seal-bar');
+        const btnSealOuter = container.querySelector('#btn-seal-outer-hatch');
+        const suitBar = container.querySelector('#airlock-suit-bar');
+        const btnWearSuit = container.querySelector('#btn-wear-eva-suit');
+        if (btnSealOuter) {
+            btnSealOuter.addEventListener('click', () => {
+                if (window.state && window.state.player) {
+                    window.state.player.outerDoorOpen = false;
+                }
+                if (outerSealBar) outerSealBar.classList.add('hidden');
+                if (statusTxt) {
+                    statusTxt.textContent = '✓ OUTER SEALED — TURN VALVE';
+                    statusTxt.className = 'text-[11px] font-extrabold text-[#FDB773]';
+                }
+                playSfx('airlockHiss');
+                if (typeof window.updateUI === 'function') window.updateUI();
+            });
+        }
+        if (btnWearSuit) {
+            btnWearSuit.addEventListener('click', () => {
+                if (window.state && window.state.player) {
+                    window.state.player.inSuit = true;
+                    window.state.player.suitChecked = true;
+                }
+                if (suitBar) suitBar.classList.add('hidden');
+                if (statusTxt) {
+                    statusTxt.textContent = '✓ EVA SUIT ON — VENT TO 0.6 kPa';
+                    statusTxt.className = 'text-[11px] font-extrabold text-[#FDB773]';
+                }
+                playSfx('pickup');
+                if (typeof window.updateUI === 'function') window.updateUI();
+            });
+        }
 
         // Populate SVG gauge scale ticks (-135deg to +135deg)
         if (ticksGroup && typeof document.createElementNS === 'function') {
@@ -10320,13 +10406,27 @@ window.AstraActivities = (function () {
             if (habitatLabel) habitatLabel.className = 'text-[#DA6556] font-extrabold';
         }
 
-        function updatePressure(newVal, deltaWheelDeg = 0, isClickStep = false) {
+        function updatePressure(newVal, deltaWheelDeg = 0, isClickStep = false, isInit = false) {
+            if (!isInit && !isExitMode && window.state && window.state.player && window.state.player.outerDoorOpen) {
+                if (statusTxt) {
+                    statusTxt.textContent = '⚠ CLOSE OUTER DOOR FIRST!';
+                    statusTxt.className = 'text-[11px] font-extrabold text-[#DA6556] animate-pulse';
+                }
+                return;
+            }
+            if (!isInit && isExitMode && window.state && window.state.player && !window.state.player.inSuit) {
+                if (statusTxt) {
+                    statusTxt.textContent = '⚠ PUT ON EVA SUIT FIRST!';
+                    statusTxt.className = 'text-[11px] font-extrabold text-[#DA6556] animate-pulse';
+                }
+                return;
+            }
             const prevKPa = currentKPa;
             currentKPa = Math.max(0.6, Math.min(120.0, newVal));
             targetWheelDeg += deltaWheelDeg;
 
-            const added = currentKPa - prevKPa;
-            if (added > 0.1) {
+            const deltaKPa = Math.abs(currentKPa - prevKPa);
+            if (!isInit && deltaKPa > 0.1) {
                 gasFlowIntensity = Math.min(1.0, gasFlowIntensity + (isClickStep ? 0.85 : 0.35));
                 spawnGasBurst(isClickStep ? 18 : 4, gasFlowIntensity);
             }
@@ -10336,7 +10436,46 @@ window.AstraActivities = (function () {
             if (pctBadge) pctBadge.textContent = `${pct}%`;
             if (chamberFill) chamberFill.style.height = `${Math.min(100, (currentKPa / 101.3) * 100)}%`;
 
-            if (currentKPa >= 100.0 && currentKPa <= 103.0) {
+            if (isExitMode && !isInit && currentKPa <= 1.5) {
+                currentKPa = 0.6;
+                if (digital) digital.textContent = '0.6 kPa';
+                if (pctBadge) pctBadge.textContent = '1%';
+                if (chamberFill) chamberFill.style.height = '2%';
+                if (statusTxt) {
+                    statusTxt.textContent = '✓ DEPRESSURIZED (0.6 kPa)';
+                    statusTxt.className = 'text-[11px] font-extrabold text-[#4fd1a0]';
+                }
+                if (digital) digital.className = 'font-mono-tech font-extrabold text-base text-[#4fd1a0] tabular-nums';
+                if (hatchBadge) {
+                    hatchBadge.textContent = 'OUTER HATCH OPEN';
+                    hatchBadge.className = 'text-[#4fd1a0] font-extrabold';
+                }
+                setHatchClosedStyles();
+                if (btnStep) btnStep.disabled = true;
+
+                if (!isDone) {
+                    isDone = true;
+                    window._lastAirlockMode = 'exit';
+                    playSfx('airlockHiss');
+                    if (window.state) {
+                        window.state.airlockPressureKPa = 0.6;
+                        if (window.state.player) {
+                            window.state.player.inSuit = true;
+                            window.state.player.suitChecked = true;
+                            window.state.player.outerDoorOpen = true;
+                        }
+                    }
+                    setTimeout(() => {
+                        showActivitySuccess(
+                            container,
+                            'ch1_airlock',
+                            'Airlock Depressurized (0.6 kPa) — Outer Door Open',
+                            'Your EVA suit is pressurized and the airlock has matched Mars exterior pressure (0.6 kPa). You may now safely step out onto the Martian surface.',
+                            onComplete
+                        );
+                    }, 950);
+                }
+            } else if (!isExitMode && !isInit && currentKPa >= 100.0 && currentKPa <= 103.0) {
                 if (statusTxt) {
                     statusTxt.textContent = '✓ EQUALIZED (SAFE)';
                     statusTxt.className = 'text-[11px] font-extrabold text-[#4fd1a0]';
@@ -10359,12 +10498,16 @@ window.AstraActivities = (function () {
 
                 if (!isDone) {
                     isDone = true;
+                    window._lastAirlockMode = 'entry';
                     playSfx('airlockHiss');
-                    if (window.state && window.state.player) {
+                    if (window.state) {
+                        window.state.airlockPressureKPa = 101.3;
                         window.state.cabinPressureKPa = 101.3;
-                        window.state.player.inSuit = true;
-                        window.state.player.suitChecked = true;
-                        window.state.player.outerDoorOpen = true;
+                        if (window.state.player) {
+                            window.state.player.inSuit = false;
+                            window.state.player.suitChecked = true;
+                            window.state.player.outerDoorOpen = false;
+                        }
                     }
                     if (typeof window.completeTask === 'function') {
                         window.completeTask('ch1_airlock');
@@ -10375,8 +10518,8 @@ window.AstraActivities = (function () {
                         showActivitySuccess(
                             container,
                             'ch1_airlock',
-                            'Airlock Atmosphere Equalized (101.3 kPa)',
-                            'Cabin atmosphere is now fully synchronized with habitat life support. Equalizing pressure prevents violent explosive decompression and allows the inner airlock hatch to safely open.',
+                            'Airlock Equalized (101.3 kPa) — Suit Removed & Inner Door Open',
+                            'Airlock pressure now matches the inside habitat (101.3 kPa). Outer door is sealed, your EVA suit is stowed, and the inner habitat door is unlocked.',
                             onComplete
                         );
                     }, 950);
@@ -10543,13 +10686,20 @@ window.AstraActivities = (function () {
             btnStep.addEventListener('click', () => {
                 if (isDone) return;
                 playSfx('valveRotate');
-                let nextKPa = currentKPa + 15.0;
-                if (currentKPa < 100.0 && nextKPa >= 99.5) {
-                    nextKPa = 101.3;
+                if (isExitMode) {
+                    let nextKPa = currentKPa - 15.0;
+                    if (nextKPa <= 1.5) nextKPa = 0.6;
+                    updatePressure(nextKPa, -90, true);
+                } else {
+                    let nextKPa = currentKPa + 15.0;
+                    if (currentKPa < 100.0 && nextKPa >= 99.5) {
+                        nextKPa = 101.3;
+                    }
+                    updatePressure(nextKPa, 90, true);
                 }
-                updatePressure(nextKPa, 90, true);
             });
         }
+        updatePressure(currentKPa, 0, false, true);
     }
 
     // Task 2: Collect Multi-Tool (Drag and Drop from Storage Compartment to Astronaut Pouch)
@@ -14723,21 +14873,19 @@ function openCodexModal() {
     if (codexModal) codexModal.classList.remove('hidden');
 }
 
-// --- SEQUENTIAL MISSION PROGRESSION & CHAPTER SELECT UI ---
+// --- SEQUENTIAL MISSION PROGRESSION & CHAPTER SELECT UI (PITCHING MISSION TRAVEL) ---
 function updateChapterSelectUI() {
     const chapterSelect = document.getElementById('chapter-select');
     if (!chapterSelect || typeof CHAPTERS === 'undefined') return;
 
-    const maxUnlocked = (typeof state.maxUnlockedChapter === 'number') ? state.maxUnlockedChapter : 0;
     const expectedVal = String(state.chapterIdx);
 
-    // Only render missions from 0 through maxUnlocked.
-    // Locked missions (index > maxUnlocked) are strictly omitted from the dropdown!
+    // Populate all missions (0 to CHAPTERS.length - 1) for rapid pitching travel
     const children = chapterSelect.children ? Array.from(chapterSelect.children) : [];
-    let countMatch = (children.length === (maxUnlocked + 1));
+    const countMatch = (children.length === CHAPTERS.length);
     let valuesMatch = true;
     if (countMatch) {
-        for (let i = 0; i <= maxUnlocked; i++) {
+        for (let i = 0; i < CHAPTERS.length; i++) {
             if (!children[i] || children[i].value !== String(i)) {
                 valuesMatch = false;
                 break;
@@ -14747,22 +14895,22 @@ function updateChapterSelectUI() {
 
     if (!countMatch || !valuesMatch) {
         chapterSelect.innerHTML = '';
-        for (let idx = 0; idx <= maxUnlocked && idx < CHAPTERS.length; idx++) {
+        for (let idx = 0; idx < CHAPTERS.length; idx++) {
             const c = CHAPTERS[idx];
             const opt = document.createElement('option');
             opt.value = String(idx);
             const isCurrent = (idx === state.chapterIdx);
-            opt.textContent = `Ch ${idx + 1}: ${c.title.split('—')[0].trim()} (${c.solRange})${isCurrent ? ' ★ ACTIVE' : ''}`;
+            opt.textContent = `Mission ${idx + 1}: ${c.title.split('—')[0].trim()} (${c.solRange})${isCurrent ? ' ★ ACTIVE' : ''}`;
             chapterSelect.appendChild(opt);
         }
     } else {
         // Refresh label text including active indicator
-        for (let idx = 0; idx <= maxUnlocked && idx < CHAPTERS.length; idx++) {
+        for (let idx = 0; idx < CHAPTERS.length; idx++) {
             const opt = children[idx];
             if (opt) {
                 const c = CHAPTERS[idx];
                 const isCurrent = (idx === state.chapterIdx);
-                opt.textContent = `Ch ${idx + 1}: ${c.title.split('—')[0].trim()} (${c.solRange})${isCurrent ? ' ★ ACTIVE' : ''}`;
+                opt.textContent = `Mission ${idx + 1}: ${c.title.split('—')[0].trim()} (${c.solRange})${isCurrent ? ' ★ ACTIVE' : ''}`;
             }
         }
     }
@@ -14863,10 +15011,21 @@ function openAirlockExitProcedure() {
     if (activityMount && typeof window.AstraActivities !== 'undefined' && typeof window.AstraActivities.renderTask === 'function') {
         activityMount.innerHTML = '';
         window.AstraActivities.renderTask('ch1_airlock', activityMount, () => {
+            const isEntryPass = (window._lastAirlockMode === 'entry');
+            window._lastAirlockMode = null;
             if (typeof state !== 'undefined' && state && state.player) {
-                state.player.inSuit = true;
-                state.player.suitChecked = true;
-                state.player.outerDoorOpen = true;
+                if (isEntryPass) {
+                    state.airlockPressureKPa = 101.3;
+                    state.cabinPressureKPa = 101.3;
+                    state.player.inSuit = false;
+                    state.player.suitChecked = true;
+                    state.player.outerDoorOpen = false;
+                } else {
+                    state.airlockPressureKPa = 0.6;
+                    state.player.inSuit = true;
+                    state.player.suitChecked = true;
+                    state.player.outerDoorOpen = true;
+                }
             }
             if (typeof completeTask === 'function') {
                 completeTask('ch1_airlock');
@@ -14879,7 +15038,8 @@ function openAirlockExitProcedure() {
             if (consoleModal) consoleModal.classList.add('hidden');
             if (typeof sfx !== 'undefined' && sfx.pickup) sfx.pickup();
             if (typeof spawnFloatingText === 'function' && typeof state !== 'undefined' && state && state.player) {
-                spawnFloatingText('💨 OUTER HATCH UNLOCKED & OPEN', state.player.x, state.player.y - 25, '#22c55e');
+                const msg = isEntryPass ? '🔒 AIRLOCK EQUALIZED & HABITAT UNLOCKED' : '💨 OUTER HATCH UNLOCKED & OPEN';
+                spawnFloatingText(msg, state.player.x, state.player.y - 25, '#22c55e');
             }
         });
     }
@@ -14973,8 +15133,9 @@ function updateUI() {
     const cadetMeterLife = document.getElementById('cadet-meter-life');
     const cadetValLife = document.getElementById('cadet-val-life');
     if (cadetValLife) {
-        const isLifeWarn = state.co2PPM > 900 || state.waterConductivity > 60 || state.faults.co2FilterClogged || state.faults.waterPipeLeaking;
-        cadetValLife.textContent = isLifeWarn ? '⚠ Check O₂' : '✓ OK';
+        const isPressureLow = (typeof state.cabinPressureKPa === 'number') && state.cabinPressureKPa < 95;
+        const isLifeWarn = isPressureLow || state.co2PPM > 900 || state.waterConductivity > 60 || state.faults.co2FilterClogged || state.faults.waterPipeLeaking;
+        cadetValLife.textContent = isPressureLow ? '⚠ Low kPa' : (isLifeWarn ? '⚠ Check O₂' : '✓ OK');
         cadetValLife.className = `font-extrabold text-[11px] leading-tight ${isLifeWarn ? 'text-[#EB895B] animate-pulse' : 'text-[#4fd1a0]'}`;
         if (cadetMeterLife) {
             cadetMeterLife.style.borderColor = isLifeWarn ? '#EB895B' : '';
@@ -15856,20 +16017,19 @@ function initUIEventListeners() {
         });
     }
 
-    // Chapter Select & Sequential Progression Handlers
+    // Chapter Select & Mission Traveling Dropdown Handlers (Pitching Travel Support)
     const chapterSelect = document.getElementById('chapter-select');
     if (chapterSelect) {
         updateChapterSelectUI();
         chapterSelect.addEventListener('change', (e) => {
             const targetIdx = parseInt(e.target.value, 10);
-            const maxUnlocked = (typeof state.maxUnlockedChapter === 'number') ? state.maxUnlockedChapter : 0;
-            if (targetIdx > maxUnlocked) {
-                if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
-                chapterSelect.value = String(state.chapterIdx);
-                return;
-            }
+            if (isNaN(targetIdx)) return;
             if (typeof sfx !== 'undefined' && sfx.beep) sfx.beep();
-            loadChapter(targetIdx, true);
+            const modalSettings = document.getElementById('modal-settings');
+            if (modalSettings && !modalSettings.classList.contains('hidden')) {
+                modalSettings.classList.add('hidden');
+            }
+            loadChapter(targetIdx, true, true);
         });
     }
 
@@ -16692,6 +16852,17 @@ function initCanvasPointer() {
     window.addEventListener('pointercancel', () => { isPointerDragging = false; });
 }
 
+// --- AIRLOCK LOCK STATUS HELPER ---
+function isInnerAirlockLocked() {
+    if (typeof state === 'undefined') return false;
+    if (typeof state.airlockPressureKPa === 'number' && state.airlockPressureKPa < 99.0) return true;
+    if (state.chapterIdx === 0) {
+        if (typeof isTaskDone === 'function' && !isTaskDone('ch1_airlock')) return true;
+    }
+    return false;
+}
+window.isInnerAirlockLocked = isInnerAirlockLocked;
+
 // --- HABITAT SOLID COLLISION DETECTOR ---
 // Prevents walking through regolith walls, central master consoles, and perimeter machinery.
 function checkSolidCollision(px, py, radius = 13) {
@@ -16703,6 +16874,18 @@ function checkSolidCollision(px, py, radius = 13) {
         const doorH = 120;
         if (px + radius > doorX && px - radius < doorX + doorW &&
             py + radius > doorY && py - radius < doorY + doorH) {
+            return true;
+        }
+    }
+
+    // 0B. Inner Airlock Bulkhead Barrier: Closed/locked when airlock pressure < 99 kPa or Ch1 task not done
+    if (isInnerAirlockLocked()) {
+        const innerDoorX = 405;
+        const innerDoorY = 335;
+        const innerDoorW = 20;
+        const innerDoorH = 90;
+        if (px + radius > innerDoorX && px - radius < innerDoorX + innerDoorW &&
+            py + radius > innerDoorY && py - radius < innerDoorY + innerDoorH) {
             return true;
         }
     }
@@ -17068,6 +17251,31 @@ function updateGame(dt) {
                 moveX = 0;
                 dx = 0;
                 if (state.player.targetX !== null && state.player.targetX > 268) {
+                    state.player.targetX = null;
+                    state.player.targetY = null;
+                }
+            }
+        }
+    }
+
+    // Strict Inner Airlock Hatch Barrier when inner airlock is locked
+    if (typeof isInnerAirlockLocked === 'function' && isInnerAirlockLocked()) {
+        const inInnerDoorY = (state.player.y >= 335 && state.player.y <= 425);
+        if (inInnerDoorY) {
+            // Inside airlock chamber (x <= 415), prevent crossing right into habitat (x > 405)
+            if (state.player.x <= 415 && (state.player.x + moveX) > 405) {
+                moveX = 0;
+                dx = 0;
+                if (state.player.targetX !== null && state.player.targetX > 405) {
+                    state.player.targetX = null;
+                    state.player.targetY = null;
+                }
+            }
+            // Inside habitat (x >= 415), prevent crossing left into unpressurized airlock (x < 425)
+            if (state.player.x >= 415 && (state.player.x + moveX) < 425) {
+                moveX = 0;
+                dx = 0;
+                if (state.player.targetX !== null && state.player.targetX < 425) {
                     state.player.targetX = null;
                     state.player.targetY = null;
                 }

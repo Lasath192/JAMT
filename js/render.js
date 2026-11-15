@@ -1738,7 +1738,9 @@ function renderGame(now) {
 
         const distToDoor = (typeof state !== 'undefined' && state && state.player) ? Math.hypot(state.player.x - cx, state.player.y - cy) : 999;
         const isOuterAirlock = (d.id === 'door_airlock_eva');
-        const isOpen = isOuterAirlock ? !!(state && state.player && state.player.outerDoorOpen) : (distToDoor <= 55);
+        const isInnerAirlock = (d.id === 'door_airlock_iva');
+        const isInnerLocked = isInnerAirlock && (typeof window !== 'undefined' && typeof window.isInnerAirlockLocked === 'function' && window.isInnerAirlockLocked());
+        const isOpen = isOuterAirlock ? !!(state && state.player && state.player.outerDoorOpen) : (isInnerLocked ? false : (distToDoor <= 55));
 
         // Outer doorframe
         ctx.fillStyle = '#090d16';
@@ -1778,8 +1780,8 @@ function renderGame(now) {
             } else {
                 ctx.fillRect(x + 2, cy - 10, d.w - 4, 20);
             }
-            // Status LEDs (Red for locked outer door, Amber for internal sealed)
-            ctx.fillStyle = isOuterAirlock ? '#ef4444' : '#f59e0b';
+            // Status LEDs (Red for locked outer or locked inner door, Amber for internal sealed)
+            ctx.fillStyle = (isOuterAirlock || isInnerLocked) ? '#ef4444' : '#f59e0b';
             ctx.fillRect(x + 1, y + 1, 3, 3);
             ctx.fillRect(x + d.w - 4, y + d.h - 4, 3, 3);
 

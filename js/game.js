@@ -317,6 +317,17 @@ function initCanvasPointer() {
     window.addEventListener('pointercancel', () => { isPointerDragging = false; });
 }
 
+// --- AIRLOCK LOCK STATUS HELPER ---
+function isInnerAirlockLocked() {
+    if (typeof state === 'undefined') return false;
+    if (typeof state.airlockPressureKPa === 'number' && state.airlockPressureKPa < 99.0) return true;
+    if (state.chapterIdx === 0) {
+        if (typeof isTaskDone === 'function' && !isTaskDone('ch1_airlock')) return true;
+    }
+    return false;
+}
+window.isInnerAirlockLocked = isInnerAirlockLocked;
+
 // --- HABITAT SOLID COLLISION DETECTOR ---
 // Prevents walking through regolith walls, central master consoles, and perimeter machinery.
 function checkSolidCollision(px, py, radius = 13) {
@@ -328,6 +339,18 @@ function checkSolidCollision(px, py, radius = 13) {
         const doorH = 120;
         if (px + radius > doorX && px - radius < doorX + doorW &&
             py + radius > doorY && py - radius < doorY + doorH) {
+            return true;
+        }
+    }
+
+    // 0B. Inner Airlock Bulkhead Barrier: Closed/locked when airlock pressure < 99 kPa or Ch1 task not done
+    if (isInnerAirlockLocked()) {
+        const innerDoorX = 405;
+        const innerDoorY = 335;
+        const innerDoorW = 20;
+        const innerDoorH = 90;
+        if (px + radius > innerDoorX && px - radius < innerDoorX + innerDoorW &&
+            py + radius > innerDoorY && py - radius < innerDoorY + innerDoorH) {
             return true;
         }
     }
@@ -693,6 +716,31 @@ function updateGame(dt) {
                 moveX = 0;
                 dx = 0;
                 if (state.player.targetX !== null && state.player.targetX > 268) {
+                    state.player.targetX = null;
+                    state.player.targetY = null;
+                }
+            }
+        }
+    }
+
+    // Strict Inner Airlock Hatch Barrier when inner airlock is locked
+    if (typeof isInnerAirlockLocked === 'function' && isInnerAirlockLocked()) {
+        const inInnerDoorY = (state.player.y >= 335 && state.player.y <= 425);
+        if (inInnerDoorY) {
+            // Inside airlock chamber (x <= 415), prevent crossing right into habitat (x > 405)
+            if (state.player.x <= 415 && (state.player.x + moveX) > 405) {
+                moveX = 0;
+                dx = 0;
+                if (state.player.targetX !== null && state.player.targetX > 405) {
+                    state.player.targetX = null;
+                    state.player.targetY = null;
+                }
+            }
+            // Inside habitat (x >= 415), prevent crossing left into unpressurized airlock (x < 425)
+            if (state.player.x >= 415 && (state.player.x + moveX) < 425) {
+                moveX = 0;
+                dx = 0;
+                if (state.player.targetX !== null && state.player.targetX < 425) {
                     state.player.targetX = null;
                     state.player.targetY = null;
                 }

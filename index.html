@@ -127,23 +127,23 @@
                 </div>
             </div>
 
-            <!-- 3-Heart Life System (Custom Pink SVG Hearts) -->
-            <div id="hud-hearts-container" class="pill border-[#DA6556]/70 px-2.5 min-w-[82px] cursor-pointer" title="Cadet Nova Lives: 3 Hearts Max (Click for details)">
-                <div id="crew-hearts" class="flex flex-row items-center justify-center gap-1 select-none">
-                    <span class="heart-glyph"><svg viewBox="0 0 24 22" class="w-4 h-4"><path d="M12 20.5S2 14.1 2 7.2C2 3.8 4.7 1.5 7.8 1.5c1.8 0 3.4.9 4.2 2.2.8-1.3 2.4-2.2 4.2-2.2 3.1 0 5.8 2.3 5.8 5.7 0 6.9-10 13.3-10 13.3z" fill="#DA6556" stroke="#2d1212" stroke-width="2"/></svg></span>
-                    <span class="heart-glyph"><svg viewBox="0 0 24 22" class="w-4 h-4"><path d="M12 20.5S2 14.1 2 7.2C2 3.8 4.7 1.5 7.8 1.5c1.8 0 3.4.9 4.2 2.2.8-1.3 2.4-2.2 4.2-2.2 3.1 0 5.8 2.3 5.8 5.7 0 6.9-10 13.3-10 13.3z" fill="#DA6556" stroke="#2d1212" stroke-width="2"/></svg></span>
-                    <span class="heart-glyph"><svg viewBox="0 0 24 22" class="w-4 h-4"><path d="M12 20.5S2 14.1 2 7.2C2 3.8 4.7 1.5 7.8 1.5c1.8 0 3.4.9 4.2 2.2.8-1.3 2.4-2.2 4.2-2.2 3.1 0 5.8 2.3 5.8 5.7 0 6.9-10 13.3-10 13.3z" fill="#DA6556" stroke="#2d1212" stroke-width="2"/></svg></span>
+            <!-- 3-Heart Life System (Strict Horizontal Pink SVG Hearts) -->
+            <div id="hud-hearts-container" class="pill h-9 border-[#DA6556]/70 px-2.5 min-w-[84px] cursor-pointer flex flex-row items-center justify-center shrink-0" title="Cadet Nova Lives: 3 Hearts Max (Click for details)">
+                <div id="crew-hearts" class="flex flex-row items-center justify-center gap-1.5 select-none whitespace-nowrap">
+                    <span class="heart-glyph inline-flex items-center justify-center shrink-0"><svg viewBox="0 0 24 22" class="w-4 h-4"><path d="M12 20.5S2 14.1 2 7.2C2 3.8 4.7 1.5 7.8 1.5c1.8 0 3.4.9 4.2 2.2.8-1.3 2.4-2.2 4.2-2.2 3.1 0 5.8 2.3 5.8 5.7 0 6.9-10 13.3-10 13.3z" fill="#DA6556" stroke="#2d1212" stroke-width="2"/></svg></span>
+                    <span class="heart-glyph inline-flex items-center justify-center shrink-0"><svg viewBox="0 0 24 22" class="w-4 h-4"><path d="M12 20.5S2 14.1 2 7.2C2 3.8 4.7 1.5 7.8 1.5c1.8 0 3.4.9 4.2 2.2.8-1.3 2.4-2.2 4.2-2.2 3.1 0 5.8 2.3 5.8 5.7 0 6.9-10 13.3-10 13.3z" fill="#DA6556" stroke="#2d1212" stroke-width="2"/></svg></span>
+                    <span class="heart-glyph inline-flex items-center justify-center shrink-0"><svg viewBox="0 0 24 22" class="w-4 h-4"><path d="M12 20.5S2 14.1 2 7.2C2 3.8 4.7 1.5 7.8 1.5c1.8 0 3.4.9 4.2 2.2.8-1.3 2.4-2.2 4.2-2.2 3.1 0 5.8 2.3 5.8 5.7 0 6.9-10 13.3-10 13.3z" fill="#DA6556" stroke="#2d1212" stroke-width="2"/></svg></span>
                 </div>
             </div>
 
             <!-- Utility Action Buttons (Clean 2-Button Header: Grid + Menu) -->
             <div id="hud-utility-drawer" class="flex items-center gap-1.5 shrink-0">
-                <button id="btn-power-grid" class="btn-primary btn-compact px-2.5 text-xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0" title="Open Power Load &amp; Telemetry Allocation">
+                <button id="btn-power-grid" class="btn-primary btn-compact h-9 px-2.5 text-xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0" title="Open Power Load &amp; Telemetry Allocation">
                     <i class="fa-solid fa-bolt text-xs"></i>
                     <span class="hidden sm:inline">Grid</span>
                 </button>
 
-                <button id="btn-settings" class="btn-secondary btn-compact px-2.5 text-xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0" title="Mission Menu: Badges, Space Weather, Telemetry &amp; Audio" aria-label="Mission Menu">
+                <button id="btn-settings" class="btn-secondary btn-compact h-9 px-2.5 text-xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0" title="Mission Menu: Badges, Space Weather, Telemetry &amp; Audio" aria-label="Mission Menu">
                     <i class="fa-solid fa-gear text-[#FDB773] text-xs"></i>
                     <span class="hidden sm:inline">Menu</span>
                 </button>

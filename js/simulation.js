@@ -15,6 +15,7 @@ const state = {
     weatherMutator: 'baseline',
     batteryKWh: 68,
     cabinPressureKPa: 101.3,
+    airlockPressureKPa: 101.3,
     oxygenKPa: 21.2,
     co2PPM: 420,
     waterLitres: 420,
@@ -265,18 +266,22 @@ function applyDilemmaChoice(chapterIdx, choiceId) {
     if (typeof updateUI === 'function') if (typeof updateUI === 'function') updateUI();
 }
 
-function loadChapter(idx, showBriefing = true) {
+function loadChapter(idx, showBriefing = true, bypassLock = false) {
     if (typeof CHAPTERS === 'undefined' || !CHAPTERS[idx]) return false;
 
-    // Strict sequential mission progression: locked missions cannot be loaded!
-    const maxUnlocked = (typeof state.maxUnlockedChapter === 'number') ? state.maxUnlockedChapter : 0;
-    if (idx > maxUnlocked) {
-        console.warn(`[Astra-1 Security] Mission ${idx + 1} is locked! Cadet Nova must complete Mission ${maxUnlocked + 1} first.`);
-        if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
-        if (typeof spawnFloatingText === 'function' && state.player) {
-            spawnFloatingText(`🔒 MISSION ${idx + 1} LOCKED!`, state.player.x, state.player.y - 25, '#ef4444');
+    // Strict sequential mission progression: locked missions cannot be loaded (can be bypassed for pitching session)
+    if (!bypassLock) {
+        const maxUnlocked = (typeof state.maxUnlockedChapter === 'number') ? state.maxUnlockedChapter : 0;
+        if (idx > maxUnlocked) {
+            console.warn(`[Astra-1 Security] Mission ${idx + 1} is locked! Cadet Nova must complete Mission ${maxUnlocked + 1} first.`);
+            if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
+            if (typeof spawnFloatingText === 'function' && state.player) {
+                spawnFloatingText(`🔒 MISSION ${idx + 1} LOCKED!`, state.player.x, state.player.y - 25, '#ef4444');
+            }
+            return false;
         }
-        return false;
+    } else {
+        state.maxUnlockedChapter = Math.max(state.maxUnlockedChapter || 0, idx);
     }
 
     state.chapterIdx = idx;
@@ -346,9 +351,19 @@ function loadChapter(idx, showBriefing = true) {
         state.co2PPM = 425;
         state.waterConductivity = 42;
         state.radiationMSvH = 0.08;
-        setAria("Welcome to Astra-1, Cadet Nova! Verify Airlock pressure, grab your tools from Central Storage, and inspect the Power & Life-Support consoles.");
+        state.airlockPressureKPa = 0.6;
+        state.cabinPressureKPa = 101.3;
+        if (state.player) {
+            state.player.x = 215;
+            state.player.y = 385;
+            state.player.inSuit = true;
+            state.player.suitChecked = true;
+            state.player.outerDoorOpen = false;
+        }
+        setAria("Welcome to Astra-1, Cadet Nova! You are currently outside in your EVA suit. Seal the outer airlock hatch and equalize pressure to 101.3 kPa to enter the habitat.");
     } else if (idx === 1) {
         // ACT I - MISSION 2: First Seeds in Red Soil (Sol 07-12)
+        state.airlockPressureKPa = 101.3;
         state.solarOutputKW = 24;
         state.backupGenKW = 0;
         state.loads.greenhouse.on = false;

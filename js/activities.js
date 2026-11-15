@@ -313,21 +313,40 @@ window.AstraActivities = (function () {
      * MISSION 1: THE FIRST BREATH (Sol 1–2)
      * ========================================================================= */
 
-    // Task 1: Cycle Airlock Pressure (Rotary Valve + Animated Chamber + Needle Gauge to 101.3 kPa)
+    // Task 1: Cycle Airlock Pressure (Bidirectional: Entry Pressurization 0.6->101.3 kPa & Exit Depressurization 101.3->0.6 kPa)
     function renderM1T1_AirlockPressure(container, onComplete) {
-        let currentKPa = 0.6;
+        const startKPa = (window.state && typeof window.state.airlockPressureKPa === 'number')
+            ? window.state.airlockPressureKPa
+            : 0.6;
+        const isExitMode = startKPa >= 50.0;
+        let currentKPa = startKPa;
         let isDone = false;
         let displayWheelDeg = 0;
         let targetWheelDeg = 0;
         let gasFlowIntensity = 0;
         let lastSoundTime = 0;
 
+        const needOuterSeal = !isExitMode && !!(window.state && window.state.player && window.state.player.outerDoorOpen);
+        const needSuit = isExitMode && !!(window.state && window.state.player && !window.state.player.inSuit);
+
         container.innerHTML = `
             ${createActivityHeader(
-                'Airlock Depress/Pressurize System',
-                'Click and drag the rotary brass valve wheel clockwise to pressurize the chamber from 0.6 kPa up to nominal habitat pressure (101.3 kPa). Equalizing pressure unlocks the inner hatch.',
-                'Rotate the valve clockwise until gas fills the airlock and the inner habitat hatch slides open at 101.3 kPa!'
+                isExitMode ? 'EVA Exit Airlock Depressurization' : 'Airlock Entry Equalization',
+                isExitMode
+                    ? '1) Put on your EVA Spacesuit. 2) Turn the valve counter-clockwise to lower airlock pressure from 101.3 kPa down to 0.6 kPa and open the outer Mars door.'
+                    : '1) Close the outer Mars door to seal the chamber. 2) Turn the valve clockwise to raise pressure from 0.6 kPa to 101.3 kPa, remove your suit, and open the inside door.',
+                isExitMode
+                    ? 'Wear EVA Suit first, then vent airlock down to 0.6 kPa to open the outer door!'
+                    : 'Close the outer door first, then pressurize to 101.3 kPa to unlock the inside door!'
             )}
+            <div id="airlock-outer-seal-bar" class="${needOuterSeal ? '' : 'hidden'} mb-3 bg-[#4a1d1d] border-2 border-[#DA6556] rounded-xl p-2.5 flex items-center justify-between gap-2">
+                <span class="text-xs font-extrabold text-[#FDB773]">⚠ Outer Mars door is still OPEN! Close it before pressurizing.</span>
+                <button id="btn-seal-outer-hatch" class="btn-primary btn-compact px-3 text-xs font-extrabold !text-[#2d1212] shrink-0 cursor-pointer">🔒 Close Outer Door</button>
+            </div>
+            <div id="airlock-suit-bar" class="${needSuit ? '' : 'hidden'} mb-3 bg-[#4a1d1d] border-2 border-[#FDB773] rounded-xl p-2.5 flex items-center justify-between gap-2">
+                <span class="text-xs font-extrabold text-[#FDB773]">⚠ Put on your EVA Spacesuit before lowering airlock pressure!</span>
+                <button id="btn-wear-eva-suit" class="btn-primary btn-compact px-3 text-xs font-extrabold !text-[#2d1212] shrink-0 cursor-pointer">🧑‍🚀 Put On EVA Suit</button>
+            </div>
             <div class="bg-[#4a1d1d] border-2 border-[#DA6556] rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 items-stretch">
                 <!-- 1. Analog Gauge (Lavender & Cream Dial + Sky Needle + Mint Target Arc) -->
                 <div class="card-row flex-col justify-center p-3">
@@ -445,8 +464,8 @@ window.AstraActivities = (function () {
                     </div>
                     <div class="mt-3 flex items-center gap-2">
                         <button id="btn-turn-valve-step" class="btn-primary btn-compact px-3.5 text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                            <i class="fa-solid fa-rotate-right text-[#2d1212]"></i>
-                            <span>Turn Valve (+15 kPa)</span>
+                            <i class="fa-solid ${isExitMode ? 'fa-rotate-left' : 'fa-rotate-right'} text-[#2d1212]"></i>
+                            <span>${isExitMode ? 'Vent Valve (-15 kPa)' : 'Turn Valve (+15 kPa)'}</span>
                         </button>
                     </div>
                     <span class="text-[11px] text-[#f7cbb0] font-bold mt-1 text-center">Drag wheel or click step button</span>
@@ -473,6 +492,39 @@ window.AstraActivities = (function () {
         const habitatLabel = container.querySelector('#habitat-label');
         const pipeFlow = container.querySelector('#pipe-flow');
         const fxCanvas = container.querySelector('#chamber-fx');
+        const outerSealBar = container.querySelector('#airlock-outer-seal-bar');
+        const btnSealOuter = container.querySelector('#btn-seal-outer-hatch');
+        const suitBar = container.querySelector('#airlock-suit-bar');
+        const btnWearSuit = container.querySelector('#btn-wear-eva-suit');
+        if (btnSealOuter) {
+            btnSealOuter.addEventListener('click', () => {
+                if (window.state && window.state.player) {
+                    window.state.player.outerDoorOpen = false;
+                }
+                if (outerSealBar) outerSealBar.classList.add('hidden');
+                if (statusTxt) {
+                    statusTxt.textContent = '✓ OUTER SEALED — TURN VALVE';
+                    statusTxt.className = 'text-[11px] font-extrabold text-[#FDB773]';
+                }
+                playSfx('airlockHiss');
+                if (typeof window.updateUI === 'function') window.updateUI();
+            });
+        }
+        if (btnWearSuit) {
+            btnWearSuit.addEventListener('click', () => {
+                if (window.state && window.state.player) {
+                    window.state.player.inSuit = true;
+                    window.state.player.suitChecked = true;
+                }
+                if (suitBar) suitBar.classList.add('hidden');
+                if (statusTxt) {
+                    statusTxt.textContent = '✓ EVA SUIT ON — VENT TO 0.6 kPa';
+                    statusTxt.className = 'text-[11px] font-extrabold text-[#FDB773]';
+                }
+                playSfx('pickup');
+                if (typeof window.updateUI === 'function') window.updateUI();
+            });
+        }
 
         // Populate SVG gauge scale ticks (-135deg to +135deg)
         if (ticksGroup && typeof document.createElementNS === 'function') {
@@ -534,13 +586,27 @@ window.AstraActivities = (function () {
             if (habitatLabel) habitatLabel.className = 'text-[#DA6556] font-extrabold';
         }
 
-        function updatePressure(newVal, deltaWheelDeg = 0, isClickStep = false) {
+        function updatePressure(newVal, deltaWheelDeg = 0, isClickStep = false, isInit = false) {
+            if (!isInit && !isExitMode && window.state && window.state.player && window.state.player.outerDoorOpen) {
+                if (statusTxt) {
+                    statusTxt.textContent = '⚠ CLOSE OUTER DOOR FIRST!';
+                    statusTxt.className = 'text-[11px] font-extrabold text-[#DA6556] animate-pulse';
+                }
+                return;
+            }
+            if (!isInit && isExitMode && window.state && window.state.player && !window.state.player.inSuit) {
+                if (statusTxt) {
+                    statusTxt.textContent = '⚠ PUT ON EVA SUIT FIRST!';
+                    statusTxt.className = 'text-[11px] font-extrabold text-[#DA6556] animate-pulse';
+                }
+                return;
+            }
             const prevKPa = currentKPa;
             currentKPa = Math.max(0.6, Math.min(120.0, newVal));
             targetWheelDeg += deltaWheelDeg;
 
-            const added = currentKPa - prevKPa;
-            if (added > 0.1) {
+            const deltaKPa = Math.abs(currentKPa - prevKPa);
+            if (!isInit && deltaKPa > 0.1) {
                 gasFlowIntensity = Math.min(1.0, gasFlowIntensity + (isClickStep ? 0.85 : 0.35));
                 spawnGasBurst(isClickStep ? 18 : 4, gasFlowIntensity);
             }
@@ -550,7 +616,46 @@ window.AstraActivities = (function () {
             if (pctBadge) pctBadge.textContent = `${pct}%`;
             if (chamberFill) chamberFill.style.height = `${Math.min(100, (currentKPa / 101.3) * 100)}%`;
 
-            if (currentKPa >= 100.0 && currentKPa <= 103.0) {
+            if (isExitMode && !isInit && currentKPa <= 1.5) {
+                currentKPa = 0.6;
+                if (digital) digital.textContent = '0.6 kPa';
+                if (pctBadge) pctBadge.textContent = '1%';
+                if (chamberFill) chamberFill.style.height = '2%';
+                if (statusTxt) {
+                    statusTxt.textContent = '✓ DEPRESSURIZED (0.6 kPa)';
+                    statusTxt.className = 'text-[11px] font-extrabold text-[#4fd1a0]';
+                }
+                if (digital) digital.className = 'font-mono-tech font-extrabold text-base text-[#4fd1a0] tabular-nums';
+                if (hatchBadge) {
+                    hatchBadge.textContent = 'OUTER HATCH OPEN';
+                    hatchBadge.className = 'text-[#4fd1a0] font-extrabold';
+                }
+                setHatchClosedStyles();
+                if (btnStep) btnStep.disabled = true;
+
+                if (!isDone) {
+                    isDone = true;
+                    window._lastAirlockMode = 'exit';
+                    playSfx('airlockHiss');
+                    if (window.state) {
+                        window.state.airlockPressureKPa = 0.6;
+                        if (window.state.player) {
+                            window.state.player.inSuit = true;
+                            window.state.player.suitChecked = true;
+                            window.state.player.outerDoorOpen = true;
+                        }
+                    }
+                    setTimeout(() => {
+                        showActivitySuccess(
+                            container,
+                            'ch1_airlock',
+                            'Airlock Depressurized (0.6 kPa) — Outer Door Open',
+                            'Your EVA suit is pressurized and the airlock has matched Mars exterior pressure (0.6 kPa). You may now safely step out onto the Martian surface.',
+                            onComplete
+                        );
+                    }, 950);
+                }
+            } else if (!isExitMode && !isInit && currentKPa >= 100.0 && currentKPa <= 103.0) {
                 if (statusTxt) {
                     statusTxt.textContent = '✓ EQUALIZED (SAFE)';
                     statusTxt.className = 'text-[11px] font-extrabold text-[#4fd1a0]';
@@ -573,12 +678,16 @@ window.AstraActivities = (function () {
 
                 if (!isDone) {
                     isDone = true;
+                    window._lastAirlockMode = 'entry';
                     playSfx('airlockHiss');
-                    if (window.state && window.state.player) {
+                    if (window.state) {
+                        window.state.airlockPressureKPa = 101.3;
                         window.state.cabinPressureKPa = 101.3;
-                        window.state.player.inSuit = true;
-                        window.state.player.suitChecked = true;
-                        window.state.player.outerDoorOpen = true;
+                        if (window.state.player) {
+                            window.state.player.inSuit = false;
+                            window.state.player.suitChecked = true;
+                            window.state.player.outerDoorOpen = false;
+                        }
                     }
                     if (typeof window.completeTask === 'function') {
                         window.completeTask('ch1_airlock');
@@ -589,8 +698,8 @@ window.AstraActivities = (function () {
                         showActivitySuccess(
                             container,
                             'ch1_airlock',
-                            'Airlock Atmosphere Equalized (101.3 kPa)',
-                            'Cabin atmosphere is now fully synchronized with habitat life support. Equalizing pressure prevents violent explosive decompression and allows the inner airlock hatch to safely open.',
+                            'Airlock Equalized (101.3 kPa) — Suit Removed & Inner Door Open',
+                            'Airlock pressure now matches the inside habitat (101.3 kPa). Outer door is sealed, your EVA suit is stowed, and the inner habitat door is unlocked.',
                             onComplete
                         );
                     }, 950);
@@ -757,13 +866,20 @@ window.AstraActivities = (function () {
             btnStep.addEventListener('click', () => {
                 if (isDone) return;
                 playSfx('valveRotate');
-                let nextKPa = currentKPa + 15.0;
-                if (currentKPa < 100.0 && nextKPa >= 99.5) {
-                    nextKPa = 101.3;
+                if (isExitMode) {
+                    let nextKPa = currentKPa - 15.0;
+                    if (nextKPa <= 1.5) nextKPa = 0.6;
+                    updatePressure(nextKPa, -90, true);
+                } else {
+                    let nextKPa = currentKPa + 15.0;
+                    if (currentKPa < 100.0 && nextKPa >= 99.5) {
+                        nextKPa = 101.3;
+                    }
+                    updatePressure(nextKPa, 90, true);
                 }
-                updatePressure(nextKPa, 90, true);
             });
         }
+        updatePressure(currentKPa, 0, false, true);
     }
 
     // Task 2: Collect Multi-Tool (Drag and Drop from Storage Compartment to Astronaut Pouch)

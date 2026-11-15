@@ -1355,21 +1355,19 @@ function openCodexModal() {
     if (codexModal) codexModal.classList.remove('hidden');
 }
 
-// --- SEQUENTIAL MISSION PROGRESSION & CHAPTER SELECT UI ---
+// --- SEQUENTIAL MISSION PROGRESSION & CHAPTER SELECT UI (PITCHING MISSION TRAVEL) ---
 function updateChapterSelectUI() {
     const chapterSelect = document.getElementById('chapter-select');
     if (!chapterSelect || typeof CHAPTERS === 'undefined') return;
 
-    const maxUnlocked = (typeof state.maxUnlockedChapter === 'number') ? state.maxUnlockedChapter : 0;
     const expectedVal = String(state.chapterIdx);
 
-    // Only render missions from 0 through maxUnlocked.
-    // Locked missions (index > maxUnlocked) are strictly omitted from the dropdown!
+    // Populate all missions (0 to CHAPTERS.length - 1) for rapid pitching travel
     const children = chapterSelect.children ? Array.from(chapterSelect.children) : [];
-    let countMatch = (children.length === (maxUnlocked + 1));
+    const countMatch = (children.length === CHAPTERS.length);
     let valuesMatch = true;
     if (countMatch) {
-        for (let i = 0; i <= maxUnlocked; i++) {
+        for (let i = 0; i < CHAPTERS.length; i++) {
             if (!children[i] || children[i].value !== String(i)) {
                 valuesMatch = false;
                 break;
@@ -1379,22 +1377,22 @@ function updateChapterSelectUI() {
 
     if (!countMatch || !valuesMatch) {
         chapterSelect.innerHTML = '';
-        for (let idx = 0; idx <= maxUnlocked && idx < CHAPTERS.length; idx++) {
+        for (let idx = 0; idx < CHAPTERS.length; idx++) {
             const c = CHAPTERS[idx];
             const opt = document.createElement('option');
             opt.value = String(idx);
             const isCurrent = (idx === state.chapterIdx);
-            opt.textContent = `Ch ${idx + 1}: ${c.title.split('—')[0].trim()} (${c.solRange})${isCurrent ? ' ★ ACTIVE' : ''}`;
+            opt.textContent = `Mission ${idx + 1}: ${c.title.split('—')[0].trim()} (${c.solRange})${isCurrent ? ' ★ ACTIVE' : ''}`;
             chapterSelect.appendChild(opt);
         }
     } else {
         // Refresh label text including active indicator
-        for (let idx = 0; idx <= maxUnlocked && idx < CHAPTERS.length; idx++) {
+        for (let idx = 0; idx < CHAPTERS.length; idx++) {
             const opt = children[idx];
             if (opt) {
                 const c = CHAPTERS[idx];
                 const isCurrent = (idx === state.chapterIdx);
-                opt.textContent = `Ch ${idx + 1}: ${c.title.split('—')[0].trim()} (${c.solRange})${isCurrent ? ' ★ ACTIVE' : ''}`;
+                opt.textContent = `Mission ${idx + 1}: ${c.title.split('—')[0].trim()} (${c.solRange})${isCurrent ? ' ★ ACTIVE' : ''}`;
             }
         }
     }
@@ -1495,10 +1493,21 @@ function openAirlockExitProcedure() {
     if (activityMount && typeof window.AstraActivities !== 'undefined' && typeof window.AstraActivities.renderTask === 'function') {
         activityMount.innerHTML = '';
         window.AstraActivities.renderTask('ch1_airlock', activityMount, () => {
+            const isEntryPass = (window._lastAirlockMode === 'entry');
+            window._lastAirlockMode = null;
             if (typeof state !== 'undefined' && state && state.player) {
-                state.player.inSuit = true;
-                state.player.suitChecked = true;
-                state.player.outerDoorOpen = true;
+                if (isEntryPass) {
+                    state.airlockPressureKPa = 101.3;
+                    state.cabinPressureKPa = 101.3;
+                    state.player.inSuit = false;
+                    state.player.suitChecked = true;
+                    state.player.outerDoorOpen = false;
+                } else {
+                    state.airlockPressureKPa = 0.6;
+                    state.player.inSuit = true;
+                    state.player.suitChecked = true;
+                    state.player.outerDoorOpen = true;
+                }
             }
             if (typeof completeTask === 'function') {
                 completeTask('ch1_airlock');
@@ -1511,7 +1520,8 @@ function openAirlockExitProcedure() {
             if (consoleModal) consoleModal.classList.add('hidden');
             if (typeof sfx !== 'undefined' && sfx.pickup) sfx.pickup();
             if (typeof spawnFloatingText === 'function' && typeof state !== 'undefined' && state && state.player) {
-                spawnFloatingText('💨 OUTER HATCH UNLOCKED & OPEN', state.player.x, state.player.y - 25, '#22c55e');
+                const msg = isEntryPass ? '🔒 AIRLOCK EQUALIZED & HABITAT UNLOCKED' : '💨 OUTER HATCH UNLOCKED & OPEN';
+                spawnFloatingText(msg, state.player.x, state.player.y - 25, '#22c55e');
             }
         });
     }
@@ -1605,8 +1615,9 @@ function updateUI() {
     const cadetMeterLife = document.getElementById('cadet-meter-life');
     const cadetValLife = document.getElementById('cadet-val-life');
     if (cadetValLife) {
-        const isLifeWarn = state.co2PPM > 900 || state.waterConductivity > 60 || state.faults.co2FilterClogged || state.faults.waterPipeLeaking;
-        cadetValLife.textContent = isLifeWarn ? '⚠ Check O₂' : '✓ OK';
+        const isPressureLow = (typeof state.cabinPressureKPa === 'number') && state.cabinPressureKPa < 95;
+        const isLifeWarn = isPressureLow || state.co2PPM > 900 || state.waterConductivity > 60 || state.faults.co2FilterClogged || state.faults.waterPipeLeaking;
+        cadetValLife.textContent = isPressureLow ? '⚠ Low kPa' : (isLifeWarn ? '⚠ Check O₂' : '✓ OK');
         cadetValLife.className = `font-extrabold text-[11px] leading-tight ${isLifeWarn ? 'text-[#EB895B] animate-pulse' : 'text-[#4fd1a0]'}`;
         if (cadetMeterLife) {
             cadetMeterLife.style.borderColor = isLifeWarn ? '#EB895B' : '';
@@ -2488,20 +2499,19 @@ function initUIEventListeners() {
         });
     }
 
-    // Chapter Select & Sequential Progression Handlers
+    // Chapter Select & Mission Traveling Dropdown Handlers (Pitching Travel Support)
     const chapterSelect = document.getElementById('chapter-select');
     if (chapterSelect) {
         updateChapterSelectUI();
         chapterSelect.addEventListener('change', (e) => {
             const targetIdx = parseInt(e.target.value, 10);
-            const maxUnlocked = (typeof state.maxUnlockedChapter === 'number') ? state.maxUnlockedChapter : 0;
-            if (targetIdx > maxUnlocked) {
-                if (typeof sfx !== 'undefined' && sfx.alert) sfx.alert();
-                chapterSelect.value = String(state.chapterIdx);
-                return;
-            }
+            if (isNaN(targetIdx)) return;
             if (typeof sfx !== 'undefined' && sfx.beep) sfx.beep();
-            loadChapter(targetIdx, true);
+            const modalSettings = document.getElementById('modal-settings');
+            if (modalSettings && !modalSettings.classList.contains('hidden')) {
+                modalSettings.classList.add('hidden');
+            }
+            loadChapter(targetIdx, true, true);
         });
     }
 
