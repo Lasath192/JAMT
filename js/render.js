@@ -1620,7 +1620,8 @@ function renderGame(now) {
 
         const distToDoor = (typeof state !== 'undefined' && state && state.player) ? Math.hypot(state.player.x - cx, state.player.y - cy) : 999;
         const isOuterAirlock = (d.id === 'door_airlock_eva');
-        const isOpen = isOuterAirlock ? !!(state && state.player && state.player.outerDoorOpen) : (distToDoor <= 55);
+        const isInnerLocked = (d.id === 'door_airlock_iva') && (typeof window.isInnerAirlockLocked === 'function' && window.isInnerAirlockLocked());
+        const isOpen = isOuterAirlock ? !!(state && state.player && state.player.outerDoorOpen) : (!isInnerLocked && distToDoor <= 55);
 
         // Outer doorframe
         ctx.fillStyle = '#090d16';

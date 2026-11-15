@@ -317,6 +317,17 @@ function initCanvasPointer() {
     window.addEventListener('pointercancel', () => { isPointerDragging = false; });
 }
 
+function isInnerAirlockLocked() {
+    if (typeof state === 'undefined' || !state) return false;
+    if (typeof state.airlockPressureKPa === 'number' && state.airlockPressureKPa < 99.0) return true;
+    if (state.chapterIdx === 0 && typeof CHAPTERS !== 'undefined' && CHAPTERS[0] && CHAPTERS[0].tasks) {
+        const t = CHAPTERS[0].tasks.find(item => item.id === 'ch1_airlock');
+        if (t && !t.done) return true;
+    }
+    return false;
+}
+window.isInnerAirlockLocked = isInnerAirlockLocked;
+
 // --- HABITAT SOLID COLLISION DETECTOR ---
 // Prevents walking through regolith walls, central master consoles, and perimeter machinery.
 function checkSolidCollision(px, py, radius = 13) {
@@ -328,6 +339,18 @@ function checkSolidCollision(px, py, radius = 13) {
         const doorH = 110;
         if (px + radius > doorX && px - radius < doorX + doorW &&
             py + radius > doorY && py - radius < doorY + doorH) {
+            return true;
+        }
+    }
+
+    // 0b. Inner Airlock Bulkhead Barrier: Sealed in Mission 1 until airlock is equalized to 101.3 kPa
+    if (isInnerAirlockLocked()) {
+        const innerX = 415;
+        const innerY = 335;
+        const innerW = 14;
+        const innerH = 90;
+        if (px + radius > innerX && px - radius < innerX + innerW &&
+            py + radius > innerY && py - radius < innerY + innerH) {
             return true;
         }
     }
@@ -534,6 +557,28 @@ function updateGame(dt) {
                 if (state.player.targetX !== null && state.player.targetX > 270) {
                     state.player.targetX = null;
                     state.player.targetY = null;
+                }
+            }
+        }
+    }
+    // Inner Airlock Bulkhead Barrier in Mission 1 until ch1_airlock is completed
+    if (state.player && isInnerAirlockLocked()) {
+        const inInnerY = (state.player.y >= 325 && state.player.y <= 435);
+        if (inInnerY && state.player.x <= 414 && (state.player.x + moveX) > 400) {
+            moveX = 0;
+            dx = 0;
+            if (state.player.targetX !== null && state.player.targetX > 400) {
+                state.player.targetX = null;
+                state.player.targetY = null;
+            }
+            const now = Date.now();
+            if (!window._lastInnerLockHintAt || now - window._lastInnerLockHintAt > 2500) {
+                window._lastInnerLockHintAt = now;
+                if (typeof spawnFloatingText === 'function') {
+                    spawnFloatingText('🔒 PRESSURIZE AIRLOCK FIRST', state.player.x, state.player.y - 25, '#FDB773');
+                }
+                if (typeof setAria === 'function') {
+                    setAria('Inner bulkhead sealed! Press [E] at the Airlock Console to equalize pressure to 101.3 kPa first.');
                 }
             }
         }

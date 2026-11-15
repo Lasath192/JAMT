@@ -2140,11 +2140,12 @@ function renderGame3D(now) {
             const d = habitatDoor3DMeshes[i];
             const dist = Math.hypot(px - d.x, py - d.y);
             const isOuterAirlock = (d.id === 'door_airlock_eva');
-            const isOpen = isOuterAirlock ? !!(state.player && state.player.outerDoorOpen) : (dist <= 65);
+            const isInnerLocked = (d.id === 'door_airlock_iva') && (typeof window.isInnerAirlockLocked === 'function' && window.isInnerAirlockLocked());
+            const isOpen = isOuterAirlock ? !!(state.player && state.player.outerDoorOpen) : (!isInnerLocked && dist <= 65);
             const targetY = isOpen ? d.openY : d.closedY;
             d.hatchGroup.position.y += (targetY - d.hatchGroup.position.y) * 0.18;
             if (d.ledMat) {
-                const targetCol = isOpen ? 0x22c55e : (isOuterAirlock ? 0xef4444 : 0xf59e0b);
+                const targetCol = isOpen ? 0x22c55e : ((isOuterAirlock || isInnerLocked) ? 0xef4444 : 0xf59e0b);
                 if (d.ledMat.color.getHex() !== targetCol) {
                     d.ledMat.color.setHex(targetCol);
                     d.ledMat.emissive.setHex(targetCol);

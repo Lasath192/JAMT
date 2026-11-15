@@ -14,7 +14,7 @@ const CHAPTERS = [
         solStart: 1,
         role: "Flight Commander",
         title: "MISSION 1: Station Activation",
-        story: "Pressurize the airlock, unpack your toolkit, and stabilize cabin oxygen.",
+        story: "Step into the airlock from outside, stabilize pressure to 101.3 kPa, unpack your toolkit, and check cabin oxygen.",
         science: "Humans need 101.3 kPa pressure and 21% O₂—just like sea level on Earth.",
         scienceMore: "Mars outside pressure is under 1 kPa. Modeled on NASA's Orion ECLSS and CHAPEA, verifying pressure (101.3 kPa), oxygen partial pressure, and comms alignment first prevents decompression hazards.",
         dilemma: "Cycle Airlock Slowly or Fast?",
@@ -26,7 +26,7 @@ const CHAPTERS = [
             { id: 'opt_fast', label: '⚡ Fast 90s Vent', pros: 'Instant Entry', tag: '-3 kPa Buffer', tone: 'amber', outcome: 'Quick entry, but expended 120L nitrogen buffer. Cabin pressure set to 98 kPa.', effect: { pressureLoss: 3 } }
         ],
         tasks: [
-            { id: 'ch1_airlock', text: 'Cycle Airlock Pressure (Airlock)', room: '🚪 Airlock Bay', shortAction: 'Equalize cabin to 101.3 kPa', done: false },
+            { id: 'ch1_airlock', text: 'Stabilize Airlock Pressure (Airlock)', room: '🚪 Airlock Bay', shortAction: 'Step in & equalize to 101.3 kPa', done: false },
             { id: 'ch1_tool', text: 'Unpack Multi-Tool & Fuse (Storage)', room: '🧰 Storage Bay', shortAction: 'Grab Multi-Tool & HV Fuse', done: false },
             { id: 'ch1_life', text: 'Verify Cabin Oxygen & ECLSS (Life Support)', room: '💨 Life Support', shortAction: 'Check 5 life-support channels', done: false }
         ]

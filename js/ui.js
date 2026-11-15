@@ -1444,10 +1444,21 @@ function openAirlockExitProcedure() {
     if (activityMount && typeof window.AstraActivities !== 'undefined' && typeof window.AstraActivities.renderTask === 'function') {
         activityMount.innerHTML = '';
         window.AstraActivities.renderTask('ch1_airlock', activityMount, () => {
+            const isEntryPass = (window._lastAirlockMode === 'entry');
+            window._lastAirlockMode = null;
             if (typeof state !== 'undefined' && state && state.player) {
-                state.player.inSuit = true;
-                state.player.suitChecked = true;
-                state.player.outerDoorOpen = true;
+                if (isEntryPass) {
+                    state.airlockPressureKPa = 101.3;
+                    state.cabinPressureKPa = 101.3;
+                    state.player.inSuit = false;
+                    state.player.suitChecked = true;
+                    state.player.outerDoorOpen = false;
+                } else {
+                    state.airlockPressureKPa = 0.6;
+                    state.player.inSuit = true;
+                    state.player.suitChecked = true;
+                    state.player.outerDoorOpen = true;
+                }
             }
             if (typeof completeTask === 'function') {
                 completeTask('ch1_airlock');
@@ -1460,7 +1471,12 @@ function openAirlockExitProcedure() {
             if (consoleModal) consoleModal.classList.add('hidden');
             if (typeof sfx !== 'undefined' && sfx.pickup) sfx.pickup();
             if (typeof spawnFloatingText === 'function' && typeof state !== 'undefined' && state && state.player) {
-                spawnFloatingText('💨 OUTER HATCH UNLOCKED & OPEN', state.player.x, state.player.y - 25, '#22c55e');
+                spawnFloatingText(
+                    isEntryPass ? '🔓 INNER DOOR OPEN • SUIT REMOVED' : '💨 OUTER HATCH UNLOCKED & OPEN',
+                    state.player.x,
+                    state.player.y - 25,
+                    '#22c55e'
+                );
             }
         });
     }
@@ -1554,8 +1570,9 @@ function updateUI() {
     const cadetMeterLife = document.getElementById('cadet-meter-life');
     const cadetValLife = document.getElementById('cadet-val-life');
     if (cadetValLife) {
-        const isLifeWarn = state.co2PPM > 900 || state.waterConductivity > 60 || state.faults.co2FilterClogged || state.faults.waterPipeLeaking;
-        cadetValLife.textContent = isLifeWarn ? '⚠ Check O₂' : '✓ OK';
+        const isPressureLow = state.cabinPressureKPa < 95;
+        const isLifeWarn = isPressureLow || state.co2PPM > 900 || state.waterConductivity > 60 || state.faults.co2FilterClogged || state.faults.waterPipeLeaking;
+        cadetValLife.textContent = isPressureLow ? '⚠ Low kPa' : (isLifeWarn ? '⚠ Check O₂' : '✓ OK');
         cadetValLife.className = `font-extrabold text-[11px] leading-tight ${isLifeWarn ? 'text-[#EB895B] animate-pulse' : 'text-[#4fd1a0]'}`;
         if (cadetMeterLife) {
             cadetMeterLife.style.borderColor = isLifeWarn ? '#EB895B' : '';

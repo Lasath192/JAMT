@@ -33,6 +33,7 @@ const state = {
     selectedDilemmas: {},
     uiSimplified: true,
     gridOverloadSeconds: 0,
+    airlockPressureKPa: 101.3,
     inventory: [],
     unlockedFacts: ['nasa_donki', 'nasa_osdr', 'nasa_curiosity_meda', 'chapea_habitat', 'chapea_comms'],
     earnedBadges: [],
@@ -344,10 +345,22 @@ function loadChapter(idx, showBriefing = true) {
         state.loads.lab.on = true;
         state.loads.greenhouse.on = false;
         state.co2PPM = 425;
+        state.airlockPressureKPa = 0.6;
+        state.cabinPressureKPa = 101.3;
         state.waterConductivity = 42;
         state.radiationMSvH = 0.08;
-        setAria("Welcome to Astra-1, Cadet Nova! Verify Airlock pressure, grab your tools from Central Storage, and inspect the Power & Life-Support consoles.");
+        if (state.player) {
+            state.player.x = 215;
+            state.player.y = 385;
+            state.player.targetX = null;
+            state.player.targetY = null;
+            state.player.inSuit = true;
+            state.player.suitChecked = true;
+            state.player.outerDoorOpen = false;
+        }
+        setAria("Welcome to Mars, Cadet Nova! Open the outer airlock door [E], step into the airlock, close the outer door, and stabilize pressure to 101.3 kPa before entering.");
     } else if (idx === 1) {
+        state.airlockPressureKPa = 101.3;
         // ACT I - MISSION 2: First Seeds in Red Soil (Sol 07-12)
         state.solarOutputKW = 24;
         state.backupGenKW = 0;
