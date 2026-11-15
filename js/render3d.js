@@ -197,6 +197,23 @@ function onThreePointerDown(e) {
             const worldY = from3DZ(gh.point.z);
             const insideWall = (typeof checkWallCollision === 'function') ? checkWallCollision(worldX, worldY, 10) : false;
             if (!insideWall) {
+                // Strict airlock hatch barrier check for 3D navigation
+                if (typeof state !== 'undefined' && state.player && !state.player.outerDoorOpen) {
+                    const isTargetOutside = worldX < 276;
+                    const isPlayerInside = state.player.x >= 276;
+                    if (isPlayerInside && isTargetOutside) {
+                        if (window.sfx && typeof sfx.alert === 'function') sfx.alert();
+                        if (typeof setAria === 'function') setAria('Airlock Door is Locked and Closed! Press [E] to unlock hatch first.');
+                        break;
+                    }
+                    const isPlayerOutside = state.player.x <= 276;
+                    const isTargetInside = worldX > 276;
+                    if (isPlayerOutside && isTargetInside) {
+                        if (window.sfx && typeof sfx.alert === 'function') sfx.alert();
+                        if (typeof setAria === 'function') setAria('Airlock Door is Locked and Closed! Press [E] to unlock hatch first.');
+                        break;
+                    }
+                }
                 state.player.targetX = Math.max(45, Math.min(1145, worldX));
                 state.player.targetY = Math.max(55, Math.min(705, worldY));
                 state.player.targetAction = null;

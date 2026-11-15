@@ -321,10 +321,10 @@ function initCanvasPointer() {
 function checkSolidCollision(px, py, radius = 13) {
     // 0. Outer Airlock Hatch Barrier: Closed door acts as a solid physical wall
     if (typeof state !== 'undefined' && state.player && !state.player.outerDoorOpen) {
-        const doorX = 270;
-        const doorY = 325;
-        const doorW = 16;
-        const doorH = 110;
+        const doorX = 265;
+        const doorY = 320;
+        const doorW = 26;
+        const doorH = 120;
         if (px + radius > doorX && px - radius < doorX + doorW &&
             py + radius > doorY && py - radius < doorY + doorH) {
             return true;
@@ -676,22 +676,22 @@ function updateGame(dt) {
 
     // Strict Outer Airlock Hatch Barrier when closed (!state.player.outerDoorOpen)
     if (state.player && !state.player.outerDoorOpen) {
-        const inDoorY = (state.player.y >= 325 && state.player.y <= 435);
+        const inDoorY = (state.player.y >= 320 && state.player.y <= 440);
         if (inDoorY) {
-            // If inside habitat (x >= 280), prevent moving left through closed door (x < 286)
-            if (state.player.x >= 280 && (state.player.x + moveX) < 286) {
+            // If inside airlock (x >= 276), strictly prevent moving left past closed door threshold (x < 288)
+            if (state.player.x >= 276 && (state.player.x + moveX) < 288) {
                 moveX = 0;
                 dx = 0;
-                if (state.player.targetX !== null && state.player.targetX < 286) {
+                if (state.player.targetX !== null && state.player.targetX < 288) {
                     state.player.targetX = null;
                     state.player.targetY = null;
                 }
             }
-            // If outside habitat (x <= 274), prevent moving right through closed door (x > 270)
-            if (state.player.x <= 274 && (state.player.x + moveX) > 270) {
+            // If outside habitat (x <= 276), strictly prevent moving right past closed door threshold (x > 268)
+            if (state.player.x <= 276 && (state.player.x + moveX) > 268) {
                 moveX = 0;
                 dx = 0;
-                if (state.player.targetX !== null && state.player.targetX > 270) {
+                if (state.player.targetX !== null && state.player.targetX > 268) {
                     state.player.targetX = null;
                     state.player.targetY = null;
                 }

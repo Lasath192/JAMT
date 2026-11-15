@@ -1062,6 +1062,36 @@ function openObjectModal(obj) {
         );
     }
 
+    // Dynamic NASA Source Citation & Raw Telemetry Drawer
+    const nasaTitleEl = document.getElementById('console-nasa-source-title');
+    const nasaTagEl = document.getElementById('console-nasa-source-tag');
+    const nasaRawEl = document.getElementById('console-raw-telemetry');
+    if (window.NASA_OPEN_DATA_RECORDS) {
+        let rec = window.NASA_OPEN_DATA_RECORDS.chapea;
+        if (obj.id === 'greenhouse_console') {
+            rec = window.NASA_OPEN_DATA_RECORDS.osdr;
+        } else if (obj.id === 'power_console') {
+            rec = window.NASA_OPEN_DATA_RECORDS.donki;
+        } else if (obj.id === 'airlock_console') {
+            rec = window.NASA_OPEN_DATA_RECORDS.curiosity_meda;
+        } else if (obj.id === 'co2_scrubber' || obj.id === 'water_recycler') {
+            rec = {
+                id: "NASA-ECLSS-ISS-EXP",
+                name: "NASA Environmental Control and Life Support System (ECLSS)",
+                rawJson: {
+                    facility: "ISS & CHAPEA Closed-Loop ECLSS",
+                    co2_scrubber: "4-Bed Molecular Sieve (4BMS) Thermal Desorption",
+                    water_recovery: "Vapor Compression Distillation + Catalytic Oxidizer",
+                    target_co2_ppm: "<1000 ppm",
+                    water_potability_threshold: "<50 µS/cm conductivity"
+                }
+            };
+        }
+        if (nasaTitleEl) nasaTitleEl.innerHTML = `<i class="fa-solid fa-database text-sky-400"></i> <span>NASA DATA SOURCE: ${rec.name}</span>`;
+        if (nasaTagEl) nasaTagEl.textContent = rec.id;
+        if (nasaRawEl) nasaRawEl.textContent = JSON.stringify(rec.rawJson, null, 2);
+    }
+
     const consoleModal = document.getElementById('modal-console');
     if (consoleModal) consoleModal.classList.remove('hidden');
 }
@@ -1148,6 +1178,22 @@ function openPowerModal() {
         });
         list.appendChild(row);
     });
+
+    const pwrRawEl = document.getElementById('power-raw-telemetry');
+    if (pwrRawEl && window.NASA_OPEN_DATA_RECORDS) {
+        pwrRawEl.textContent = JSON.stringify({
+            dataset: "NASA DONKI API (FLR/CME) + Curiosity Martian Solar Irradiance Model",
+            solar_output_kw: state.solarOutputKW,
+            backup_gen_kw: state.backupGenKW,
+            active_load_kw: pwr.load,
+            net_balance_kw: pwr.net,
+            battery_soc_percent: Math.round(state.batteryKWh),
+            mars_dust_tau: state.weatherMutator === 'dust_storm' ? 3.85 : 0.55,
+            donki_solar_max: state.weatherMutator === 'solar_max',
+            radiation_msvh: state.weatherMutator === 'solar_max' ? state.radiationMSvH * 1.65 : state.radiationMSvH,
+            peak_flare_event: window.NASA_OPEN_DATA_RECORDS.donki.peakEvent
+        }, null, 2);
+    }
 
     const powerModal = document.getElementById('modal-power');
     if (powerModal) powerModal.classList.remove('hidden');
@@ -1548,39 +1594,39 @@ function updateUI() {
         valEnv.className = `font-bold text-[11px] sm:text-xs ${effRad > 0.5 ? 'text-red-400' : 'text-lime-300'}`;
     }
 
-    // Cadet Mode 3 Core Meters
+    // Cadet Mode 3 Core Meters (Strict Single-Line Concise Layout)
     const cadetValPower = document.getElementById('cadet-val-power');
     if (cadetValPower) {
         const isNetNeg = pwr.net < 0;
-        cadetValPower.textContent = `${Math.round(state.batteryKWh)}% ${isNetNeg ? '(-kW Deficit)' : '(Stable)'}`;
-        cadetValPower.className = `font-bold text-[11px] ${state.batteryKWh < 35 || isNetNeg ? 'text-amber-400 animate-pulse' : 'text-emerald-400'}`;
+        cadetValPower.textContent = `${Math.round(state.batteryKWh)}% ${isNetNeg ? 'Deficit' : 'Stable'}`;
+        cadetValPower.className = `font-bold text-[11px] leading-none whitespace-nowrap ${state.batteryKWh < 35 || isNetNeg ? 'text-amber-400 animate-pulse' : 'text-emerald-400'}`;
     }
 
     const cadetValLife = document.getElementById('cadet-val-life');
     if (cadetValLife) {
         const isLifeWarn = state.co2PPM > 900 || state.waterConductivity > 60 || state.faults.co2FilterClogged || state.faults.waterPipeLeaking;
-        cadetValLife.textContent = isLifeWarn ? 'Alert (Check ECLSS)' : 'Optimal (Air & H2O)';
-        cadetValLife.className = `font-bold text-[11px] ${isLifeWarn ? 'text-amber-400 animate-pulse' : 'text-teal-300'}`;
+        cadetValLife.textContent = isLifeWarn ? 'Alert (ECLSS)' : 'Optimal';
+        cadetValLife.className = `font-bold text-[11px] leading-none whitespace-nowrap ${isLifeWarn ? 'text-amber-400 animate-pulse' : 'text-teal-300'}`;
     }
 
     const cadetValRad = document.getElementById('cadet-val-rad');
     if (cadetValRad) {
         const effRad = state.weatherMutator === 'solar_max' ? state.radiationMSvH * 1.65 : state.radiationMSvH;
         const isRadDanger = effRad > 0.5 || state.faults.radiationAlertActive;
-        cadetValRad.textContent = isRadDanger ? 'STORM ALERT (SHELTER!)' : `${effRad.toFixed(2)} mSv/h (Safe)`;
-        cadetValRad.className = `font-bold text-[11px] ${isRadDanger ? 'text-red-400 animate-pulse' : 'text-sky-300'}`;
+        cadetValRad.textContent = isRadDanger ? 'STORM ALERT' : `${effRad.toFixed(2)} mSv/h`;
+        cadetValRad.className = `font-bold text-[11px] leading-none whitespace-nowrap ${isRadDanger ? 'text-red-400 animate-pulse' : 'text-sky-300'}`;
     }
 
-    // UPGRADE 2: 3-Heart Life System Display (Strict horizontal alignment with glow)
+    // UPGRADE 2: 3-Heart Life System Display (Strict Single-Row Horizontal Alignment)
     const crewHeartsEl = document.getElementById('crew-hearts');
     const hCount = (typeof state.hearts === 'number') ? state.hearts : 3;
     if (crewHeartsEl) {
         let heartsHtml = '';
         for (let i = 0; i < 3; i++) {
             if (i < hCount) {
-                heartsHtml += '<span class="heart-glyph inline-block text-sm leading-none shrink-0" style="filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.7));">❤️</span>';
+                heartsHtml += '<span class="heart-glyph inline-block text-sm leading-none shrink-0" style="filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.7)); margin: 0 1px;">❤️</span>';
             } else {
-                heartsHtml += '<span class="heart-glyph inline-block text-sm leading-none shrink-0 opacity-30 grayscale">🖤</span>';
+                heartsHtml += '<span class="heart-glyph inline-block text-sm leading-none shrink-0 opacity-30 grayscale" style="margin: 0 1px;">🖤</span>';
             }
         }
         crewHeartsEl.innerHTML = heartsHtml;
@@ -1593,14 +1639,40 @@ function updateUI() {
     if (btnQuickDoor) {
         const isDoorOpen = !!(state.player && state.player.outerDoorOpen);
         if (iconQuickDoor) {
-            iconQuickDoor.className = isDoorOpen ? 'fa-solid fa-door-open text-emerald-400 text-xs' : 'fa-solid fa-door-closed text-sky-400 text-xs';
+            iconQuickDoor.className = isDoorOpen ? 'fa-solid fa-door-open text-emerald-400 text-xs shrink-0' : 'fa-solid fa-door-closed text-sky-400 text-xs shrink-0';
         }
         if (labelQuickDoor) {
             labelQuickDoor.textContent = isDoorOpen ? '[E] Close' : '[E] Open';
         }
         btnQuickDoor.className = isDoorOpen
-            ? 'h-8 btn-tech bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/50 text-emerald-200 px-2.5 rounded-lg text-xs font-mono-tech flex items-center justify-center gap-1.5 cursor-pointer shrink-0 box-border'
-            : 'h-8 btn-tech bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/50 text-sky-200 px-2.5 rounded-lg text-xs font-mono-tech flex items-center justify-center gap-1.5 cursor-pointer shrink-0 box-border';
+            ? 'hud-header-item h-[34px] btn-tech bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/50 text-emerald-200 px-2.5 rounded-lg text-xs font-mono-tech flex items-center justify-center gap-1.5 cursor-pointer shrink-0 box-border whitespace-nowrap'
+            : 'hud-header-item h-[34px] btn-tech bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/50 text-sky-200 px-2.5 rounded-lg text-xs font-mono-tech flex items-center justify-center gap-1.5 cursor-pointer shrink-0 box-border whitespace-nowrap';
+    }
+
+    // In-Game Near-Door Proximity Lock/Unlock Action Button
+    const doorPrompt = document.getElementById('door-proximity-prompt');
+    const doorProximityLabel = document.getElementById('door-proximity-label');
+    const doorProximityIcon = document.getElementById('door-proximity-icon');
+    const btnDoorProximity = document.getElementById('btn-door-proximity-action');
+    if (doorPrompt && state.player) {
+        const distToDoor = Math.hypot(state.player.x - 276, state.player.y - 380);
+        if (distToDoor <= 85) {
+            doorPrompt.classList.remove('hidden');
+            const isDoorOpen = !!state.player.outerDoorOpen;
+            if (doorProximityLabel) {
+                doorProximityLabel.textContent = isDoorOpen ? '[E] CLOSE & LOCK AIRLOCK DOOR' : '[E] UNLOCK & OPEN AIRLOCK DOOR';
+            }
+            if (doorProximityIcon) {
+                doorProximityIcon.className = isDoorOpen ? 'fa-solid fa-door-open text-emerald-400 text-sm' : 'fa-solid fa-lock text-amber-400 text-sm';
+            }
+            if (btnDoorProximity) {
+                btnDoorProximity.className = isDoorOpen
+                    ? 'btn-tech bg-slate-900/95 hover:bg-slate-800 border-2 border-emerald-400 text-white px-4 py-2 rounded-xl shadow-[0_0_25px_rgba(52,211,153,0.4)] flex items-center gap-2.5 font-mono-tech text-xs cursor-pointer group'
+                    : 'btn-tech bg-slate-900/95 hover:bg-slate-800 border-2 border-amber-400 text-white px-4 py-2 rounded-xl shadow-[0_0_25px_rgba(245,158,11,0.4)] flex items-center gap-2.5 font-mono-tech text-xs cursor-pointer group';
+            }
+        } else {
+            doorPrompt.classList.add('hidden');
+        }
     }
 
     // UPGRADE 3: Emergency Task Countdown Bar
@@ -1989,6 +2061,32 @@ function initUIEventListeners() {
             setAria(`Cadet Nova has ${state.hearts || 3} of 3 Hearts remaining! Protect your life support and power to keep the habitat online.`);
         });
     }
+
+    // --- Official NASA Open Data Judge Verification Hub ---
+    const btnJudgeHub = document.getElementById('btn-judge-hub');
+    const btnCloseJudgeHub = document.getElementById('btn-close-judge-hub');
+    const btnJudgeTestDonki = document.getElementById('btn-judge-test-donki');
+    const btnJudgeTestOsdr = document.getElementById('btn-judge-test-osdr');
+    const btnJudgeTestBaselines = document.getElementById('btn-judge-test-baselines');
+    const btnJudgeHubDonki = document.getElementById('btn-judge-hub-donki');
+    const btnJudgeHubOsdr = document.getElementById('btn-judge-hub-osdr');
+
+    if (btnJudgeHub) btnJudgeHub.addEventListener('click', openJudgeHubModal);
+    if (btnCloseJudgeHub) btnCloseJudgeHub.addEventListener('click', closeJudgeHubModal);
+    if (btnJudgeTestDonki) btnJudgeTestDonki.addEventListener('click', testDonkiSolarStorm);
+    if (btnJudgeTestOsdr) btnJudgeTestOsdr.addEventListener('click', testOsdrGreenhouse);
+    if (btnJudgeTestBaselines) btnJudgeTestBaselines.addEventListener('click', openJudgeHubModal);
+    if (btnJudgeHubDonki) btnJudgeHubDonki.addEventListener('click', testDonkiSolarStorm);
+    if (btnJudgeHubOsdr) btnJudgeHubOsdr.addEventListener('click', testOsdrGreenhouse);
+
+    // Near-Door Proximity Lock/Unlock Action Button
+    const btnDoorProximityAction = document.getElementById('btn-door-proximity-action');
+    if (btnDoorProximityAction) {
+        btnDoorProximityAction.addEventListener('click', () => {
+            if (typeof toggleOuterAirlockDoor === 'function') toggleOuterAirlockDoor();
+        });
+    }
+
     if (btnToggleTrainer) btnToggleTrainer.addEventListener('click', () => toggleTrainer(false));
     if (pillTrainer) pillTrainer.addEventListener('click', () => toggleTrainer(true));
 
@@ -2705,3 +2803,69 @@ function prevOutroStorySlide() {
     }
 }
 window.prevOutroStorySlide = prevOutroStorySlide;
+
+// --- NASA OPEN DATA JUDGE VERIFICATION HUB INTERACTIVE HANDLERS ---
+function openJudgeHubModal() {
+    const modal = document.getElementById('modal-judge-hub');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    const rawEl = document.getElementById('judge-hub-raw-json');
+    if (rawEl && window.NASA_OPEN_DATA_RECORDS) {
+        rawEl.textContent = JSON.stringify(window.NASA_OPEN_DATA_RECORDS, null, 2);
+    }
+    if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+}
+window.openJudgeHubModal = openJudgeHubModal;
+
+function closeJudgeHubModal() {
+    const modal = document.getElementById('modal-judge-hub');
+    if (modal) modal.classList.add('hidden');
+    if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+}
+window.closeJudgeHubModal = closeJudgeHubModal;
+
+function testDonkiSolarStorm() {
+    if (typeof closeTitleWelcomeModal === 'function') closeTitleWelcomeModal();
+    const judgeModal = document.getElementById('modal-judge-hub');
+    if (judgeModal) judgeModal.classList.add('hidden');
+
+    state.paused = false;
+    state.weatherMutator = 'solar_max';
+    state.radiationMSvH = 2.45;
+    state.faults.radiationAlertActive = true;
+
+    if (window.sfx && typeof sfx.alert === 'function') sfx.alert();
+    if (typeof updateTelemetryUI === 'function') updateTelemetryUI();
+    if (typeof renderAll === 'function') renderAll();
+
+    const donkiModal = document.getElementById('modal-donki-weather');
+    if (donkiModal) donkiModal.classList.remove('hidden');
+    if (typeof fetchDonkiSpaceWeather === 'function') fetchDonkiSpaceWeather();
+    setAria('CRITICAL ALERT: Class X8.7 Solar Flare simulated via NASA DONKI API! Surface radiation spiked from 0.08 to 2.45 mSv/h. Evacuate to Radiation Shelter!');
+}
+window.testDonkiSolarStorm = testDonkiSolarStorm;
+
+function testOsdrGreenhouse() {
+    if (typeof closeTitleWelcomeModal === 'function') closeTitleWelcomeModal();
+    const judgeModal = document.getElementById('modal-judge-hub');
+    if (judgeModal) judgeModal.classList.add('hidden');
+
+    state.paused = false;
+    state.player.x = 880;
+    state.player.y = 570;
+    state.player.targetX = null;
+    state.player.targetY = null;
+
+    if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+    if (typeof updateTelemetryUI === 'function') updateTelemetryUI();
+    if (typeof renderAll === 'function') renderAll();
+
+    openObjectModal({
+        id: 'greenhouse_console',
+        name: 'Hydroponics & Crop Bio-Dome',
+        room: 'greenhouse',
+        factId: 'hydroponics'
+    });
+    setAria('Greenhouse Bio-Dome activated! Testing NASA OSDR Study OSD-321 PAR lighting modes (1.5 kW Dormant, 5.0 kW OSDR, 8.5 kW Overdrive).');
+}
+window.testOsdrGreenhouse = testOsdrGreenhouse;
