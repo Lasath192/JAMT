@@ -1,214 +1,171 @@
-# 🚀 ASTRA-1: The Red Frontier — Game Overview & Current Status
-**2026 NASA Space Apps Challenge Submission**  
-*Junior Astronaut Mission Trainer (JAMT) — 378-Sol Mars Analog Campaign*
+# 🚀 ASTRA-1: The Red Frontier — Final Version Overview
+### **2026 NASA Space Apps Challenge Submission**
+**Category:** *Build a Junior Astronaut Mission Trainer (JAMT)*  
+**Target Audience:** Students (Ages 7–12) & General Public  
+**Simulation Duration:** 378 Martian Sols (NASA CHAPEA Mars Dune Alpha Analog)  
+**Primary Engine:** Dual-Engine (2.5D Canvas & Three.js 3D WebGL, 100% Vanilla JS, Zero External Runtime Dependencies)
 
 ---
 
-## 📌 Executive Summary
+## 🌟 Executive Concept & Vision
 
-**ASTRA-1: The Red Frontier** is an authentic, educational, dual-engine (2.5D Isometric & 3D WebGL) space mission trainer designed for students (ages 7–12) and the general public. Players step into the boots of **Cadet Nova**, the junior astronaut aboard humanity's first 378-sol permanent Mars surface habitat in Arcadia Planitia (modeled after NASA's **CHAPEA Mars Dune Alpha** 3D-printed habitat).
+**ASTRA-1: The Red Frontier** is an authentic, educational space systems engineering simulation. Rather than generic space trivia, players step into the boots of **Cadet Nova**, the junior astronaut aboard humanity's first permanent 378-sol Mars surface habitat in **Arcadia Planitia** (2048).
 
-Rather than multiple-choice trivia, *ASTRA-1* is a live systems-engineering simulation where players manage real telemetry: balancing kilowatts against life support loads, scrubbing rising $\text{CO}_2$ ppm, purifying graywater, inspecting solar arrays during Martian dust storms, deploying the *Perseverance* rover and *Ingenuity* helicopter, and surviving Solar Particle Events (SPE).
-
----
-
-## 📊 Current Development Status
-
-| Component | Status | Details |
-| :--- | :--- | :--- |
-| **Campaign Missions** | ✅ **100% Complete** | 10 full chapters spanning Sol 1 to Sol 378, each with 3–4 scripted objectives. |
-| **Automated Test Suite** | ✅ **100% Passing** | `npm test` verifies all 10 missions, 20 interactive tasks, and Sol 378 victory debrief. |
-| **Engines & Visuals** | ✅ **100% Functional** | Dual-engine: Custom 2.5D Canvas renderer + Three.js 3D WebGL renderer. |
-| **Airlock & Spacesuit System** | ✅ **100% Functional** | 2-step console sequence (`🧑‍🚀 Suit Up` + `✅ Seal Check`), `[F]` key locked outer hatch, dynamic IVA vs. EVA suit rendering, auto-stow on return. |
-| **Life & Hearts System** | ✅ **100% Functional** | 3-Heart (`❤️❤️❤️`) health system, floating damage text, screen shake, audio alerts, and Game Over modal with Retry. |
-| **Emergency Timers** | ✅ **100% Functional** | 60s–75s ticking countdown bars during crisis missions with health penalty on expiration. |
-| **Icon Inventory Pouch** | ✅ **100% Functional** | 36×36px visual badges with hover tooltips (`🔧`, `⚡`, `🫧`, `🚰`, `🪨`). |
-| **10-Second Storm Dilemma** | ✅ **100% Functional** | Interactive critical choice: Fold panels (0 kW safe) vs. Leave open (keep power, conduit sever, -1 ❤️). |
-| **Live Space Weather (DONKI)** | ✅ **100% Functional** | Live fetch from NASA DONKI Solar Flare API (`api.nasa.gov`) with offline historical fallback. |
-| **Packaging & Deployment** | ✅ **100% Ready** | Standalone single-file bundle (`astra_1_the_red_frontier.html`), modular web app (`index.html`), Vercel-ready (`vercel.json`). |
+Modeled after NASA's **CHAPEA (Crew Health and Performance Exploration Analog)** 3D-printed *Mars Dune Alpha* habitat at Johnson Space Center, the game challenges junior astronauts to manage interconnected life-critical systems: balancing electrical power against life support loads, scrubbing carbon dioxide before toxicity sets in, purifying graywater, conducting emergency EVAs during dust storms, deploying the *Perseverance* rover and *Ingenuity* helicopter, and surviving Solar Particle Events (SPE).
 
 ---
 
-## 🎮 Core Gameplay Mechanics
+## 🎬 Complete End-to-End Mission Journey
 
-### 1. 3-Heart Life System (`❤️❤️❤️`)
-- Cadet Nova has 3 hearts displayed prominently in the top HUD.
-- **Heart Loss Triggers:**
-  - Emergency task countdown timer running out.
-  - Manually disabling essential life support or habitat heating in the Power Console.
-  - Total depletion of battery power, oxygen/clean air, or potable water.
-  - Making dangerous dilemma choices (e.g., leaving solar panels unlatched in severe dust storms).
-- Reaching 0 hearts triggers the **Game Over Screen** with options to **Retry Mission** or **Restart Campaign**.
+```mermaid
+flowchart TD
+    A["Welcome / Title Screen<br/>(ASTRA-1: The Red Frontier)"] -->|Click 'Enroll Now'| B["5-Slide Cinematic Intro<br/>(AI Concept Art & Narrative)"]
+    B -->|Complete Slides| C["Junior Astronaut Field Manual<br/>(Controls & Systems Guidelines)"]
+    C -->|Commence Mission: Sol 01| D["10-Mission Sequential Campaign<br/>(Sol 1 to Sol 378)"]
+    D --> E["Sol 378 Touchdown & Debrief<br/>(Score Model & Printable Certificate)"]
+    E -->|Click 'Finish the Mission'| F["5-Slide Cinematic Outro<br/>(Relief Crew & Homecoming)"]
+    F --> G["Space Weather Mutator Replay<br/>or Free Habitat Exploration"]
+```
 
-### 2. Physical Airlock & Suit Cycling Interlock
-- Leaving the habitat requires following realistic safety protocols:
-  1. Approach the **Airlock Console** and click `🧑‍🚀 1. Put On Spacesuit`. Nova changes into the golden EVA helmet and pressurized suit.
-  2. Click `✅ 2. Check Suit & Airlock Seal` to verify 101.3 kPa differential pressure.
-  3. Step to the outer hatch (`x = 278`) and press **`[F]`** (or tap the on-screen `[F] Door` button).
-- The outer door is a solid physical collision wall if unsuited or unsealed. Stepping back inside (`x >= 415`) automatically re-seals the door and stows the heavy EVA suit.
+---
 
-### 3. Compounding Real-Time Telemetry Loop
-The simulation recalculates resource flows every 1500ms:
-- **⚡ Power (kW / kWh):** Solar arrays generate power based on Mars sun angle and dust storm optical depth ($\tau$). A 100 kWh battery bank buffers surpluses and deficits.
-- **🫧 Atmosphere (O₂ & CO₂ ppm):** Crew respiration generates $\text{CO}_2$. If scrubbers clog, $\text{CO}_2$ compounds toward dangerous levels ($>2800\text{ ppm}$), causing headaches and system warnings.
-- **💧 Clean Water (Liters & Conductivity):** Graywater recycling system purifies hygiene water into drinking water ($<15\text{ µS/cm}$).
-- **🌱 Food & Biome:** Hydroponic grow trays produce dwarf wheat crops, boosting crew health.
-- **🛡️ Radiation Shielding:** Regolith roof panels attenuate cosmic rays and solar flares ($0.08\text{ mSv/h}$ normal up to $2.45\text{ mSv/h}$ in solar storms).
+## 🕹️ Core Systems & Gameplay Mechanics
 
-### 4. Time-Based Emergency Countdown Timers
-During high-stakes missions (Missions 4, 5, 6, 8, 9), an animated countdown bar ticks down in the checklist panel (60 to 75 seconds). Completing all mission objectives stops the timer; running out inflicts heart damage.
+### 1. Title Welcome Screen & "Enroll Now" Portal
+* **Welcome Screen**: Introduces the mission context, setting, and systems overview with high-tech NASA Space Apps badges.
+* **Enroll Now Action**: One-click launch into the narrative orientation. Players can also bypass directly to the habitat if returning.
 
-### 5. Mike Given's 10-Second Solar Panel Dust Storm Dilemma
-A high-tension pop-up event where a sudden dust front approaches:
-- **Option A (Safe):** Fold and lock solar arrays. Generation drops to 0 kW, but panels remain undamaged.
-- **Option B (Risky):** Keep panels deployed to maintain power. A flying debris fragment severs a conduit, costing -1 ❤️ and requiring immediate EVA repairs.
+### 2. Cinematic Story Cutscenes (10 AI-Generated Art Slides)
+* **5 Intro Slides**:
+  1. *The Call of the Cosmos*: Sunrise SLS rocket launch from Cape Canaveral.
+  2. *The Silent Void*: 7-month interplanetary transit inside the Orion cupola, facing the 14-minute speed-of-light comms delay.
+  3. *Fiery Descent*: Retro-rocket landing kicking up red basalt regolith dust in Arcadia Planitia.
+  4. *Mars Dune Alpha*: Overview of the 3D-printed curved regolith habitat, solar arrays, and rover.
+  5. *Meet the Crew*: Pressure equalized at 101.3 kPa, welcomed by the 4 CHAPEA specialists.
+* **5 Outro Slides** (Triggered via `🏆 FINISH THE MISSION`):
+  1. *Sol 378 Milestone*: Nova holding the completed holographic mission logbook at Martian sunset.
+  2. *Relief Expedition Arrives*: NASA Crew 2 landing under twin supersonic parachutes.
+  3. *Astrobiological Treasure*: Loading sealed Jezero Delta core canisters into the ascent craft.
+  4. *Farewell, Mars Dune Alpha*: Orbital ascent looking down at the illuminated base.
+  5. *Homecoming to the Blue Planet*: Orion approaching Earth, certified as a NASA Commander.
 
-### 6. Live NASA DONKI Space Weather Integration
-A top-bar button (`🛰️ Weather`) allows students to ping NASA's live **DONKI (Space Weather Database Of Notifications, Knowledge, Information)** API to view real solar flare events from the Sun, with an instant offline fallback if without internet access.
+### 3. Living Habitat & Autonomous Room-Restricted Crew
+* **4 Dedicated Specialists**:
+  * **Cmdr. Sarah Ross** (Mission Commander) — Central Command & Comms.
+  * **Dr. Chen** (Flight Surgeon & Astrobiologist) — Science Lab & Medical Bay.
+  * **Elena Rostova** (Chief Botanist) — Hydroponic Greenhouse Dome.
+  * **Marcus Vance** (Flight Engineer) — Power Grid & Water Reclamation.
+* **Autonomous Routines**: Crew members walk between designated workstations inside their rooms, inspect equipment, pause smoothly when the player approaches, and turn to face Cadet Nova during radio transmissions.
+
+### 4. Directional Airlock & Dynamic Spacesuit Protocol
+* **Dynamic Suit Switching**: Cadet Nova seamlessly switches between the blue/gray **IVA shirtsleeve uniform** (inside the habitat) and the pressurized **EVA spacesuit with gold visor** (on Mars surface).
+* **Directional Safety Interlock**:
+  * *Exiting from Habitat*: Players must follow proper safety checklists at the Airlock Console (`🧑‍🚀 1. Put On Suit` -> `✅ 2. Check Seal`). The outer hatch acts as a solid physical wall until unsealed.
+  * *Entering from Mars*: Approaching the door from the outside allows immediate one-click entry to save oxygen. Stepping back into the Central Spine automatically equalizes pressure and stows the heavy EVA gear.
+* **Multi-Input Hatch Controls**: Operated via `[E]`, `[F]`, on-screen touch buttons, wall switches, or clicking the floating prompt.
+
+### 5. Compounding Real-Time Telemetry Physics
+* **⚡ Electrical Power (kW / kWh)**: 100 kW solar array generation dynamic with sun angle and atmospheric dust tau ($\tau$). A 100 kWh battery bank buffers deficits. Finite backup RTG generator burns fuel when activated.
+* **🫧 Atmosphere (O₂ & CO₂ ppm)**: Crew respiration generates $\text{CO}_2$. If scrubbers fail or lack power, $\text{CO}_2$ compounds past $1000\text{ ppm}$ (drowsiness) to $2800\text{ ppm}$ (toxicity).
+* **💧 Potable Water & Recovery**: Graywater recovery loop purifies hygiene water; filters must maintain electrical conductivity below $15\text{ µS/cm}$.
+* **🌱 Closed-Loop Agriculture**: Dwarf wheat hydroponics trays consume water and 5 kW of PAR lighting to produce fresh food, boosting crew morale.
+* **🛡️ Radiation & Space Weather**: Regolith shielding attenuates cosmic rays ($0.08\text{ mSv/h}$ baseline). Live NASA DONKI API integration detects real solar flares peaking at $2.45\text{ mSv/h}$.
+
+### 6. 3-Heart Life System (`❤️❤️❤️`) & Emergency Timers
+* **Health Buffering**: Cadet Nova has 3 hearts. Hearts are lost if life support or heating is shut down, if critical resources deplete, or if emergency timers expire.
+* **Time-Based Emergencies**: High-stakes missions trigger animated 60s–75s ticking countdown bars in the checklist panel.
+* **Game Over & Retry**: Reaching 0 hearts displays the Game Over modal with options to retry the mission or restart the campaign.
+
+### 7. Interactive Mission Activities (`js/activities.js`)
+* All 30 campaign tasks feature interactive simulation activities (e.g., aligning spectrometer wavelengths, calibrating LiOH chemical flow valves, balancing circuit breaker loads, routing irrigation pumps, patching pipeline seals).
+
+---
+
+## 📜 The 10-Mission Sequential Campaign
+
+| Mission | Sol Range | Title | Core Activity & Scientific Learning |
+| :---: | :---: | :--- | :--- |
+| **01** | Sol 1–2 | **The First Breath** | Airlock cycling, multi-tool retrieval, initial ECLSS $\text{CO}_2$ scrubber diagnostics. |
+| **02** | Sol 24–40 | **First Seeds in Red Soil** | Bioregenerative agriculture, dwarf wheat PAR lighting (5 kW), irrigation pump flushing. |
+| **03** | Sol 75–90 | **Commissioning Perseverance & Ingenuity** | First EVA excursion, rover telemetry calibration, drone rotor diagnostics. |
+| **04** | Sol 130–145 | **The Rising Sky of Copper** | Emergency 75s timer. Global dust storm ($\tau = 3.8$), non-essential load shedding, RTG fuel activation. |
+| **05** | Sol 190–205 | **The Zero-Visibility EVA** | Emergency 75s timer. Gale winds sever external power conduit; EVA repair with replacement fuse. |
+| **06** | Sol 250–265 | **ECLSS Scrubber Saturation** | Emergency 75s timer. Amine bed failure, $\text{CO}_2$ spikes to 1800 ppm; LiOH cassette swap. |
+| **07** | Sol 295–315 | **The Jezero Delta Core Expedition** | Rover delta core sample extraction, Raman mineral spectrometry analysis. |
+| **08** | Sol 330–345 | **The Graywater Biofilm Crisis** | Emergency 75s timer. Catalytic oxidizer biofilm clog; pipe sealant application and conductivity flush. |
+| **09** | Sol 360–370 | **Solar Particle Event — Code Red** | Emergency 60s timer. Live NASA DONKI CME alert ($2.45\text{ mSv/h}$); shelter evacuation and shielding check. |
+| **10** | Sol 375–378 | **The Return Window — Handover** | Core canister vaulting, fresh crop harvest, final Earth telemetry logbook transmission. |
 
 ---
 
 ## 🗺️ Habitat Layout (Arcadia Planitia Base)
 
 ```text
-+-------------------------------------------------------------------------------------------------+
-|                                          MARS SURFACE                                           |
-|   [External Solar Array]          [Ingenuity Scout Drone]           [Perseverance Rover]        |
-+-------------------------------------------------------------------------------------------------+
-|   [1. AIRLOCK & SUIT BENCH]   |   [2. POWER ROOM]          |   [3. LIFE SUPPORT (ECLSS)]        |
-|   - Outer Hatch ([F] to open) |   - Solar Array Telemetry  |   - Primary & Backup CO2 Scrubbers |
-|   - Suit Bench & Seal Check   |   - HV Junction & Breakers |   - O2 Generator & LiOH Filters    |
-+-------------------------------+----------------------------+------------------------------------+
-|   [CENTRAL CORRIDOR / STORAGE]|   [4. WATER ROOM]          |   [5. GREENHOUSE DOME]             |
-|   - Multi-Tools & Spare Fuses |   - Graywater Purifier     |   - Hydroponic Dwarf Wheat         |
-|   - Pipe Sealants & LiOH      |   - Conductivity Sensors   |   - Automated Irrigation Pumps     |
-+-------------------------------+----------------------------+------------------------------------+
-|   [CREW QUARTERS]             |   [6. SCIENCE & COMMS]     |   [7. RADIATION SHELTER]           |
-|   - Cmdr. Sarah Ross          |   - High-Gain Uplink       |   - High-Density Regolith Bunker   |
-|   - Dr. Chen, Elena, Marcus   |   - 14-Minute Comms Delay  |   - Storm Emergency Bunks          |
-+-------------------------------+----------------------------+------------------------------------+
++---------------------------------------------------------------------------------------------------------+
+|                                              MARS SURFACE                                               |
+|   [External Solar Array (100 kW)]          [Ingenuity Scout Drone]           [Perseverance Rover]       |
++---------------------------------------------------------------------------------------------------------+
+|   [1. AIRLOCK & SUIT BENCH]     |   [2. POWER ROOM]            |   [3. LIFE SUPPORT (ECLSS)]            |
+|   - Outer Door ([E]/[F] cycle)  |   - Solar Array Telemetry    |   - Primary & Backup CO2 Scrubbers     |
+|   - Suit Bench & Seal Check     |   - High-Voltage Junction    |   - O2 Generator & LiOH Filters        |
++---------------------------------+------------------------------+----------------------------------------+
+|   [CENTRAL PRESSURIZED SPINE]   |   [4. WATER RECLAMATION]     |   [5. GREENHOUSE DOME]                 |
+|   - Multi-Tools & Spare Fuses   |   - Catalytic Oxidizer       |   - Hydroponic Dwarf Wheat Trays       |
+|   - Pipe Sealants & Cassettes   |   - Conductivity Sensors     |   - PAR Grow Lighting (5 kW)           |
++---------------------------------+------------------------------+----------------------------------------+
+|   [CREW QUARTERS & BUNK]        |   [6. SCIENCE & COMMS]       |   [7. RADIATION SHELTER]               |
+|   - Cmdr. Sarah Ross            |   - High-Gain Earth Uplink   |   - High-Density Regolith Bunker       |
+|   - Dr. Chen, Elena, Marcus     |   - 14-Minute Comms Delay    |   - Solar Particle Storm Retreat       |
++---------------------------------+------------------------------+----------------------------------------+
 ```
 
 ---
 
-## 📜 Full 10-Mission CHAPEA Analog Campaign
+## 🏆 Scoring & Certification Model
 
-### 1. Mission 1: The First Breath (Sol 1–2)
-- **Story:** Fresh touchdown on Mars. Cadet Nova inspects life-critical habitat systems.
-- **Tasks:** Cycle airlock pressure, collect multi-tool, verify ECLSS $\text{CO}_2$ scrubber levels, uplink touchdown confirmation.
+At Sol 378, the simulation evaluates Cadet Nova across four objective pillars:
+1. **Campaign Completion (400 pts)**: Finishing all 10 sequential chapters.
+2. **Interactive Tasks (300 pts)**: Successfully executing all 30 activities without critical failures.
+3. **Resource Stewardship (200 pts)**: Maintaining power, oxygen, water, and food buffers.
+4. **Mission Badges (100 pts)**: Collecting all 5 NASA specialist badges.
 
-### 2. Mission 2: First Seeds in Red Soil (Sol 24–40)
-- **Story:** Initiating the bioregenerative life support system in the greenhouse dome.
-- **Tasks:** Check dwarf wheat trays, set PAR lighting to 5 kW, flush irrigation pump lines.
-
-### 3. Mission 3: Commissioning Perseverance & Ingenuity (Sol 75–90)
-- **Story:** First major surface excursion outside the habitat to interface with robotic precursors.
-- **Tasks:** Suit up and check airlock seal, inspect Perseverance rover, reboot Ingenuity drone rotor telemetry.
-
-### 4. Mission 4: The Rising Sky of Copper (Sol 130–145)
-- **Story:** A localized dust storm reduces solar irradiance. Power budget drops critically.
-- **Tasks:** Emergency 75s countdown timer. Shed non-essential lab loads, activate backup RTG fuel, inspect exterior dust wipers.
-
-### 5. Mission 5: The Zero-Visibility EVA (Sol 190–205)
-- **Story:** High winds sever a solar panel array high-voltage feeder cable.
-- **Tasks:** Emergency 75s timer. Put on EVA suit, cycle outer airlock door, repair solar cable junction with spare fuse.
-
-### 6. Mission 6: ECLSS Scrubber Saturation (Sol 250–265)
-- **Story:** Carbon dioxide spikes to 1800 ppm after mechanical failure in primary amine beds.
-- **Tasks:** Emergency 75s timer. Grab fresh LiOH canister from storage, replace saturated scrubber, verify $\text{CO}_2$ falls below 500 ppm.
-
-### 7. Mission 7: The Jezero Delta Core Expedition (Sol 295–315)
-- **Story:** Collecting astrobiological regolith core sample tubes from ancient river delta sediment.
-- **Tasks:** Retrieve drill core sample from rover, insert into science Raman spectrometer, catalog mineral composition.
-
-### 8. Mission 8: The Graywater Biofilm Crisis (Sol 330–345)
-- **Story:** Bacterial biofilm clogs catalytic oxidizer filters in the water reclamation loop.
-- **Tasks:** Emergency 75s timer. Collect pipe seal kit, cycle water purifier flush, verify conductivity drops below $15\text{ µS/cm}$.
-
-### 9. Mission 9: Solar Particle Event — Code Red (Sol 360–370)
-- **Story:** Live NASA DONKI alert detects an X-Class coronal mass ejection heading toward Mars. Radiation reaches $2.45\text{ mSv/h}$.
-- **Tasks:** Emergency 60s timer. Sound habitat alarm, verify regolith storm shelter shielding, muster crew inside bunker.
-
-### 10. Mission 10: The Return Window — Handover (Sol 375–378)
-- **Story:** Sol 378 milestone. Crew prepares habitat for relief crew rotation and Earth return window.
-- **Tasks:** Store science sample canisters in airlock vault, harvest mature greenhouse crops, transmit final 378-sol expedition logbook to NASA Houston.
-- **Ending:** Sol 378 debrief modal calculates final rank (**Commander Tier**, **Officer Tier**, or **Specialist Tier**) with a **Printable NASA Junior Astronaut Certificate**.
+* **Commander Tier (900–1000 pts)**: Highest honors; unlocks the personalized **Official NASA Junior Astronaut Certificate** with browser print styling (`@media print`).
 
 ---
 
-## 🕹️ Controls Guide
+## 🔬 Official NASA Open Data Attribution
 
-| Input | Action | Notes |
-| :--- | :--- | :--- |
-| **`W`, `A`, `S`, `D`** / **Arrow Keys** | Walk / Move Nova | Smooth 8-directional movement with footstep audio |
-| **Click / Tap Floor** | Click-to-Move | Mobile & tablet friendly waypoint navigation |
-| **`E`** | Interact | Opens consoles, lockers, crew dialogues, sample tubes |
-| **`F`** (or `[F] Door` button) | Cycle Outer Hatch | Opens/closes exterior airlock door when suited & sealed |
-| **Pouch Icon Click** | Select Tool | Selects active inventory item |
-| **HUD Badge Click** | Jargon Decoder | Explains complex terms (kW, kPa, ppm, mSv/h, Sol) |
-| **`3D / 2D` Button** | Toggle View Mode | Switches instantly between 2.5D Isometric & 3D Walkthrough |
-| **`🛰️ Weather` Button** | Live DONKI Weather | Queries live NASA solar flare feed |
-| **`⚡ 10s Storm` Button** | Storm Dilemma | Triggers Mike Given's interactive dust storm choice |
+* **NASA CHAPEA (Mars Dune Alpha)**: Architectural layout, 3D-printed regolith construction, 4-specialist division, and 378-sol duration.
+* **NASA DONKI (Space Weather Database)**: Solar flare events and coronal mass ejection proton flux data.
+* **Curiosity RAD & Perseverance MEDA**: Mars surface pressure (0.6 kPa), baseline cosmic radiation (0.08 mSv/h), and atmospheric dust optical depth ($\tau = 0.5 \text{ to } 3.8$).
+* **NASA OSDR (Open Science Data Repository)**: Spaceflight dwarf wheat growth metrics, transpiration, and lighting spectrums.
+* **Speed-of-Light Radio Delay**: Simulated 14-minute electromagnetic transit time between Earth and Mars.
 
 ---
 
-## 🏗️ Technical Architecture & File Map
+## 💻 Technical Architecture & Delivery Files
 
 ```text
 JAMT/
-├── index.html                   # Primary web application (modular mode)
-├── astra_1_the_red_frontier.html # Standalone single-file bundle (offline ready)
+├── index.html                   # Primary modular web application
+├── astra_1_the_red_frontier.html # 100% self-contained standalone offline bundle (778 KB)
 ├── build_standalone.js          # Inlines CSS and JS into single standalone file
-├── server.js / server.py        # Local lightweight development servers
+├── server.js / server.py        # Lightweight local development servers
 ├── package.json                 # Scripts: start, test, check, bundle
-├── vercel.json                  # Static hosting configuration for Vercel
+├── vercel.json                  # Production configuration for Vercel deployment
+├── assets/story/                # 10 AI-generated 16:9 cinematic story cutscenes
+│   ├── intro_1.jpg to intro_5.jpg
+│   └── outro_1.jpg to outro_5.jpg
 ├── js/
-│   ├── chapters.js              # 10 CHAPEA mission definitions, tasks, dialogs
-│   ├── simulation.js            # Telemetry loop, hearts, timers, resource calculations
-│   ├── game.js                  # Player physics, collision, input handler, [F] hatch
-│   ├── render.js                # 2.5D pseudo-isometric Canvas renderer
-│   ├── render3d.js              # Three.js 3D WebGL renderer & scene manager
-│   ├── ui.js                    # Modals, HUD, icon pouch, jargon decoder, DONKI
+│   ├── chapters.js              # 10 sequential mission definitions & objectives
+│   ├── activities.js            # 30 interactive minigames & mission procedures
+│   ├── simulation.js            # Real-time resource dynamics, hearts & emergency timers
+│   ├── game.js                  # Player physics, collision, directional airlock, input
+│   ├── render.js                # Custom 2.5D pseudo-isometric Canvas engine
+│   ├── render3d.js              # Three.js 3D WebGL habitat renderer
+│   ├── ui.js                    # Modals, story sliders, guidelines, HUD, DONKI
 │   ├── soundfx.js               # Web Audio API procedural sound synthesizer
-│   └── nasa_data.js             # Historical NASA datasets (DONKI, OSDR, Curiosity)
-├── css/
-│   └── style.css                # Retro sci-fi HUD styling, responsive layout, modals
+│   └── nasa_data.js             # NASA open science telemetry references
 └── test/
-    └── test_tasks.js            # End-to-end headless automated test suite
+    └── test_tasks.js            # Headless automated end-to-end audit suite
 ```
-
----
-
-## 🚀 How to Run the Game
-
-### Option 1: Standalone Direct Launch (No installation required)
-Double-click `astra_1_the_red_frontier.html` or `Run_Game.bat`. It opens directly in any web browser with zero server setup or internet connection needed.
-
-### Option 2: Local Node.js Development Server
-```bash
-npm install
-npm start
-# Open http://localhost:3000 in your browser
-```
-
-### Option 3: Run the Verification Test Suite
-```bash
-npm test
-# Verifies all 10 missions, task triggers, and debrief sequences
-```
-
----
-
-## 🌟 NASA Open Data Calibrations
-
-1. **NASA CHAPEA (Crew Health & Performance Exploration Analog):**
-   Habitat geometry, 4-person crew roles, 378-sol mission timeline, and psychological stress mechanics mirror the Johnson Space Center Mars Dune Alpha mission.
-2. **NASA DONKI (Space Weather Database):**
-   Real-time and historical solar proton events and CME data power the solar flare telemetry.
-3. **Curiosity RAD (Radiation Assessment Detector):**
-   Surface cosmic ray baseline ($0.08\text{ mSv/h}$) calibrated against Gale Crater surface readings.
-4. **Perseverance MEDA (Mars Environmental Dynamics Analyzer):**
-   Surface pressure ($0.6\text{ kPa}$) and atmospheric dust tau values calibrated against Jezero Crater weather data.
-5. **NASA OSDR (Open Science Data Repository):**
-   Dwarf wheat crop parameters, transpiration, and lighting spectrums reflect spaceflight biology experiments.
-
