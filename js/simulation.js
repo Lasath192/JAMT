@@ -31,6 +31,7 @@ const state = {
     timerDuration: 75,
     timerActive: false,
     selectedDilemmas: {},
+    uiSimplified: true,
     gridOverloadSeconds: 0,
     inventory: [],
     unlockedFacts: ['nasa_donki', 'nasa_osdr', 'nasa_curiosity_meda', 'chapea_habitat', 'chapea_comms'],
@@ -416,28 +417,153 @@ function loadChapter(idx, showBriefing = true) {
     }
 }
 
+function syncUIToggleButtons() {
+    const isSimplified = state.uiSimplified !== false;
+    const label = isSimplified ? '✨ Simplified UI' : '🔬 Classic UI';
+    const cls = isSimplified
+        ? 'pill border-[#FDB773] text-[11px] font-extrabold text-[#FDB773] hover:brightness-110 cursor-pointer transition'
+        : 'pill border-[#FDB773] text-[11px] font-extrabold text-[#FDB773] hover:brightness-110 cursor-pointer transition';
+
+    const btnStory = document.getElementById('btn-toggle-ui-mode');
+    if (btnStory) {
+        btnStory.textContent = label;
+        btnStory.className = cls;
+    }
+    const btnConsole = document.getElementById('btn-toggle-ui-mode-console');
+    if (btnConsole) {
+        btnConsole.textContent = label;
+        btnConsole.className = cls;
+    }
+}
+window.syncUIToggleButtons = syncUIToggleButtons;
+
 function openStoryBriefing(ch) {
+    const isSimplified = state.uiSimplified !== false;
+    syncUIToggleButtons();
+
+    const btnToggleUI = document.getElementById('btn-toggle-ui-mode');
+    if (btnToggleUI) {
+        btnToggleUI.onclick = () => {
+            if (typeof sfx !== 'undefined' && sfx.beep) sfx.beep();
+            state.uiSimplified = !(state.uiSimplified !== false);
+            syncUIToggleButtons();
+            openStoryBriefing(ch);
+        };
+    }
+
     const solTag = document.getElementById('story-sol-tag');
     if (solTag) solTag.textContent = `MARS OUTPOST ASTRA-1 • ${ch.act ? ch.act + ' • ' : ''}${ch.solRange.toUpperCase()}`;
     const titleEl = document.getElementById('story-title');
     if (titleEl) titleEl.textContent = ch.title;
+
+    const roleBadge = document.getElementById('story-role-badge');
+    if (roleBadge) {
+        roleBadge.textContent = `👩‍🚀 ${ch.role || 'Junior Astronaut'}`;
+        if (isSimplified) roleBadge.classList.remove('hidden');
+        else roleBadge.classList.add('hidden');
+    }
+
     const illus = document.getElementById('story-illustration');
     if (illus && typeof getChapterSceneSVG === 'function') {
         illus.innerHTML = getChapterSceneSVG(ch.id);
+        illus.className = isSimplified
+            ? 'w-full h-24 sm:h-28 bg-[#4a1d1d] border-b border-[#DA6556] relative overflow-hidden shrink-0'
+            : 'w-full h-36 sm:h-44 bg-[#4a1d1d] border-b border-[#DA6556] relative overflow-hidden shrink-0';
     }
+
+    const simpView = document.getElementById('story-simplified-view');
+    const classicView = document.getElementById('story-classic-view');
+    if (simpView && classicView) {
+        if (isSimplified) {
+            simpView.classList.remove('hidden');
+            classicView.classList.add('hidden');
+        } else {
+            simpView.classList.add('hidden');
+            classicView.classList.remove('hidden');
+        }
+    }
+
+    // Simplified Briefing View Data
+    const goalTextEl = document.getElementById('story-goal-text');
+    if (goalTextEl) goalTextEl.textContent = ch.story;
+
+    const taskCardsEl = document.getElementById('story-task-cards');
+    if (taskCardsEl && Array.isArray(ch.tasks)) {
+        taskCardsEl.innerHTML = '';
+        ch.tasks.forEach((t, idx) => {
+            const cardBtn = document.createElement('button');
+            cardBtn.type = 'button';
+            cardBtn.className = `card-row p-2.5 text-left items-start cursor-pointer transition-all ${
+                t.done
+                    ? 'border-[#4fd1a0]/80 text-[#fff7f0]'
+                    : 'border-[#DA6556] hover:border-[#FDB773] text-[#fff7f0]'
+            }`;
+            cardBtn.innerHTML = `
+                <div class="icon-tile w-8 h-8 ${t.done ? 'border-[#4fd1a0]' : 'border-[#FDB773]/70'} shrink-0 text-xs font-extrabold ${t.done ? 'text-[#4fd1a0]' : 'text-[#FDB773]'}">
+                    ${t.done ? '✓' : idx + 1}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-1 mb-0.5">
+                        <span class="text-[10px] font-extrabold text-[#FDB773] truncate">${t.room || 'Outpost Console'}</span>
+                        <span class="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-[#4a1d1d] ${t.done ? 'text-[#4fd1a0]' : 'text-[#EB895B]'} border border-[#DA6556]/70 shrink-0">${t.done ? 'DONE' : 'TODO'}</span>
+                    </div>
+                    <div class="text-[11px] font-bold text-[#fff7f0] leading-snug">${t.text}</div>
+                    ${t.shortAction ? `<div class="text-[10px] text-[#f7cbb0] mt-0.5 truncate">${t.shortAction}</div>` : ''}
+                </div>
+            `;
+            cardBtn.addEventListener('click', () => {
+                if (typeof sfx !== 'undefined' && sfx.beep) sfx.beep();
+                const sm = document.getElementById('modal-story');
+                if (sm) sm.classList.add('hidden');
+                if (typeof setAria === 'function') {
+                    setAria(`Next step: Head to ${t.room || 'the marked console'} to ${t.shortAction || t.text}.`);
+                }
+            });
+            taskCardsEl.appendChild(cardBtn);
+        });
+    }
+
+    const sciShortEl = document.getElementById('story-science-short');
+    const sciMoreBtn = document.getElementById('btn-story-science-more');
+    let scienceExpanded = false;
+    if (sciShortEl) sciShortEl.textContent = ch.science;
+    if (sciMoreBtn) {
+        sciMoreBtn.textContent = '+ More';
+        sciMoreBtn.onclick = () => {
+            if (typeof sfx !== 'undefined' && sfx.beep) sfx.beep();
+            scienceExpanded = !scienceExpanded;
+            if (sciShortEl) {
+                sciShortEl.textContent = scienceExpanded
+                    ? (ch.scienceMore || ch.classicScience || ch.science)
+                    : ch.science;
+            }
+            sciMoreBtn.textContent = scienceExpanded ? 'Less' : '+ More';
+        };
+    }
+
+    // Classic Briefing View Data
     const bodyEl = document.getElementById('story-body');
-    if (bodyEl) bodyEl.textContent = ch.story;
+    if (bodyEl) bodyEl.textContent = ch.classicStory || ch.story;
     const sciEl = document.getElementById('story-science');
-    if (sciEl) sciEl.textContent = ch.science;
+    if (sciEl) sciEl.textContent = ch.classicScience || ch.science;
     const dilEl = document.getElementById('story-dilemma');
-    if (dilEl) dilEl.textContent = ch.dilemma;
+    if (dilEl) dilEl.textContent = ch.classicDilemma || ch.dilemma;
+
     const btnStart = document.getElementById('btn-start-chapter');
-    if (btnStart) btnStart.textContent = `Begin ${ch.solRange} Operations`;
+    if (btnStart) {
+        btnStart.textContent = isSimplified ? '🚀 Start Mission' : `Begin ${ch.solRange} Operations`;
+    }
 
     // Render High-Stakes Consequence Decision Point
     const decBox = document.getElementById('story-decision-box');
     const decOpts = document.getElementById('story-decision-options');
     const decStatus = document.getElementById('story-decision-status');
+    const decPrompt = document.getElementById('story-decision-prompt');
+    if (decPrompt) {
+        decPrompt.textContent = isSimplified
+            ? (ch.dilemma || 'Operational Trade-Off Decision')
+            : 'Operational Trade-Off Decision';
+    }
     if (decBox && decOpts) {
         if (ch.dilemmaChoices && ch.dilemmaChoices.length > 0) {
             decBox.classList.remove('hidden');
@@ -445,25 +571,44 @@ function openStoryBriefing(ch) {
             const currentChoice = state.selectedDilemmas[ch.id];
             if (decStatus) {
                 decStatus.textContent = currentChoice ? 'Decision Committed' : 'Action Required';
-                decStatus.className = `text-[9px] font-mono-tech px-2 py-0.5 rounded-full font-bold ${currentChoice ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}`;
+                decStatus.className = `pill text-[10px] font-extrabold shrink-0 ${currentChoice ? 'border-[#4fd1a0] text-[#4fd1a0]' : 'border-[#EB895B] text-[#EB895B]'}`;
             }
             ch.dilemmaChoices.forEach(choice => {
                 const isSelected = currentChoice === choice.id;
                 const btn = document.createElement('button');
-                btn.className = `p-2.5 rounded-xl text-left border transition cursor-pointer ${
-                    isSelected 
-                        ? 'bg-amber-500/20 border-amber-400 text-white shadow-md shadow-amber-500/10' 
-                        : 'bg-slate-800/80 hover:bg-slate-800 border-slate-700/80 hover:border-slate-500 text-slate-300'
-                }`;
-                btn.innerHTML = `
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="font-bold text-xs ${isSelected ? 'text-amber-300' : 'text-slate-200'} font-display">${choice.label}</span>
-                        <span class="text-[10px] font-mono-tech ${isSelected ? 'text-emerald-400 font-bold' : 'text-slate-500'}">
-                            ${isSelected ? '✓ SELECTED' : 'CHOOSE'}
-                        </span>
-                    </div>
-                    <div class="text-[10px] text-slate-400 font-mono-tech leading-relaxed">${choice.outcome}</div>
-                `;
+                if (isSimplified) {
+                    const toneBorder = choice.tone === 'amber'
+                        ? (isSelected ? 'border-2 border-[#EB895B] ring-2 ring-[#EB895B]/50 bg-[#b34e4e]' : 'border-[#DA6556] hover:border-[#EB895B]')
+                        : (choice.tone === 'sky'
+                            ? (isSelected ? 'border-2 border-[#FDB773] ring-2 ring-[#FDB773]/50 bg-[#b34e4e]' : 'border-[#DA6556] hover:border-[#FDB773]')
+                            : (isSelected ? 'border-2 border-[#4fd1a0] ring-2 ring-[#4fd1a0]/50 bg-[#b34e4e]' : 'border-[#DA6556] hover:border-[#4fd1a0]'));
+                    btn.className = `card-row p-2.5 text-left justify-between transition-all cursor-pointer ${toneBorder}`;
+                    btn.innerHTML = `
+                        <div class="min-w-0">
+                            <div class="font-bold text-xs text-[#FDB773] font-display truncate">${choice.label}</div>
+                            <div class="text-[11px] text-[#4fd1a0] font-bold mt-0.5">+ ${choice.pros || choice.outcome}</div>
+                        </div>
+                        <div class="flex flex-col items-end shrink-0 gap-1">
+                            <span class="pill py-0.5 px-2 text-[10px] font-bold text-[#fff7f0]">${choice.tag || (isSelected ? 'Selected' : 'Choose')}</span>
+                            <span class="text-[9px] font-extrabold ${isSelected ? 'text-[#4fd1a0]' : 'text-[#f7cbb0]'}">${isSelected ? '✓ SELECTED' : 'CHOOSE'}</span>
+                        </div>
+                    `;
+                } else {
+                    btn.className = `card-row p-2.5 flex-col items-stretch text-left transition cursor-pointer ${
+                        isSelected
+                            ? 'border-2 border-[#FDB773] bg-[#b34e4e]'
+                            : 'border-[#DA6556] hover:border-[#FDB773]'
+                    }`;
+                    btn.innerHTML = `
+                        <div class="flex items-center justify-between w-full mb-1">
+                            <span class="font-bold text-xs ${isSelected ? 'text-[#FDB773]' : 'text-[#fff7f0]'} font-display">${choice.label}</span>
+                            <span class="text-[10px] font-extrabold ${isSelected ? 'text-[#4fd1a0]' : 'text-[#f7cbb0]'}">
+                                ${isSelected ? '✓ SELECTED' : 'CHOOSE'}
+                            </span>
+                        </div>
+                        <div class="text-[11px] text-[#f7cbb0] leading-relaxed">${choice.outcome}</div>
+                    `;
+                }
                 btn.addEventListener('click', () => {
                     applyDilemmaChoice(ch.id, choice.id);
                     openStoryBriefing(ch);
@@ -518,7 +663,7 @@ function calculateMissionLegacy() {
             rank: "Cadet Commander",
             rankTitle: "Cadet Commander",
             title: "Thriving Martian Biosphere",
-            badgeClass: "bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/20",
+            badgeClass: "bg-[#FDB773] text-[#341717] border-2 border-[#2d1212] shadow-md",
             icon: "fa-award",
             headline: "Exceptional Outpost Leadership • Sol 378 Handover Complete",
             summary: "Cadet Nova, your engineering leadership has guided Astra-1 through the full 378-day Mars expedition! The Earth Return Vehicle receives pristine Jezero Delta core samples, thriving dwarf wheat cultivars, and fully operational life support. Houston Flight Directors have awarded you the highest distinction: Commander Tier.",
@@ -541,7 +686,7 @@ function calculateMissionLegacy() {
             rank: "Mission Systems Officer",
             rankTitle: "Mission Systems Officer",
             title: "Resilient Outpost Handover",
-            badgeClass: "bg-sky-400 text-slate-950 shadow-lg shadow-sky-400/20",
+            badgeClass: "bg-[#FDB773] text-[#341717] border-2 border-[#2d1212] shadow-md",
             icon: "fa-shield-halved",
             headline: "Sturdy Expedition Handover • Crew Safe Across 378 Sols",
             summary: "Cadet Nova, your disciplined balance of habitat power grids, airlock cycles, and life-support scrubbers delivered all 5 astronauts safely through severe dust storms, SPE radiation alerts, and hardware anomalies across 378 Sols. Outpost systems held firm and handover was certified.",
@@ -564,7 +709,7 @@ function calculateMissionLegacy() {
             rank: "Mission Operations Specialist",
             rankTitle: "Mission Operations Specialist",
             title: "Emergency Handover & Resupply",
-            badgeClass: "bg-orange-500 text-slate-950 shadow-lg shadow-orange-500/20",
+            badgeClass: "bg-[#EB895B] text-[#341717] border-2 border-[#2d1212] shadow-md",
             icon: "fa-wrench",
             headline: "Critical Red-Frontier Operation • Handover Complete",
             summary: "Cadet Nova, the harsh Martian frontier pushed Astra-1 to its threshold. Yet through systematic troubleshooting and adherence to emergency checklists, you maintained life support and delivered the outpost to the relief crew through Sol 378.",
@@ -648,12 +793,12 @@ function showVictoryModal() {
         BADGES.forEach(b => {
             const earned = state.earnedBadges.includes(b.id);
             const card = document.createElement('div');
-            card.className = `p-2 rounded-lg border text-center ${earned ? 'bg-amber-500/15 border-amber-400/50 text-white' : 'bg-slate-900/60 border-slate-800 text-slate-500'}`;
+            card.className = `card-row p-2 flex-col items-center text-center ${earned ? 'border-[#FDB773] text-[#FDB773]' : 'opacity-55 text-[#f7cbb0]'}`;
             card.innerHTML = `
-                <div class="w-6 h-6 mx-auto mb-1 rounded-full flex items-center justify-center text-[10px] ${earned ? 'bg-amber-400 text-slate-950 font-bold' : 'bg-slate-800 text-slate-600'}">
+                <div class="icon-tile w-8 h-8 ${earned ? 'border-[#FDB773] bg-[#FDB773] text-[#341717] font-black' : 'text-[#cfa08e]'} text-xs">
                     <i class="fa-solid ${b.icon}"></i>
                 </div>
-                <div class="font-bold text-[10px] font-display truncate">${b.name}</div>
+                <div class="font-bold text-[10px] font-display truncate w-full">${b.name}</div>
             `;
             rptBadgesList.appendChild(card);
         });

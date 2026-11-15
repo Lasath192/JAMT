@@ -59,7 +59,7 @@ function isAnyModalOpen() {
     const dilemmaModal = document.getElementById('modal-storm-dilemma');
     const donkiModal = document.getElementById('modal-donki-weather');
     const completeModal = document.getElementById('modal-mission-complete');
-    const airlockExitModal = document.getElementById('modal-airlock-exit');
+    const settingsModal = document.getElementById('modal-settings');
 
     return (consoleModal && !consoleModal.classList.contains('hidden')) ||
            (powerModal && !powerModal.classList.contains('hidden')) ||
@@ -75,14 +75,18 @@ function isAnyModalOpen() {
            (dilemmaModal && !dilemmaModal.classList.contains('hidden')) ||
            (donkiModal && !donkiModal.classList.contains('hidden')) ||
            (completeModal && !completeModal.classList.contains('hidden')) ||
-           (airlockExitModal && !airlockExitModal.classList.contains('hidden'));
+           (settingsModal && !settingsModal.classList.contains('hidden'));
 }
 
 function closeAllModals() {
-    ['modal-console', 'modal-power', 'modal-codex', 'modal-dialogue', 'modal-story', 'modal-victory', 'modal-mission-complete', 'modal-airlock-exit'].forEach(id => {
+    ['modal-console', 'modal-power', 'modal-codex', 'modal-dialogue', 'modal-story', 'modal-victory', 'modal-mission-complete', 'modal-settings', 'modal-donki-weather'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     });
+    if (window._lastModalTrigger && typeof window._lastModalTrigger.focus === 'function') {
+        try { window._lastModalTrigger.focus(); } catch (_) {}
+        window._lastModalTrigger = null;
+    }
 }
 
 // --- INTERACTIVE STORY DIALOGUE ENGINE ---
@@ -179,17 +183,17 @@ function getNearestCrewNPC() {
 }
 
 function triggerNearestObjectInteraction() {
-    // 1. Priority: Outer Airlock Door (within 75px)
+    const obj = getNearestObject();
     if (state && state.player) {
         const distToDoor = Math.hypot(state.player.x - 276, state.player.y - 380);
-        if (distToDoor <= 75) {
+        const distToObj = obj ? Math.hypot(state.player.x - obj.x, state.player.y - obj.y) : Infinity;
+        if (distToDoor <= 75 && distToDoor < distToObj) {
             if (typeof toggleOuterAirlockDoor === 'function') {
                 toggleOuterAirlockDoor();
                 return;
             }
         }
     }
-    const obj = getNearestObject();
     if (obj) {
         if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
         unlockFact(obj.factId);
@@ -205,6 +209,7 @@ function triggerNearestObjectInteraction() {
 
 // --- EQUIPMENT DIAGNOSTIC & CONSOLE MODAL ---
 function openObjectModal(obj) {
+    window._activeConsoleObj = obj;
     document.getElementById('console-room').textContent = obj.room.toUpperCase();
     document.getElementById('console-title').textContent = obj.name;
     
@@ -253,26 +258,28 @@ function openObjectModal(obj) {
     if (targetTask && typeof window.AstraActivities !== 'undefined' && window.AstraActivities.hasActivity(targetTask.id)) {
         if (!isTaskAlreadyDone) {
             badge.textContent = 'Active Astronaut Procedure';
-            badge.className = 'text-[11px] font-mono-tech font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse';
+            badge.className = 'pill text-[11px] font-extrabold text-[#EB895B] border-[#EB895B] animate-pulse';
             window.AstraActivities.renderTask(targetTask.id, activityMount, () => {
                 if (typeof updateUI === 'function') updateUI();
                 openObjectModal(obj);
             });
         } else {
             badge.textContent = 'Verified Operational (Nominal)';
-            badge.className = 'text-[11px] font-mono-tech font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+            badge.className = 'pill text-[11px] font-extrabold text-[#4fd1a0] border-[#4fd1a0]';
             activityMount.innerHTML = `
-                <div class="p-3 bg-slate-900/90 border border-emerald-500/30 rounded-xl flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-circle-check text-emerald-400"></i>
-                        <div>
-                            <div class="text-xs font-bold text-white">${targetTask.text}</div>
-                            <div class="text-[10px] text-emerald-300 font-mono-tech">Procedure Verified Complete • All systems nominal</div>
+                <div class="card-row justify-between border-[#4fd1a0] bg-[#4a1d1d]">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="icon-tile w-10 h-10 border-[#4fd1a0] text-[#4fd1a0]">
+                            <i class="fa-solid fa-circle-check text-base"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="text-xs font-extrabold text-[#fff7f0] truncate">${targetTask.text}</div>
+                            <div class="text-[11px] text-[#4fd1a0] font-bold">Procedure Verified Complete • Nominal</div>
                         </div>
                     </div>
-                    <button id="btn-replay-activity" class="btn-tech bg-slate-800 hover:bg-slate-700 text-sky-300 border border-sky-500/40 px-3 py-1.5 rounded-lg text-xs font-mono-tech cursor-pointer">
+                    <button id="btn-replay-activity" class="btn-secondary btn-compact px-3 text-xs cursor-pointer shrink-0">
                         <i class="fa-solid fa-rotate-right mr-1"></i>
-                        <span>Replay Simulation</span>
+                        <span>Replay</span>
                     </button>
                 </div>
             `;
@@ -289,28 +296,56 @@ function openObjectModal(obj) {
         }
     }
 
-    const addMetric = (label, value, colorClass = 'text-white') => {
+    const addMetric = (label, value, colorClass = 'text-[#fff7f0]') => {
         const div = document.createElement('div');
-        div.innerHTML = `<div class="text-[10px] text-slate-400">${label}</div><div class="text-sm sm:text-base font-bold ${colorClass}">${value}</div>`;
+        const cosmicColor = colorClass
+            .replace('text-emerald-400', 'text-[#4fd1a0]')
+            .replace('text-emerald-300', 'text-[#4fd1a0]')
+            .replace('text-teal-300', 'text-[#4fd1a0]')
+            .replace('text-lime-400', 'text-[#4fd1a0]')
+            .replace('text-amber-400', 'text-[#FDB773]')
+            .replace('text-amber-300', 'text-[#FDB773]')
+            .replace('text-orange-400', 'text-[#EB895B]')
+            .replace('text-orange-300', 'text-[#EB895B]')
+            .replace('text-sky-300', 'text-[#FDB773]')
+            .replace('text-blue-400', 'text-[#FDB773]')
+            .replace('text-purple-300', 'text-[#FDB773]')
+            .replace('text-red-400', 'text-[#DA6556]')
+            .replace('text-red-500', 'text-[#DA6556]')
+            .replace('text-slate-300', 'text-[#fff7f0]')
+            .replace('text-slate-400', 'text-[#f7cbb0]')
+            .replace('text-white', 'text-[#FDB773]');
+        div.className = 'bg-[#A14646]/75 border border-[#DA6556] rounded-xl p-2.5';
+        div.innerHTML = `<div class="text-[10px] font-bold uppercase tracking-wider text-[#f7cbb0]">${label}</div><div class="text-sm sm:text-base font-extrabold ${cosmicColor}">${value}</div>`;
         grid.appendChild(div);
     };
 
-    const addActionBtn = (label, subtext, onClick, styleClass = 'bg-sky-600 hover:bg-sky-500 text-white', disabled = false) => {
+    const mapCosmicBtn = (styleClass = '', disabled = false) => {
+        if (disabled) return 'btn-disabled';
+        if (styleClass.includes('red-600') || styleClass.includes('rose-')) return 'btn-danger';
+        if (styleClass.includes('emerald') || styleClass.includes('teal')) return 'btn-success';
+        if (styleClass.includes('amber') || styleClass.includes('orange')) return 'btn-primary';
+        if (styleClass.includes('sky') || styleClass.includes('blue')) return 'btn-tertiary';
+        return 'btn-secondary';
+    };
+
+    const addActionBtn = (label, subtext, onClick, styleClass = 'btn-tertiary', disabled = false) => {
         const btn = document.createElement('button');
         btn.disabled = disabled;
-        btn.className = `w-full btn-tech ${disabled ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : styleClass} p-2.5 rounded-xl text-left flex items-center justify-between border border-white/10`;
+        const variant = mapCosmicBtn(styleClass, disabled);
+        btn.className = `w-full ${variant} p-2.5 px-3.5 text-left flex items-center justify-between cursor-pointer`;
         btn.innerHTML = `
-            <div>
-                <div class="font-bold text-xs sm:text-sm">${label}</div>
-                <div class="text-[10px] opacity-85 font-mono-tech">${subtext}</div>
+            <div class="min-w-0 pr-2">
+                <div class="font-extrabold text-xs sm:text-sm leading-tight">${label}</div>
+                <div class="text-[11px] opacity-85 leading-snug mt-0.5">${subtext}</div>
             </div>
-            <i class="fa-solid fa-chevron-right text-xs"></i>
+            <i class="fa-solid fa-chevron-right text-xs shrink-0"></i>
         `;
         if (!disabled) btn.addEventListener('click', onClick);
         actionsEl.appendChild(btn);
     };
 
-    const addTaskActionBtn = (taskIds, label, subtext, onClick, styleClass = 'bg-sky-600 hover:bg-sky-500 text-white', disabled = false) => {
+    const addTaskActionBtn = (taskIds, label, subtext, onClick, styleClass = 'btn-tertiary', disabled = false) => {
         const ids = Array.isArray(taskIds) ? taskIds : [taskIds];
         // If this task is currently active and uncompleted, suppress the instant-completion shortcut!
         // The cadet must operate the physical controls in the interactive AstraActivities simulation.
@@ -322,13 +357,13 @@ function openObjectModal(obj) {
 
     if (targetTask && !isTaskAlreadyDone) {
         const activeNotice = document.createElement('div');
-        activeNotice.className = 'p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl mb-2 text-left';
+        activeNotice.className = 'p-3 bg-[#A14646] border-2 border-[#FDB773] rounded-xl mb-2 text-left';
         activeNotice.innerHTML = `
-            <div class="flex items-center gap-2 text-xs font-bold font-mono-tech text-amber-300">
-                <i class="fa-solid fa-gamepad animate-pulse"></i>
+            <div class="flex items-center gap-2 text-xs font-extrabold text-[#FDB773]">
+                <i class="fa-solid fa-gamepad text-[#FDB773] animate-pulse"></i>
                 <span>HANDS-ON SIMULATION REQUIRED</span>
             </div>
-            <div class="text-[11px] text-slate-300 mt-0.5">Operate the interactive equipment controls above to complete <strong>${targetTask.text}</strong>.</div>
+            <div class="text-xs text-[#fff7f0] mt-0.5">Operate the equipment controls above to complete <strong>${targetTask.text}</strong>.</div>
         `;
         actionsEl.appendChild(activeNotice);
     }
@@ -1050,6 +1085,58 @@ function openObjectModal(obj) {
         );
     }
 
+    const isSimplified = !state || state.uiSimplified !== false;
+    if (typeof syncUIToggleButtons === 'function') syncUIToggleButtons();
+
+    const btnToggleConsoleUI = document.getElementById('btn-toggle-ui-mode-console');
+    if (btnToggleConsoleUI) {
+        btnToggleConsoleUI.onclick = () => {
+            if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+            if (state) state.uiSimplified = !(state.uiSimplified !== false);
+            if (typeof syncUIToggleButtons === 'function') syncUIToggleButtons();
+            if (window._activeConsoleObj) openObjectModal(window._activeConsoleObj);
+        };
+    }
+
+    const illusBox = document.getElementById('console-illustration');
+    const descBox = document.getElementById('console-desc-box');
+    const actionsBox = document.getElementById('console-actions-box');
+    const factBox = document.getElementById('console-fact-box');
+    const btnConsoleInfo = document.getElementById('btn-toggle-console-info');
+
+    const isActiveMiniGame = !!(targetTask && !isTaskAlreadyDone && typeof window.AstraActivities !== 'undefined' && window.AstraActivities.hasActivity(targetTask.id));
+    const shouldCollapseDetails = isSimplified && isActiveMiniGame;
+
+    const setDetailsVisible = (show) => {
+        [illusBox, grid, descBox, actionsBox, factBox].forEach(el => {
+            if (!el) return;
+            if (show) el.classList.remove('hidden');
+            else el.classList.add('hidden');
+        });
+        if (btnConsoleInfo) {
+            btnConsoleInfo.textContent = show ? '✕ Hide Science & Telemetry' : '💡 Science & Telemetry';
+            btnConsoleInfo.className = show
+                ? 'pill text-[11px] font-extrabold text-[#FDB773] border-[#FDB773] cursor-pointer transition-colors'
+                : 'pill text-[11px] font-extrabold text-[#FDB773] border-[#FDB773] hover:border-[#FDB773] cursor-pointer transition-colors';
+        }
+    };
+
+    if (shouldCollapseDetails) {
+        let detailsExpanded = false;
+        setDetailsVisible(false);
+        if (btnConsoleInfo) {
+            btnConsoleInfo.classList.remove('hidden');
+            btnConsoleInfo.onclick = () => {
+                if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+                detailsExpanded = !detailsExpanded;
+                setDetailsVisible(detailsExpanded);
+            };
+        }
+    } else {
+        setDetailsVisible(true);
+        if (btnConsoleInfo) btnConsoleInfo.classList.add('hidden');
+    }
+
     const consoleModal = document.getElementById('modal-console');
     if (consoleModal) consoleModal.classList.remove('hidden');
 }
@@ -1065,10 +1152,27 @@ function openPowerModal() {
     const netEl = document.getElementById('pwr-modal-net');
     if (pwr.net < 0) {
         netEl.textContent = `${pwr.net} kW Deficit`;
-        netEl.className = 'text-xl font-bold text-red-400';
+        netEl.className = 'text-xl font-bold text-[#DA6556]';
     } else {
         netEl.textContent = `+${pwr.net} kW Surplus`;
-        netEl.className = 'text-xl font-bold text-emerald-400';
+        netEl.className = 'text-xl font-bold text-[#4fd1a0]';
+    }
+
+    const loadBarEl = document.getElementById('pwr-modal-load-bar');
+    const loadPctEl = document.getElementById('pwr-modal-load-pct');
+    const loadRatio = pwr.gen > 0 ? pwr.load / pwr.gen : 1.5;
+    if (loadPctEl) {
+        loadPctEl.textContent = pwr.net < 0 ? `${Math.round(loadRatio * 100)}% OVERLOAD` : `${Math.round(loadRatio * 100)}% Balanced`;
+        loadPctEl.className = pwr.net < 0 ? 'font-extrabold text-[#DA6556]' : 'font-extrabold text-[#4fd1a0]';
+    }
+    if (loadBarEl) {
+        const filledCount = Math.max(0, Math.min(8, Math.round(loadRatio * 6)));
+        const fillCls = pwr.net < 0 ? 'filled-danger' : (loadRatio > 0.85 ? 'filled-warn' : 'filled-mint');
+        let segs = '';
+        for (let i = 0; i < 8; i++) {
+            segs += `<span class="progress-seg-pip ${i < filledCount ? fillCls : ''}"></span>`;
+        }
+        loadBarEl.innerHTML = segs;
     }
 
     const list = document.getElementById('power-breaker-list');
@@ -1076,13 +1180,13 @@ function openPowerModal() {
 
     // Backup RTG / Fission Generator Toggle
     const genDiv = document.createElement('div');
-    genDiv.className = 'flex items-center justify-between bg-amber-950/40 border border-amber-500/40 p-2.5 rounded-xl';
+    genDiv.className = 'card-row justify-between border-[#FDB773] bg-[#4a1d1d] p-3';
     genDiv.innerHTML = `
-        <div>
-            <div class="font-bold text-amber-300 text-xs sm:text-sm">Backup RTG / Fission Surface Generator</div>
-            <div class="text-[10px] font-mono-tech text-amber-200/70">Supplies +12 kW emergency power | Fuel: <span class="text-amber-300 font-bold">${state.backupFuelKg.toFixed(1)} kg</span></div>
+        <div class="min-w-0 pr-2">
+            <div class="font-extrabold text-[#FDB773] text-xs sm:text-sm">Backup RTG / Fission Surface Generator</div>
+            <div class="text-[11px] text-[#f7cbb0]">Supplies +12 kW emergency power • Fuel: <span class="text-[#FDB773] font-bold">${state.backupFuelKg.toFixed(1)} kg</span></div>
         </div>
-        <button id="toggle-backup-gen" class="px-3 py-1 rounded-lg font-mono-tech font-bold text-xs ${state.backupGenKW > 0 ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-300 border border-slate-600'}">
+        <button id="toggle-backup-gen" class="${state.backupGenKW > 0 ? 'btn-success' : 'btn-secondary'} btn-compact px-3 text-xs shrink-0 cursor-pointer">
             ${state.backupGenKW > 0 ? 'ONLINE (+12 kW)' : 'OFF (0 kW)'}
         </button>
     `;
@@ -1104,16 +1208,16 @@ function openPowerModal() {
     // Individual Load Breakers
     Object.entries(state.loads).forEach(([key, item]) => {
         const row = document.createElement('div');
-        row.className = 'flex items-center justify-between bg-slate-900/90 border border-slate-800 p-2.5 rounded-xl';
+        row.className = 'card-row justify-between p-3';
         row.innerHTML = `
-            <div>
-                <div class="font-semibold text-white text-xs sm:text-sm flex items-center gap-2">
+            <div class="min-w-0 pr-2">
+                <div class="font-bold text-[#fff7f0] text-xs sm:text-sm flex items-center gap-2 flex-wrap">
                     <span>${item.name}</span>
-                    <span class="text-[9px] font-mono-tech px-1.5 py-0.5 rounded ${item.essential ? 'bg-red-500/20 text-red-300' : 'bg-sky-500/20 text-sky-300'}">${item.essential ? 'ESSENTIAL' : 'DEFERRABLE'}</span>
+                    <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-[#4a1d1d] border ${item.essential ? 'border-[#DA6556] text-[#DA6556]' : 'border-[#FDB773] text-[#FDB773]'}">${item.essential ? 'ESSENTIAL' : 'OPTIONAL'}</span>
                 </div>
-                <div class="text-[10px] font-mono-tech text-slate-400">Demand: ${item.kw} kW</div>
+                <div class="text-[11px] font-mono-tech text-[#f7cbb0] mt-0.5">Demand: ${item.kw} kW</div>
             </div>
-            <button class="px-3 py-1 rounded-lg font-mono-tech font-bold text-xs ${item.on ? 'bg-sky-500 text-slate-950' : 'bg-slate-800 text-slate-400 border border-slate-700'}">
+            <button class="${item.on ? 'btn-tertiary' : 'btn-secondary'} btn-compact px-3 text-xs shrink-0 cursor-pointer">
                 ${item.on ? `ON (${item.kw} kW)` : 'SHED (0 kW)'}
             </button>
         `;
@@ -1163,13 +1267,13 @@ function openCodexModal() {
         BADGES.forEach(b => {
             const earned = state.earnedBadges.includes(b.id);
             const card = document.createElement('div');
-            card.className = `p-3 rounded-xl border text-center ${earned ? 'bg-amber-500/15 border-amber-400/50 text-white' : 'bg-slate-900/60 border-slate-800 text-slate-500'}`;
+            card.className = `p-3 rounded-xl border-2 text-center transition ${earned ? 'bg-[#A14646] border-[#FDB773] text-[#fff7f0] shadow-lg' : 'bg-[#4a1d1d] border-[#DA6556]/60 text-[#cfa08e]'}`;
             card.innerHTML = `
-                <div class="w-9 h-9 mx-auto mb-1.5 rounded-full flex items-center justify-center ${earned ? 'bg-amber-400 text-slate-950' : 'bg-slate-800 text-slate-600'}">
-                    <i class="fa-solid ${b.icon}"></i>
+                <div class="icon-tile w-11 h-11 mx-auto mb-2 ${earned ? 'bg-[#fbe58a] border-[#2d1212] text-[#2d1212]' : 'bg-[#341717] text-[#cfa08e]'}">
+                    <i class="fa-solid ${earned ? b.icon : 'fa-lock'} text-base"></i>
                 </div>
-                <div class="font-bold text-xs font-display">${b.name}</div>
-                <div class="text-[10px] mt-1 leading-tight opacity-85">${b.desc}</div>
+                <div class="font-display text-xs ${earned ? '!text-[#FDB773]' : '!text-[#cfa08e] !shadow-none'}">${b.name}</div>
+                <div class="text-[10px] mt-1 leading-tight opacity-90">${b.desc}</div>
             `;
             badgesContainer.appendChild(card);
         });
@@ -1184,11 +1288,11 @@ function openCodexModal() {
         Object.entries(SPACE_FACTS).forEach(([id, fact]) => {
             const unlocked = state.unlockedFacts.includes(id);
             const fCard = document.createElement('div');
-            fCard.className = `p-3 rounded-xl border ${unlocked ? 'bg-sky-950/30 border-sky-500/40 text-slate-200' : 'bg-slate-900/50 border-slate-800 text-slate-500'}`;
+            fCard.className = `p-3 rounded-xl border-2 ${unlocked ? 'bg-[#A14646] border-[#FDB773] text-[#fff7f0]' : 'bg-[#4a1d1d] border-[#DA6556]/60 text-[#f7cbb0]'}`;
             fCard.innerHTML = `
-                <div class="font-bold text-sky-300 font-mono-tech text-[11px] mb-1">
-                    <i class="fa-solid ${unlocked ? 'fa-unlock text-emerald-400' : 'fa-lock'} mr-1"></i>
-                    ${unlocked ? fact.title : 'Inspect Outpost Equipment to Unlock'}
+                <div class="font-extrabold text-xs mb-1 ${unlocked ? 'text-[#FDB773]' : 'text-[#cfa08e]'}">
+                    <i class="fa-solid ${unlocked ? 'fa-unlock text-[#4fd1a0]' : 'fa-lock text-[#cfa08e]'} mr-1"></i>
+                    ${unlocked ? fact.title : 'Inspect Console to Unlock'}
                 </div>
                 <p class="text-[11px] leading-relaxed">${unlocked ? fact.text : 'Walk up to habitat consoles and press [E] to discover NASA science facts.'}</p>
             `;
@@ -1321,150 +1425,46 @@ function showMissionCompletionModal(chapterIdx, newlyUnlocked) {
 }
 window.showMissionCompletionModal = showMissionCompletionModal;
 
-// --- INTERACTIVE AIRLOCK EVA EXIT DEPRESSURIZATION PROCEDURE ---
+// --- INTERACTIVE AIRLOCK EVA EXIT DEPRESSURIZATION PROCEDURE (Unified onto Animation #1) ---
 function openAirlockExitProcedure() {
     if (typeof closeAllModals === 'function') closeAllModals();
-    const modal = document.getElementById('modal-airlock-exit');
-    if (!modal) return;
 
-    let chamberKPa = 101.3;
-    let isEqualized = false;
+    const airlockObj = (typeof OBJECTS !== 'undefined' && Array.isArray(OBJECTS))
+        ? (OBJECTS.find(o => o.id === 'airlock_console') || { id: 'airlock_console', name: 'Airlock & EVA Suit Lock', room: 'airlock', factId: 'chapea_habitat' })
+        : { id: 'airlock_console', name: 'Airlock & EVA Suit Lock', room: 'airlock', factId: 'chapea_habitat' };
 
-    const needle = document.getElementById('eva-airlock-needle');
-    const digital = document.getElementById('eva-airlock-digital-val');
-    const statusTxt = document.getElementById('eva-airlock-status-txt');
-    const wheel = document.getElementById('eva-valve-wheel');
-    const btnStep = document.getElementById('btn-eva-turn-step');
-    const successCard = document.getElementById('eva-airlock-success');
-    const btnProceed = document.getElementById('btn-eva-proceed-out');
-    const btnClose = document.getElementById('btn-close-airlock-exit');
-
-    if (successCard) successCard.classList.add('hidden');
-    if (btnStep) {
-        btnStep.disabled = false;
-        btnStep.classList.remove('opacity-50', 'cursor-not-allowed');
+    if (typeof openObjectModal === 'function') {
+        openObjectModal(airlockObj);
+    } else {
+        const consoleModal = document.getElementById('modal-console');
+        if (consoleModal) consoleModal.classList.remove('hidden');
     }
 
-    function updateGauge(val) {
-        chamberKPa = Math.max(0.6, Math.min(101.3, val));
-        // Gauge needle rotates across 270 degree arc (-135deg at 0 kPa to +135deg at 120 kPa)
-        const angle = -135 + (chamberKPa / 120) * 270;
-        if (needle) needle.style.transform = `rotate(${angle}deg)`;
-        if (digital) digital.textContent = `${chamberKPa.toFixed(1)} kPa`;
-
-        if (chamberKPa <= 1.0) {
-            chamberKPa = 0.6;
-            if (digital) digital.textContent = '0.6 kPa (Mars Surface Ambient)';
-            if (statusTxt) {
-                statusTxt.textContent = '● EQUALIZED WITH MARS SURFACE (0.6 kPa)';
-                statusTxt.className = 'text-[10px] font-mono-tech text-emerald-400 font-bold';
+    const activityMount = document.getElementById('console-activity-mount');
+    if (activityMount && typeof window.AstraActivities !== 'undefined' && typeof window.AstraActivities.renderTask === 'function') {
+        activityMount.innerHTML = '';
+        window.AstraActivities.renderTask('ch1_airlock', activityMount, () => {
+            if (typeof state !== 'undefined' && state && state.player) {
+                state.player.inSuit = true;
+                state.player.suitChecked = true;
+                state.player.outerDoorOpen = true;
             }
-            if (!isEqualized) {
-                isEqualized = true;
-                if (typeof sfx !== 'undefined') {
-                    if (sfx.airlockHiss) sfx.airlockHiss();
-                    if (sfx.success) sfx.success();
-                }
-                if (state && state.player) {
-                    state.player.inSuit = true;
-                    state.player.suitChecked = true;
-                    state.player.outerDoorOpen = true;
-                }
-                syncTasksWithState();
-                if (typeof completeTask === 'function') {
-                    completeTask('ch5_cycle_door');
-                    completeTask('ch3_eva_prep');
-                }
-                if (successCard) successCard.classList.remove('hidden');
-                if (btnStep) {
-                    btnStep.disabled = true;
-                    btnStep.classList.add('opacity-50', 'cursor-not-allowed');
-                }
-                if (typeof updateUI === 'function') updateUI();
+            if (typeof completeTask === 'function') {
+                completeTask('ch1_airlock');
+                if (typeof state !== 'undefined' && state && state.chapterIdx === 2) completeTask('ch3_eva_prep');
+                if (typeof state !== 'undefined' && state && state.chapterIdx === 4) completeTask('ch5_cycle_door');
             }
-        } else {
-            if (statusTxt) {
-                statusTxt.textContent = `● EVACUATING CHAMBER... (${chamberKPa.toFixed(1)} kPa)`;
-                statusTxt.className = 'text-[10px] font-mono-tech text-sky-400 font-bold';
-            }
-        }
-    }
-
-    // Initialize gauge
-    updateGauge(101.3);
-
-    // Turn valve step button (-15.0 kPa per click)
-    if (btnStep) {
-        btnStep.onclick = () => {
-            if (isEqualized) return;
-            if (typeof sfx !== 'undefined') {
-                if (sfx.valveRotate) sfx.valveRotate();
-                if (sfx.airlockHiss) sfx.airlockHiss();
-            }
-            updateGauge(chamberKPa - 15.0);
-        };
-    }
-
-    // Rotary valve wheel drag interaction
-    if (wheel) {
-        let isDragging = false;
-        let lastAngle = 0;
-
-        const onWheelStart = (e) => {
-            if (isEqualized) return;
-            isDragging = true;
-            const rect = wheel.getBoundingClientRect();
-            const cx = rect.left + rect.width / 2;
-            const cy = rect.top + rect.height / 2;
-            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-            lastAngle = Math.atan2(clientY - cy, clientX - cx);
-        };
-
-        const onWheelMove = (e) => {
-            if (!isDragging || isEqualized) return;
-            const rect = wheel.getBoundingClientRect();
-            const cx = rect.left + rect.width / 2;
-            const cy = rect.top + rect.height / 2;
-            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-            const currentAngle = Math.atan2(clientY - cy, clientX - cx);
-            let delta = currentAngle - lastAngle;
-            if (delta > Math.PI) delta -= Math.PI * 2;
-            if (delta < -Math.PI) delta += Math.PI * 2;
-            lastAngle = currentAngle;
-
-            const absDelta = Math.abs(delta);
-            if (absDelta > 0.05) {
-                if (typeof sfx !== 'undefined' && sfx.valveRotate) sfx.valveRotate();
-                updateGauge(chamberKPa - absDelta * 14);
-            }
-        };
-
-        const onWheelEnd = () => { isDragging = false; };
-
-        wheel.onpointerdown = onWheelStart;
-        window.addEventListener('pointermove', onWheelMove);
-        window.addEventListener('pointerup', onWheelEnd);
-    }
-
-    if (btnProceed) {
-        btnProceed.onclick = () => {
-            modal.classList.add('hidden');
+            if (typeof syncTasksWithState === 'function') syncTasksWithState();
+            if (typeof updateUI === 'function') updateUI();
+            const consoleModal = document.getElementById('modal-console');
+            if (consoleModal) consoleModal.classList.add('hidden');
             if (typeof sfx !== 'undefined' && sfx.pickup) sfx.pickup();
-            if (typeof spawnFloatingText === 'function' && state.player) {
+            if (typeof spawnFloatingText === 'function' && typeof state !== 'undefined' && state && state.player) {
                 spawnFloatingText('💨 OUTER HATCH UNLOCKED & OPEN', state.player.x, state.player.y - 25, '#22c55e');
             }
-        };
+        });
     }
 
-    if (btnClose) {
-        btnClose.onclick = () => {
-            modal.classList.add('hidden');
-        };
-    }
-
-    modal.classList.remove('hidden');
     if (typeof sfx !== 'undefined' && sfx.beep) sfx.beep();
 }
 window.openAirlockExitProcedure = openAirlockExitProcedure;
@@ -1498,7 +1498,7 @@ function updateUI() {
         const locEl = document.getElementById('hud-location');
         if (locEl && currentRoom) {
             locEl.innerHTML = `
-                <i class="fa-solid fa-location-crosshairs text-sky-400 text-[11px]"></i>
+                <i class="fa-solid fa-location-crosshairs text-[#FDB773] text-[11px]"></i>
                 <span>${currentRoom.name}</span>
             `;
         }
@@ -1508,67 +1508,86 @@ function updateUI() {
     const valPower = document.getElementById('val-power');
     if (valPower) {
         valPower.textContent = `${pwr.gen} / ${pwr.load} kW`;
-        valPower.className = `font-bold text-[11px] sm:text-xs ${pwr.net < 0 ? 'text-red-400 animate-pulse' : 'text-emerald-400'}`;
+        valPower.className = `font-bold text-[11px] ${pwr.net < 0 ? 'text-[#DA6556] animate-pulse' : 'text-[#4fd1a0]'}`;
     }
 
     const valBat = document.getElementById('val-battery');
     if (valBat) {
         valBat.textContent = `${Math.round(state.batteryKWh)}% (${Math.round(state.batteryKWh)} kWh)`;
-        valBat.className = `font-bold text-[11px] sm:text-xs ${state.batteryKWh < 35 ? 'text-amber-400' : 'text-sky-300'}`;
+        valBat.className = `font-bold text-[11px] ${state.batteryKWh < 35 ? 'text-[#EB895B]' : 'text-[#FDB773]'}`;
     }
 
     const valAtmo = document.getElementById('val-atmo');
     if (valAtmo) {
         valAtmo.textContent = `${state.cabinPressureKPa.toFixed(1)} kPa | ${Math.round(state.co2PPM)} ppm`;
-        valAtmo.className = `font-bold text-[11px] sm:text-xs ${state.co2PPM > 900 ? 'text-red-400 animate-pulse' : 'text-teal-300'}`;
+        valAtmo.className = `font-bold text-[11px] ${state.co2PPM > 900 ? 'text-[#DA6556] animate-pulse' : 'text-[#4fd1a0]'}`;
     }
 
     const valWater = document.getElementById('val-water');
     if (valWater) {
         valWater.textContent = `${Math.round(state.waterLitres)} L | ${state.waterConductivity} µS/cm`;
-        valWater.className = `font-bold text-[11px] sm:text-xs ${state.waterConductivity > 60 || state.faults.waterPipeLeaking ? 'text-amber-400' : 'text-blue-300'}`;
+        valWater.className = `font-bold text-[11px] ${state.waterConductivity > 60 || state.faults.waterPipeLeaking ? 'text-[#EB895B]' : 'text-[#FDB773]'}`;
     }
 
     const valEnv = document.getElementById('val-env');
     if (valEnv) {
         const effRad = state.weatherMutator === 'solar_max' ? state.radiationMSvH * 1.65 : state.radiationMSvH;
         valEnv.textContent = `${Math.round(state.foodCrewDays)}d | ${effRad.toFixed(2)} mSv/h`;
-        valEnv.className = `font-bold text-[11px] sm:text-xs ${effRad > 0.5 ? 'text-red-400' : 'text-lime-300'}`;
+        valEnv.className = `font-bold text-[11px] ${effRad > 0.5 ? 'text-[#DA6556]' : 'text-[#4fd1a0]'}`;
     }
 
-    // Cadet Mode 3 Core Meters
+    // Cadet Mode 3 Core Meters (non-color symbols ✓ / ! / ⚠ paired with semantic tones)
+    const cadetMeterPower = document.getElementById('cadet-meter-power');
     const cadetValPower = document.getElementById('cadet-val-power');
     if (cadetValPower) {
         const isNetNeg = pwr.net < 0;
-        cadetValPower.textContent = `${Math.round(state.batteryKWh)}% ${isNetNeg ? '(-kW Deficit)' : '(Stable)'}`;
-        cadetValPower.className = `font-bold text-[11px] ${state.batteryKWh < 35 || isNetNeg ? 'text-amber-400 animate-pulse' : 'text-emerald-400'}`;
+        const isLowBat = state.batteryKWh < 35;
+        cadetValPower.textContent = isNetNeg
+            ? `⚠ ${Math.round(state.batteryKWh)}% (-kW)`
+            : (isLowBat ? `! ${Math.round(state.batteryKWh)}%` : `${Math.round(state.batteryKWh)}%`);
+        cadetValPower.className = `font-extrabold text-[11px] leading-tight ${isNetNeg || isLowBat ? 'text-[#EB895B] animate-pulse' : 'text-[#4fd1a0]'}`;
+        if (cadetMeterPower) {
+            cadetMeterPower.style.borderColor = (isNetNeg || isLowBat) ? '#EB895B' : '';
+        }
     }
 
+    const cadetMeterLife = document.getElementById('cadet-meter-life');
     const cadetValLife = document.getElementById('cadet-val-life');
     if (cadetValLife) {
         const isLifeWarn = state.co2PPM > 900 || state.waterConductivity > 60 || state.faults.co2FilterClogged || state.faults.waterPipeLeaking;
-        cadetValLife.textContent = isLifeWarn ? 'Alert (Check ECLSS)' : 'Optimal (Air & H2O)';
-        cadetValLife.className = `font-bold text-[11px] ${isLifeWarn ? 'text-amber-400 animate-pulse' : 'text-teal-300'}`;
+        cadetValLife.textContent = isLifeWarn ? '⚠ Check O₂' : '✓ OK';
+        cadetValLife.className = `font-extrabold text-[11px] leading-tight ${isLifeWarn ? 'text-[#EB895B] animate-pulse' : 'text-[#4fd1a0]'}`;
+        if (cadetMeterLife) {
+            cadetMeterLife.style.borderColor = isLifeWarn ? '#EB895B' : '';
+        }
     }
 
+    const cadetMeterRad = document.getElementById('cadet-meter-rad');
     const cadetValRad = document.getElementById('cadet-val-rad');
     if (cadetValRad) {
         const effRad = state.weatherMutator === 'solar_max' ? state.radiationMSvH * 1.65 : state.radiationMSvH;
         const isRadDanger = effRad > 0.5 || state.faults.radiationAlertActive;
-        cadetValRad.textContent = isRadDanger ? 'STORM ALERT (SHELTER!)' : `${effRad.toFixed(2)} mSv/h (Safe)`;
-        cadetValRad.className = `font-bold text-[11px] ${isRadDanger ? 'text-red-400 animate-pulse' : 'text-sky-300'}`;
+        cadetValRad.textContent = isRadDanger ? '⚠ STORM!' : `✓ ${effRad.toFixed(2)} Safe`;
+        cadetValRad.className = `font-extrabold text-[11px] leading-tight ${isRadDanger ? 'text-[#DA6556] animate-pulse' : 'text-[#FDB773]'}`;
+        if (cadetMeterRad) {
+            cadetMeterRad.style.borderColor = isRadDanger ? '#DA6556' : '';
+            if (cadetMeterRad.classList) {
+                if (isRadDanger) cadetMeterRad.classList.remove('hidden');
+                else cadetMeterRad.classList.add('hidden');
+            }
+        }
     }
 
-    // UPGRADE 2: 3-Heart Life System Display (Strict horizontal alignment with glow)
+    // 3-Heart Life System Display (Custom Pink SVG Hearts)
     const crewHeartsEl = document.getElementById('crew-hearts');
     const hCount = (typeof state.hearts === 'number') ? state.hearts : 3;
     if (crewHeartsEl) {
         let heartsHtml = '';
         for (let i = 0; i < 3; i++) {
             if (i < hCount) {
-                heartsHtml += '<span class="heart-glyph inline-block text-sm leading-none shrink-0" style="filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.7));">❤️</span>';
+                heartsHtml += '<span class="heart-glyph inline-flex items-center justify-center shrink-0"><svg viewBox="0 0 24 22" class="w-4 h-4"><path d="M12 20.5S2 14.1 2 7.2C2 3.8 4.7 1.5 7.8 1.5c1.8 0 3.4.9 4.2 2.2.8-1.3 2.4-2.2 4.2-2.2 3.1 0 5.8 2.3 5.8 5.7 0 6.9-10 13.3-10 13.3z" fill="#DA6556" stroke="#2d1212" stroke-width="2"/></svg></span>';
             } else {
-                heartsHtml += '<span class="heart-glyph inline-block text-sm leading-none shrink-0 opacity-30 grayscale">🖤</span>';
+                heartsHtml += '<span class="heart-glyph heart-empty inline-flex items-center justify-center shrink-0 opacity-45"><svg viewBox="0 0 24 22" class="w-4 h-4"><path d="M12 20.5S2 14.1 2 7.2C2 3.8 4.7 1.5 7.8 1.5c1.8 0 3.4.9 4.2 2.2.8-1.3 2.4-2.2 4.2-2.2 3.1 0 5.8 2.3 5.8 5.7 0 6.9-10 13.3-10 13.3z" fill="#4a1d1d" stroke="#DA6556" stroke-width="2"/></svg></span>';
             }
         }
         crewHeartsEl.innerHTML = heartsHtml;
@@ -1581,17 +1600,17 @@ function updateUI() {
     if (btnQuickDoor) {
         const isDoorOpen = !!(state.player && state.player.outerDoorOpen);
         if (iconQuickDoor) {
-            iconQuickDoor.className = isDoorOpen ? 'fa-solid fa-door-open text-emerald-400 text-xs' : 'fa-solid fa-door-closed text-sky-400 text-xs';
+            iconQuickDoor.className = isDoorOpen ? 'fa-solid fa-door-open text-[#341717] text-xs' : 'fa-solid fa-door-closed text-[#4a1d1d] text-xs';
         }
         if (labelQuickDoor) {
-            labelQuickDoor.textContent = isDoorOpen ? '[E] Close' : '[E] Open';
+            labelQuickDoor.textContent = isDoorOpen ? '[E] Close' : '[E] Door';
         }
         btnQuickDoor.className = isDoorOpen
-            ? 'h-8 btn-tech bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/50 text-emerald-200 px-2.5 rounded-lg text-xs font-mono-tech flex items-center justify-center gap-1.5 cursor-pointer shrink-0 box-border'
-            : 'h-8 btn-tech bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/50 text-sky-200 px-2.5 rounded-lg text-xs font-mono-tech flex items-center justify-center gap-1.5 cursor-pointer shrink-0 box-border';
+            ? 'btn-success btn-compact px-2.5 text-xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0'
+            : 'btn-tertiary btn-compact px-2.5 text-xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0';
     }
 
-    // UPGRADE 3: Emergency Task Countdown Bar
+    // Emergency Task Countdown Bar
     const timerContainer = document.getElementById('task-timer-bar-container');
     const timerVal = document.getElementById('task-timer-val');
     const timerFill = document.getElementById('task-timer-fill');
@@ -1605,14 +1624,14 @@ function updateUI() {
             const pct = Math.max(0, Math.min(100, (state.taskTimer / (state.timerDuration || 75)) * 100));
             timerFill.style.width = `${pct}%`;
             if (secs <= 15) {
-                timerFill.className = 'bg-red-500 h-full animate-pulse transition-all duration-200';
-                timerVal.className = 'font-bold text-red-400 animate-pulse font-mono-tech';
+                timerFill.className = 'h-full rounded animate-pulse transition-all duration-200 bg-[#DA6556]';
+                timerVal.className = 'font-black text-[#DA6556] animate-pulse font-mono-tech';
             } else if (secs <= 30) {
-                timerFill.className = 'bg-amber-400 h-full transition-all duration-200';
-                timerVal.className = 'font-bold text-amber-300 font-mono-tech';
+                timerFill.className = 'h-full rounded transition-all duration-200 bg-[#EB895B]';
+                timerVal.className = 'font-black text-[#EB895B] font-mono-tech';
             } else {
-                timerFill.className = 'bg-emerald-400 h-full transition-all duration-200';
-                timerVal.className = 'font-bold text-emerald-300 font-mono-tech';
+                timerFill.className = 'h-full rounded transition-all duration-200 bg-[#4fd1a0]';
+                timerVal.className = 'font-black text-[#4fd1a0] font-mono-tech';
             }
         } else {
             timerContainer.classList.add('hidden');
@@ -1620,7 +1639,7 @@ function updateUI() {
     }
     const trainerHealthEl = document.getElementById('trainer-health-text');
     if (trainerHealthEl) {
-        trainerHealthEl.textContent = '❤️'.repeat(Math.max(0, hCount)) + '🖤'.repeat(Math.max(0, 3 - hCount));
+        trainerHealthEl.textContent = '💗'.repeat(Math.max(0, hCount)) + '🤍'.repeat(Math.max(0, 3 - hCount));
     }
 
     // Suit & Crew Health
@@ -1628,18 +1647,28 @@ function updateUI() {
     if (suitPill) {
         if (state.player.inSuit) {
             suitPill.textContent = 'EVA SUIT ON';
-            suitPill.className = 'text-[10px] font-mono-tech px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40';
+            suitPill.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-[#4a1d1d] text-[#EB895B] border border-[#EB895B]/70';
         } else {
             suitPill.textContent = 'IVA HABITAT';
-            suitPill.className = 'text-[10px] font-mono-tech px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300';
+            suitPill.className = 'text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-[#4a1d1d] text-[#4fd1a0] border border-[#4fd1a0]/60';
         }
     }
 
     const healthVal = document.getElementById('crew-health-val');
-    if (healthVal) healthVal.textContent = `${Math.round(state.crewHealth)}% OK`;
+    if (healthVal) {
+        const hp = Math.round(state.crewHealth);
+        healthVal.textContent = hp >= 70 ? `${hp}% OK` : (hp >= 40 ? `! ${hp}%` : `⚠ ${hp}%`);
+        healthVal.className = `font-extrabold ${hp >= 70 ? 'text-[#4fd1a0]' : (hp >= 40 ? 'text-[#EB895B]' : 'text-[#DA6556]')}`;
+    }
 
     const healthBar = document.getElementById('crew-health-bar');
-    if (healthBar) healthBar.style.width = `${Math.max(0, Math.min(100, state.crewHealth))}%`;
+    if (healthBar) {
+        const hpPct = Math.max(0, Math.min(100, state.crewHealth));
+        healthBar.style.width = `${hpPct}%`;
+        healthBar.className = hpPct >= 70
+            ? 'progress-fill progress-done'
+            : (hpPct >= 40 ? 'h-full rounded bg-[#EB895B] transition-all duration-200' : 'h-full rounded bg-[#DA6556] transition-all duration-200');
+    }
 
     // Rolling sparkline updates
     if (Math.random() < 0.25) {
@@ -1648,8 +1677,8 @@ function updateUI() {
         sparklineHistory.co2.push(Math.round(state.co2PPM));
         if (sparklineHistory.co2.length > 20) sparklineHistory.co2.shift();
     }
-    drawSparkline('spark-battery', sparklineHistory.battery, '#38bdf8', 'rgba(56, 189, 248, 0.25)');
-    drawSparkline('spark-co2', sparklineHistory.co2, '#2dd4bf', 'rgba(45, 212, 191, 0.25)');
+    drawSparkline('spark-battery', sparklineHistory.battery, '#FDB773', 'rgba(253, 183, 115, 0.25)');
+    drawSparkline('spark-co2', sparklineHistory.co2, '#4fd1a0', 'rgba(79, 209, 160, 0.25)');
 
     const badgeCount = document.getElementById('badge-count');
     if (badgeCount) badgeCount.textContent = `${state.earnedBadges.length}/${typeof BADGES !== 'undefined' ? BADGES.length : 5}`;
@@ -1675,7 +1704,7 @@ function updateUI() {
         }
     }
 
-    // Mission Checklist Tasks
+    // Mission Checklist Tasks (.card-row pattern with icon-tile + progress bar + n/m + status pill)
     const taskListEl = document.getElementById('task-list');
     if (taskListEl) {
         taskListEl.innerHTML = '';
@@ -1684,7 +1713,7 @@ function updateUI() {
         ch.tasks.forEach(t => {
             if (!t.done) allDone = false;
             const item = document.createElement('div');
-            
+
             let status = 'not_started';
             if (t.done) {
                 status = 'completed';
@@ -1694,31 +1723,37 @@ function updateUI() {
             }
 
             if (status === 'completed') {
-                item.className = 'flex items-start justify-between gap-2 p-1.5 rounded-lg border bg-emerald-950/30 border-emerald-500/40 text-emerald-300';
+                item.className = 'card-row p-2 border-[#4fd1a0]/70 text-[#fff7f0]';
                 item.innerHTML = `
-                    <div class="flex items-start gap-2">
-                        <i class="fa-solid fa-circle-check text-emerald-400 mt-0.5 text-[11px]"></i>
-                        <span class="line-through opacity-80 leading-snug">${t.text}</span>
+                    <div class="icon-tile w-7 h-7 border-[#4fd1a0]/70 shrink-0">
+                        <i class="fa-solid fa-circle-check text-[#4fd1a0] text-xs"></i>
                     </div>
-                    <span class="text-[9px] font-mono-tech font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex-shrink-0">DONE</span>
+                    <div class="flex-1 min-w-0">
+                        <div class="line-through opacity-75 leading-snug text-[11px] font-bold">${t.text}</div>
+                    </div>
+                    <span class="shrink-0 text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[#4a1d1d] text-[#4fd1a0] border border-[#4fd1a0]/50">DONE</span>
                 `;
             } else if (status === 'in_progress') {
-                item.className = 'flex items-start justify-between gap-2 p-1.5 rounded-lg border bg-amber-950/30 border-amber-500/50 text-amber-200 shadow-[0_0_10px_rgba(245,158,11,0.15)] animate-pulse';
+                item.className = 'card-row p-2 border-2 border-[#FDB773] text-[#FDB773] shadow-[0_0_12px_rgba(253,183,115,0.22)]';
                 item.innerHTML = `
-                    <div class="flex items-start gap-2">
-                        <i class="fa-solid fa-circle-dot text-amber-400 mt-0.5 text-[11px]"></i>
-                        <span class="font-medium leading-snug">${t.text}</span>
+                    <div class="icon-tile w-7 h-7 border-[#FDB773] shrink-0">
+                        <i class="fa-solid fa-star text-[#FDB773] text-xs"></i>
                     </div>
-                    <span class="text-[9px] font-mono-tech font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex-shrink-0">ACTIVE</span>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-extrabold leading-snug text-[11px] text-[#FDB773]">${t.text}</div>
+                    </div>
+                    <span class="shrink-0 text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[#4a1d1d] text-[#EB895B] border border-[#FDB773]">ACTIVE</span>
                 `;
             } else {
-                item.className = 'flex items-start justify-between gap-2 p-1.5 rounded-lg border bg-slate-900/60 border-slate-800 text-slate-400';
+                item.className = 'card-row p-2 opacity-75 text-[#f7cbb0]';
                 item.innerHTML = `
-                    <div class="flex items-start gap-2">
-                        <i class="fa-regular fa-circle text-slate-500 mt-0.5 text-[11px]"></i>
-                        <span class="leading-snug opacity-75">${t.text}</span>
+                    <div class="icon-tile w-7 h-7 shrink-0">
+                        <i class="fa-regular fa-circle text-[#cfa08e] text-xs"></i>
                     </div>
-                    <span class="text-[9px] font-mono-tech font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700/50 flex-shrink-0">STANDBY</span>
+                    <div class="flex-1 min-w-0">
+                        <div class="leading-snug text-[11px] text-[#f7cbb0]">${t.text}</div>
+                    </div>
+                    <span class="shrink-0 text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[#4a1d1d] text-[#f7cbb0] border border-[#DA6556]/60">WAIT</span>
                 `;
             }
             taskListEl.appendChild(item);
@@ -1735,10 +1770,10 @@ function updateUI() {
             if (state.chapterIdx < CHAPTERS.length - 1) {
                 const nextCh = CHAPTERS[state.chapterIdx + 1];
                 btnAdvance.innerHTML = `<i class="fa-solid fa-angles-right"></i> Advance to Mission ${state.chapterIdx + 2} (${nextCh ? nextCh.solRange : ''})`;
-                btnAdvance.className = "w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-3 rounded-lg text-xs font-mono-tech transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 animate-pulse cursor-pointer";
+                btnAdvance.className = 'btn-success btn-compact w-full px-3 text-xs flex items-center justify-center gap-2 animate-pulse cursor-pointer';
             } else {
-                btnAdvance.innerHTML = `<i class="fa-solid fa-trophy text-amber-300"></i> View Final Expedition Legacy Report ★`;
-                btnAdvance.className = "w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 px-3 rounded-lg text-xs font-mono-tech transition flex items-center justify-center gap-2 shadow-lg shadow-amber-600/30 cursor-pointer";
+                btnAdvance.innerHTML = `<i class="fa-solid fa-trophy"></i> View Final Expedition Legacy Report ★`;
+                btnAdvance.className = 'btn-primary btn-compact w-full px-3 text-xs font-display !text-[#2d1212] flex items-center justify-center gap-2 cursor-pointer';
             }
         }
 
@@ -1756,42 +1791,43 @@ function updateUI() {
         }
     }
 
-    // UPGRADE 4: Icon-Only Square Inventory Pouch (36x36px with Tooltips)
+    // Field Kit Icon Tiles (Auto-hides when empty; shows only collected tools)
+    const fieldKitBox = document.getElementById('field-kit-box');
     const invEl = document.getElementById('inventory-list');
+    if (fieldKitBox && fieldKitBox.classList) {
+        if (state.inventory.length === 0) fieldKitBox.classList.add('hidden');
+        else fieldKitBox.classList.remove('hidden');
+    }
     if (invEl) {
         invEl.innerHTML = '';
-        if (state.inventory.length === 0) {
-            invEl.innerHTML = `<span class="text-[10px] font-mono-tech text-slate-500 px-2 select-none">Empty Pouch</span>`;
-        } else {
-            state.inventory.forEach(item => {
-                const badge = document.createElement('div');
-                badge.title = `${item} (Equipped in Pouch)`;
-                let iconHTML = `<i class="fa-solid fa-wrench text-slate-300 text-base"></i>`;
-                let extraClass = '';
-                if (item === 'Multi-Tool') {
-                    extraClass = ' border-amber-400/60 bg-amber-500/10';
-                    iconHTML = `<i class="fa-solid fa-screwdriver-wrench text-amber-400 text-base"></i>`;
-                } else if (item === 'HV Fuse') {
-                    extraClass = ' border-yellow-400/60 bg-yellow-500/10';
-                    iconHTML = `<i class="fa-solid fa-bolt text-yellow-300 text-base"></i>`;
-                } else if (item === 'LiOH Filter') {
-                    extraClass = ' border-teal-400/60 bg-teal-500/10';
-                    iconHTML = `<i class="fa-solid fa-fan text-teal-300 text-base"></i>`;
-                } else if (item === 'Pipe Seal Kit') {
-                    extraClass = ' border-sky-400/60 bg-sky-500/10';
-                    iconHTML = `<i class="fa-solid fa-faucet-drip text-sky-400 text-base"></i>`;
-                }
-                badge.className = 'w-9 h-9 rounded-xl bg-slate-900/90 border border-slate-700/80 hover:border-amber-400 flex items-center justify-center cursor-pointer shadow-md transition-all hover:scale-110' + extraClass;
-                badge.innerHTML = iconHTML;
-                invEl.appendChild(badge);
-            });
-        }
+        state.inventory.forEach(item => {
+            const slot = document.createElement('div');
+            slot.title = `${item} (Equipped in Field Kit)`;
+            let iconHTML = `<i class="fa-solid fa-wrench text-[#fff7f0] text-base"></i>`;
+            let borderCol = 'border-[#FDB773]';
+            if (item === 'Multi-Tool') {
+                borderCol = 'border-[#FDB773]';
+                iconHTML = `<i class="fa-solid fa-screwdriver-wrench text-[#FDB773] text-base"></i>`;
+            } else if (item === 'HV Fuse') {
+                borderCol = 'border-[#EB895B]';
+                iconHTML = `<i class="fa-solid fa-bolt text-[#FDB773] text-base"></i>`;
+            } else if (item === 'LiOH Filter') {
+                borderCol = 'border-[#4fd1a0]';
+                iconHTML = `<i class="fa-solid fa-fan text-[#4fd1a0] text-base"></i>`;
+            } else if (item === 'Pipe Seal Kit') {
+                borderCol = 'border-[#FDB773]';
+                iconHTML = `<i class="fa-solid fa-faucet-drip text-[#FDB773] text-base"></i>`;
+            }
+            slot.className = `icon-tile w-10 h-10 ${borderCol} cursor-pointer transition-transform hover:scale-110`;
+            slot.innerHTML = iconHTML;
+            invEl.appendChild(slot);
+        });
     }
 }
 
 // --- SETUP EVENT LISTENERS (Modals, Buttons, Jargon, Weather, Comms) ---
 function initUIEventListeners() {
-    // --- HUD Mode Toggle (Cadet Mode vs Engineer Mode) ---
+    // --- HUD Mode Toggle (Cadet Mode vs Engineer Mode) & Mobile Overflow ---
     let isEngineerMode = false;
     const btnHudMode = document.getElementById('btn-hud-mode');
     const labelHudMode = document.getElementById('label-hud-mode');
@@ -1803,19 +1839,54 @@ function initUIEventListeners() {
             if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
             isEngineerMode = !isEngineerMode;
             if (isEngineerMode) {
-                if (labelHudMode) labelHudMode.textContent = 'Engineer Mode';
+                if (labelHudMode) labelHudMode.textContent = 'Engineer';
                 if (cadetMeters) cadetMeters.classList.add('hidden');
-                if (engMeters) engMeters.classList.remove('hidden');
-                btnHudMode.classList.add('border-amber-400', 'text-amber-300');
+                if (engMeters) {
+                    engMeters.classList.remove('hidden');
+                    engMeters.classList.add('flex');
+                }
+                btnHudMode.classList.remove('btn-secondary');
+                btnHudMode.classList.add('btn-primary', '!text-[#2d1212]');
                 setAria('ENGINEER MODE: Detailed kW, kPa, ppm, and mSv/h telemetry exposed for mission diagnostics.');
             } else {
-                if (labelHudMode) labelHudMode.textContent = 'Cadet Mode';
+                if (labelHudMode) labelHudMode.textContent = 'Cadet';
                 if (cadetMeters) cadetMeters.classList.remove('hidden');
-                if (engMeters) engMeters.classList.add('hidden');
-                btnHudMode.classList.remove('border-amber-400', 'text-amber-300');
+                if (engMeters) {
+                    engMeters.classList.add('hidden');
+                    engMeters.classList.remove('flex');
+                }
+                btnHudMode.classList.remove('btn-primary', '!text-[#2d1212]');
+                btnHudMode.classList.add('btn-secondary');
                 setAria('CADET MODE: Streamlined 3-pillar safety gauges active. Click any gauge for plain-language decoder.');
             }
         });
+    }
+
+    const btnHudOverflow = document.getElementById('btn-hud-overflow');
+    const hudUtilityDrawer = document.getElementById('hud-utility-drawer');
+    let overflowOpen = false;
+    const setOverflowDrawer = (open) => {
+        overflowOpen = !!open;
+        if (!hudUtilityDrawer) return;
+        if (overflowOpen) {
+            hudUtilityDrawer.className = 'flex sm:flex items-center gap-1.5 flex-wrap absolute right-3 top-14 z-40 hud-panel p-2 sm:static sm:p-0 sm:bg-transparent sm:border-0 sm:shadow-none shrink-0';
+        } else {
+            hudUtilityDrawer.className = 'hidden sm:flex items-center gap-1.5 shrink-0';
+        }
+    };
+    if (btnHudOverflow && hudUtilityDrawer) {
+        btnHudOverflow.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+            setOverflowDrawer(!overflowOpen);
+        });
+        if (typeof document.addEventListener === 'function') {
+            document.addEventListener('click', (e) => {
+                if (overflowOpen && !hudUtilityDrawer.contains(e.target) && !btnHudOverflow.contains(e.target)) {
+                    setOverflowDrawer(false);
+                }
+            });
+        }
     }
 
     // --- Collapsible Left Checklist Panel ---
@@ -1910,7 +1981,11 @@ function initUIEventListeners() {
     // UPGRADE 6: Live NASA DONKI Space Weather Button & Modal
     const btnDonkiWeather = document.getElementById('btn-donki-weather');
     if (btnDonkiWeather) {
-        btnDonkiWeather.addEventListener('click', openDonkiWeatherModal);
+        btnDonkiWeather.addEventListener('click', () => {
+            const sm = document.getElementById('modal-settings');
+            if (sm) sm.classList.add('hidden');
+            openDonkiWeatherModal();
+        });
     }
 
     // --- Story & Guidelines Modals Event Listeners ---
@@ -1961,11 +2036,18 @@ function initUIEventListeners() {
     if (btnOutroPrev) {
         btnOutroPrev.addEventListener('click', prevOutroStorySlide);
     }
+    const closeDonkiModal = () => {
+        if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+        const modal = document.getElementById('modal-donki-weather');
+        if (modal) modal.classList.add('hidden');
+        restoreFocusAfterClose();
+    };
     const btnCloseDonki = document.getElementById('btn-close-donki');
-    if (btnCloseDonki) {
-        btnCloseDonki.addEventListener('click', () => {
-            const modal = document.getElementById('modal-donki-weather');
-            if (modal) modal.classList.add('hidden');
+    if (btnCloseDonki) btnCloseDonki.addEventListener('click', closeDonkiModal);
+    const modalDonki = document.getElementById('modal-donki-weather');
+    if (modalDonki) {
+        modalDonki.addEventListener('click', (e) => {
+            if (e.target === modalDonki) closeDonkiModal();
         });
     }
 
@@ -1985,6 +2067,41 @@ function initUIEventListeners() {
     const container3D = document.getElementById('three-container');
     if (container3D) container3D.classList.remove('hidden');
 
+    // --- Sync Segmented Audio Bars in Settings ---
+    const syncSettingsAudioUI = () => {
+        const musicOn = !window.sfx || sfx.musicEnabled !== false;
+        const soundOn = !window.sfx || sfx.enabled !== false;
+
+        const mIcon = document.getElementById('icon-music');
+        const mLabel = document.getElementById('label-music');
+        const mBar = document.getElementById('settings-music-bar');
+        if (mIcon) mIcon.className = musicOn ? 'fa-solid fa-music text-[#FDB773]' : 'fa-solid fa-volume-off text-[#f7cbb0]';
+        if (mLabel) mLabel.textContent = musicOn ? 'Ambient: ON' : 'Ambient: OFF';
+        if (mBar && typeof mBar.querySelectorAll === 'function') {
+            Array.from(mBar.querySelectorAll('.progress-seg-pip')).forEach(pip => {
+                if (pip.classList) pip.classList.toggle('filled', musicOn);
+            });
+        }
+
+        const sIcon = document.getElementById('icon-sound');
+        const sLabel = document.getElementById('label-sound');
+        const sBar = document.getElementById('settings-sound-bar');
+        if (sIcon) sIcon.className = soundOn ? 'fa-solid fa-volume-high text-[#4fd1a0]' : 'fa-solid fa-volume-xmark text-[#DA6556]';
+        if (sLabel) sLabel.textContent = soundOn ? 'SFX: ON' : 'SFX: OFF';
+        if (sBar && typeof sBar.querySelectorAll === 'function') {
+            Array.from(sBar.querySelectorAll('.progress-seg-pip')).forEach(pip => {
+                if (pip.classList) pip.classList.toggle('filled-mint', soundOn);
+            });
+        }
+    };
+
+    const restoreFocusAfterClose = () => {
+        if (window._lastModalTrigger && typeof window._lastModalTrigger.focus === 'function') {
+            window._lastModalTrigger.focus();
+            window._lastModalTrigger = null;
+        }
+    };
+
     // --- Mission Settings & Tools Modal ---
     const btnSettings = document.getElementById('btn-settings');
     const modalSettings = document.getElementById('modal-settings');
@@ -1992,22 +2109,25 @@ function initUIEventListeners() {
 
     if (btnSettings && modalSettings) {
         btnSettings.addEventListener('click', () => {
+            window._lastModalTrigger = document.activeElement;
+            syncSettingsAudioUI();
             if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
             modalSettings.classList.remove('hidden');
+            setOverflowDrawer(false);
+            if (btnCloseSettings) btnCloseSettings.focus();
         });
     }
+    const closeSettingsModal = () => {
+        if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+        if (modalSettings) modalSettings.classList.add('hidden');
+        restoreFocusAfterClose();
+    };
     if (btnCloseSettings && modalSettings) {
-        btnCloseSettings.addEventListener('click', () => {
-            if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
-            modalSettings.classList.add('hidden');
-        });
+        btnCloseSettings.addEventListener('click', closeSettingsModal);
     }
     if (modalSettings) {
         modalSettings.addEventListener('click', (e) => {
-            if (e.target === modalSettings) {
-                if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
-                modalSettings.classList.add('hidden');
-            }
+            if (e.target === modalSettings) closeSettingsModal();
         });
     }
 
@@ -2041,6 +2161,8 @@ function initUIEventListeners() {
     const btnReplayDlg = document.getElementById('btn-replay-dialogue');
     if (btnReplayDlg) btnReplayDlg.addEventListener('click', () => {
         if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+        const sm = document.getElementById('modal-settings');
+        if (sm) sm.classList.add('hidden');
         if (typeof CHAPTER_DIALOGUES !== 'undefined' && CHAPTER_DIALOGUES[state.chapterIdx]) {
             startDialogueSequence(CHAPTER_DIALOGUES[state.chapterIdx], state.chapterIdx);
         }
@@ -2067,6 +2189,8 @@ function initUIEventListeners() {
     const btnPowerGrid = document.getElementById('btn-power-grid');
     if (btnPowerGrid) {
         btnPowerGrid.addEventListener('click', () => {
+            window._lastModalTrigger = document.activeElement;
+            setOverflowDrawer(false);
             if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
             openPowerModal();
         });
@@ -2076,6 +2200,7 @@ function initUIEventListeners() {
         if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
         const pm = document.getElementById('modal-power');
         if (pm) pm.classList.add('hidden');
+        restoreFocusAfterClose();
     };
     const btnClosePower = document.getElementById('btn-close-power');
     if (btnClosePower) btnClosePower.addEventListener('click', closePowerModal);
@@ -2090,11 +2215,37 @@ function initUIEventListeners() {
         });
     }
 
-    // Codex Modal Open & Close
+    // Codex Modal Open, Close & Category Tabs (All / Badges / Facts)
+    const codexTabsEl = document.getElementById('codex-tabs');
+    const codexBadgesSec = document.getElementById('codex-badges-section');
+    const codexFactsSec = document.getElementById('codex-facts-section');
+    const setCodexTab = (tabName) => {
+        if (codexTabsEl && typeof codexTabsEl.querySelectorAll === 'function') {
+            Array.from(codexTabsEl.querySelectorAll('[data-codex-tab]')).forEach(btn => {
+                if (btn.classList) btn.classList.toggle('active', btn.getAttribute('data-codex-tab') === tabName);
+            });
+        }
+        if (codexBadgesSec && codexBadgesSec.classList) codexBadgesSec.classList.toggle('hidden', tabName === 'facts');
+        if (codexFactsSec && codexFactsSec.classList) codexFactsSec.classList.toggle('hidden', tabName === 'badges');
+    };
+    if (codexTabsEl && typeof codexTabsEl.querySelectorAll === 'function') {
+        Array.from(codexTabsEl.querySelectorAll('[data-codex-tab]')).forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+                setCodexTab(btn.getAttribute('data-codex-tab') || 'all');
+            });
+        });
+    }
+
     const btnCodex = document.getElementById('btn-codex');
     if (btnCodex) {
         btnCodex.addEventListener('click', () => {
+            window._lastModalTrigger = document.activeElement;
+            setOverflowDrawer(false);
+            const sm = document.getElementById('modal-settings');
+            if (sm) sm.classList.add('hidden');
             if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+            setCodexTab('all');
             openCodexModal();
         });
     }
@@ -2102,6 +2253,7 @@ function initUIEventListeners() {
         if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
         const cxm = document.getElementById('modal-codex');
         if (cxm) cxm.classList.add('hidden');
+        restoreFocusAfterClose();
     };
     const btnCloseCodex = document.getElementById('btn-close-codex');
     if (btnCloseCodex) btnCloseCodex.addEventListener('click', closeCodexModal);
@@ -2130,29 +2282,22 @@ function initUIEventListeners() {
             if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
             const sm = document.getElementById('modal-story');
             if (sm) sm.classList.add('hidden');
-            if (typeof CHAPTER_DIALOGUES !== 'undefined' && CHAPTER_DIALOGUES[state.chapterIdx]) {
+            const isSimplified = !state || state.uiSimplified !== false;
+            if (!isSimplified && typeof CHAPTER_DIALOGUES !== 'undefined' && CHAPTER_DIALOGUES[state.chapterIdx]) {
                 startDialogueSequence(CHAPTER_DIALOGUES[state.chapterIdx], state.chapterIdx);
             }
         });
     }
 
-    // Audio & Ambient Music Toggles
+    // Audio & Ambient Music Toggles (Synced with Settings Segmented Bars)
     const btnMusic = document.getElementById('btn-music');
     if (btnMusic) {
         btnMusic.addEventListener('click', () => {
             if (window.sfx) {
                 sfx.startAmbientEngine();
                 sfx.musicEnabled = !sfx.musicEnabled;
-                const icon = document.getElementById('icon-music');
-                const label = document.getElementById('label-music');
-                if (sfx.musicEnabled) {
-                    if (icon) icon.className = 'fa-solid fa-music text-indigo-300';
-                    if (label) label.textContent = 'AMBIENT ON';
-                    sfx.beep();
-                } else {
-                    if (icon) icon.className = 'fa-solid fa-volume-off text-slate-400';
-                    if (label) label.textContent = 'AMBIENT OFF';
-                }
+                syncSettingsAudioUI();
+                if (sfx.musicEnabled) sfx.beep();
             }
         });
     }
@@ -2163,8 +2308,7 @@ function initUIEventListeners() {
             if (window.sfx) {
                 sfx.startAmbientEngine();
                 sfx.enabled = !sfx.enabled;
-                const icon = document.getElementById('icon-sound');
-                if (icon) icon.className = sfx.enabled ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark text-red-400';
+                syncSettingsAudioUI();
                 if (sfx.enabled) sfx.beep();
             }
         });
@@ -2408,6 +2552,11 @@ function onDilemmaOptionB() {
 
 // --- UPGRADE 6: LIVE NASA DONKI SPACE WEATHER FETCHER ---
 async function openDonkiWeatherModal() {
+    window._lastModalTrigger = (typeof document !== 'undefined') ? document.activeElement : null;
+    const drawer = document.getElementById('hud-utility-drawer');
+    if (drawer && !drawer.classList.contains('sm:flex')) {
+        drawer.className = 'hidden sm:flex items-center gap-1.5 shrink-0';
+    }
     const modal = document.getElementById('modal-donki-weather');
     if (!modal) return;
     modal.classList.remove('hidden');
@@ -2416,7 +2565,7 @@ async function openDonkiWeatherModal() {
     const statusEl = document.getElementById('donki-status');
     const resultsEl = document.getElementById('donki-results');
     if (statusEl) statusEl.textContent = 'Connecting to NASA DONKI Telemetry...';
-    if (resultsEl) resultsEl.innerHTML = '<div class="text-sky-300 animate-pulse py-2">Querying NASA Space Weather Database (api.nasa.gov)...</div>';
+    if (resultsEl) resultsEl.innerHTML = '<div class="text-[#FDB773] font-bold animate-pulse py-2">Querying NASA Space Weather Database (api.nasa.gov)...</div>';
 
     try {
         const controller = new AbortController();
@@ -2430,14 +2579,14 @@ async function openDonkiWeatherModal() {
             if (Array.isArray(data) && data.length > 0) {
                 const latest = data.slice(-3).reverse();
                 resultsEl.innerHTML = latest.map(f => `
-                    <div class="p-2.5 rounded-lg bg-slate-800/80 border border-sky-500/30 flex items-center justify-between">
+                    <div class="card-row p-3 justify-between">
                         <div>
-                            <div class="font-bold text-amber-300 font-display flex items-center gap-1.5">
-                                <i class="fa-solid fa-sun text-amber-400"></i> ${f.classType || 'M-Class'} Solar Flare
+                            <div class="font-bold text-[#FDB773] font-display flex items-center gap-1.5">
+                                <i class="fa-solid fa-sun text-[#FDB773]"></i> ${f.classType || 'M-Class'} Solar Flare
                             </div>
-                            <div class="text-[11px] text-slate-400 font-mono-tech">Peak Time: ${f.peakTime || 'Recent'}</div>
+                            <div class="text-[11px] text-[#f7cbb0] font-mono-tech">Peak Time: ${f.peakTime || 'Recent'}</div>
                         </div>
-                        <span class="text-[10px] font-mono-tech bg-red-500/20 text-red-300 border border-red-500/40 px-2 py-0.5 rounded-full">CME Proton Flux</span>
+                        <span class="pill text-[10px] font-bold text-[#DA6556] border-[#DA6556]/70">CME Proton Flux</span>
                     </div>
                 `).join('');
             } else {
@@ -2449,17 +2598,17 @@ async function openDonkiWeatherModal() {
         if (statusEl) statusEl.textContent = 'NASA DONKI Archive Telemetry (Local Offline Buffer)';
         if (resultsEl) {
             resultsEl.innerHTML = `
-                <div class="p-2.5 rounded-lg bg-slate-800/80 border border-amber-500/30 space-y-2">
-                    <div class="flex items-center justify-between">
-                        <div class="font-bold text-amber-300 font-display flex items-center gap-1.5">
-                            <i class="fa-solid fa-sun text-amber-400"></i> X1.5 High-Energy Solar Flare (DONKI Logged)
+                <div class="card-row p-3 flex-col items-stretch border-[#EB895B] space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="font-bold text-[#FDB773] font-display flex items-center gap-1.5">
+                            <i class="fa-solid fa-sun text-[#FDB773]"></i> X1.5 High-Energy Solar Flare (DONKI Logged)
                         </div>
-                        <span class="text-[10px] font-mono-tech bg-red-500/20 text-red-300 border border-red-500/40 px-2 py-0.5 rounded-full">2.45 mSv/h Radiation</span>
+                        <span class="pill text-[10px] font-bold text-[#DA6556] border-[#DA6556]/70 shrink-0">2.45 mSv/h</span>
                     </div>
-                    <div class="text-[11px] text-slate-300">
+                    <div class="text-[11px] text-[#fff7f0] leading-relaxed">
                         Coronal Mass Ejection detected propagating outward. Surface cosmic radiation dosage rates increase from baseline 0.08 mSv/h to 2.45 mSv/h.
                     </div>
-                    <div class="text-[10px] font-mono-tech text-emerald-300">
+                    <div class="text-[11px] font-bold text-[#4fd1a0]">
                         ✓ Countermeasure: Evacuate crew into Module 07 (Radiation Shelter with Water-Wall Shielding).
                     </div>
                 </div>
@@ -2576,7 +2725,7 @@ function renderIntroSlide(idx) {
     }
     if (dotsEl) {
         dotsEl.innerHTML = INTRO_STORY_SLIDES.map((_, i) => `
-            <span onclick="renderIntroSlide(${i})" class="w-2.5 h-2.5 rounded-full cursor-pointer transition ${i === currentIntroSlideIdx ? 'bg-sky-400 scale-125' : 'bg-slate-700 hover:bg-slate-500'}"></span>
+            <span onclick="renderIntroSlide(${i})" class="w-3 h-3 rounded-full cursor-pointer transition ${i === currentIntroSlideIdx ? 'bg-[#FDB773] ring-2 ring-[#FDB773] scale-125' : 'bg-[#4a1d1d] border border-[#DA6556] hover:bg-[#b34e4e]'}"></span>
         `).join('');
     }
     if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
@@ -2659,7 +2808,7 @@ function renderOutroSlide(idx) {
     }
     if (dotsEl) {
         dotsEl.innerHTML = OUTRO_STORY_SLIDES.map((_, i) => `
-            <span onclick="renderOutroSlide(${i})" class="w-2.5 h-2.5 rounded-full cursor-pointer transition ${i === currentOutroSlideIdx ? 'bg-amber-400 scale-125' : 'bg-slate-700 hover:bg-slate-500'}"></span>
+            <span onclick="renderOutroSlide(${i})" class="w-3 h-3 rounded-full cursor-pointer transition ${i === currentOutroSlideIdx ? 'bg-[#FDB773] ring-2 ring-[#FDB773] scale-125' : 'bg-[#4a1d1d] border border-[#DA6556] hover:bg-[#b34e4e]'}"></span>
         `).join('');
     }
     if (window.sfx && typeof sfx.beep === 'function') sfx.beep();

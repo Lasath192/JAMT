@@ -1,0 +1,368 @@
+================================================================================
+ASTRA-1: THE RED FRONTIER — COMPLETE UI ELEMENTS INVENTORY & REQUIREMENTS PROMPT
+Generated: 2026-11-15 | Workspace: E:\Mandila\VibeCode projets\JAMT
+================================================================================
+
+--------------------------------------------------------------------------------
+SECTION 1: COMPLETE UI ELEMENTS BRIEF & IMPORTANCE RANKING (#1 TO #25)
+--------------------------------------------------------------------------------
+
+All UI elements in ASTRA-1: The Red Frontier (index.html, js/ui.js,
+js/activities.js, js/game.js, js/simulation.js), grouped by operational tier
+and ranked from #1 (essential to play) to #25 (optional enrichment).
+
+=== TIER 1: CORE GAMEPLAY & MISSION-CRITICAL (ESSENTIAL TO PLAY) ===
+
+#1 | 3D / 2D Habitat Viewport (#three-container, #game-canvas)
+   - Location: Center Main Screen (index.html #L177-L182)
+   - Brief: Primary interactive Mars Outpost world (Three.js 3D default engine
+     with 2D HTML5 canvas fallback). Displays the habitat modules, exterior
+     Martian terrain, Cadet Nova, NPCs, consoles, and floor waypoint clicks.
+   - Importance: Core spatial gameplay loop; without it, navigation and
+     station exploration are impossible.
+
+#2 | Equipment & Activity Console Modal (#modal-console, #console-activity-mount)
+   - Location: Fullscreen Modal (index.html #L452-L531; js/activities.js)
+   - Brief: Opens when interacting with any equipment console or the EVA outer
+     airlock door. Hosts #console-activity-mount (all 30 hands-on mini-games in
+     TASK_RENDERERS, including the unified 3-column Airlock Astronaut Chamber
+     rotary valve in renderM1T1_AirlockPressure), #console-telemetry-grid,
+     #console-actions, #console-illustration, #console-desc-box,
+     #console-fact-box, #btn-toggle-console-info, and #btn-toggle-ui-mode-console.
+   - Importance: Execution hub for every interactive engineering procedure and
+     task completion across all 10 missions.
+
+#3 | Mission Checklist Panel (#panel-checklist, #pill-checklist-collapsed)
+   - Location: Left Overlay (index.html #L197-L242)
+   - Brief: Displays the 3 current mission objectives (#task-list), Sol range
+     (#chapter-sol-range), minimize toggle (#btn-toggle-checklist ->
+     #pill-checklist-collapsed with #checklist-progress-text), emergency countdown
+     bar (#task-timer-bar-container), and chapter advance button
+     (#advance-container / #btn-advance-chapter).
+   - Importance: Primary progress tracker showing the player what has been done
+     and how to finish each mission.
+
+#4 | Proximity Interaction Prompt (#interact-prompt)
+   - Location: Floating Bottom-Center Overlay (index.html #L300-L306)
+   - Brief: Dynamic prompt showing [E] keybadge (#interact-kbd), target title
+     (#interact-title), and action hint (#interact-sub) whenever Cadet Nova is
+     near a console, airlock hatch, or crew NPC. Clickable or triggered via E/F.
+   - Importance: Bridges 3D/2D spatial movement with interactive modals.
+
+#5 | Active Objective Pill (#active-objective-pill)
+   - Location: Top Telemetry Bar Center (index.html #L39-L46)
+   - Brief: Single-line persistent pill displaying "TASK: <current task>" inside
+     #active-objective-text with a pulsing amber beacon. Clicking focuses or
+     expands the Mission Checklist.
+   - Importance: Keeps players immediately oriented without scanning panels.
+
+#6 | Mission Briefing & Trade-Off Modal (#modal-story)
+   - Location: Fullscreen Modal (index.html #L628-L725)
+   - Brief: Opens at mission start. Features header metadata (#story-sol-tag,
+     #story-title, #story-role-badge), pixel-art scene banner
+     (#story-illustration), UI mode toggle (#btn-toggle-ui-mode), Simplified view
+     (#story-simplified-view: #story-goal-text, 3 #story-task-cards,
+     #story-science-short, #btn-story-science-more), Classic view
+     (#story-classic-view: #story-body, #story-science, #story-dilemma), optional
+     A/B decision point (#story-decision-box), and #btn-start-chapter.
+   - Importance: Launches each chapter and enforces key mission decisions.
+
+#7 | Astronaut Tool & Part Pouch (#inventory-list)
+   - Location: Bottom-Right Bar (index.html #L374-L380; js/ui.js)
+   - Brief: Displays collected items (e.g., Multi-Tool, HV Fuse, LiOH Filter,
+     Pipe Seal Kit) needed to unlock repair tasks at consoles.
+   - Importance: Tracks inventory prerequisites across multi-step tasks.
+
+#8 | On-Screen Touch D-Pad & Mobile Controls (.dpad-btn, #btn-touch-e, #btn-touch-f)
+   - Location: Bottom-Right Bar on Small Screens sm:hidden (index.html #L383-L394)
+   - Brief: Directional movement pad (up/down/left/right) plus dedicated E
+     (interact) and F (outer airlock door) buttons for phones and tablets.
+   - Importance: Mandatory for playability on mobile/touch devices.
+
+
+=== TIER 2: LIVE SURVIVAL TELEMETRY & GUIDANCE (HIGH IMPORTANCE) ===
+
+#9 | 3-Heart Life Counter (#hud-hearts-container, #crew-hearts)
+   - Location: Top Telemetry Bar Right (index.html #L126-L130)
+   - Brief: Displays up to 3 hearts (❤️). Losing all 3 hearts from unfixed hazards,
+     power depletion, or expired emergency timers triggers Game Over.
+   - Importance: Core failure/survival stake of the campaign.
+
+#10 | Simplified Cadet Safety Meters (#hud-cadet-meters)
+   - Location: Top Telemetry Bar Right (index.html #L51-L78)
+   - Brief: Default 3 color-coded pills: Power (#cadet-meter-power /
+     #cadet-val-power), Life Support (#cadet-meter-life / #cadet-val-life), and
+     Shield (#cadet-meter-rad / #cadet-val-rad). Clicking gives ARIA guidance.
+   - Importance: Gives instant, kid-friendly (Ages 7-12) health status of the
+     habitat without overwhelming jargon.
+
+#11 | Emergency Warning & Countdown Bars (#emergency-banner, #task-timer-bar-container)
+   - Location: Top-Center Overlay & Checklist (index.html #L191-L194, #L221-L229)
+   - Brief: Flashing red hazard alert banner (#emergency-text) and checklist
+     timer bar (#task-timer-val, #task-timer-fill) during crisis chapters.
+   - Importance: Signals urgent threats before they cost a heart.
+
+#12 | Power Distribution & Breaker Grid Modal (#modal-power, #btn-power-grid)
+   - Location: Top Bar Grid Button + Fullscreen Modal (index.html #L157-L160, #L534-L594)
+   - Brief: Displays Solar+Gen kW (#pwr-modal-gen), active demand (#pwr-modal-load),
+     battery SOC (#pwr-modal-soc), net balance (#pwr-modal-net), room circuit
+     breakers (#power-breaker-list), and backup generator toggle (#toggle-backup-gen).
+   - Importance: Required for load-shedding and solar deficit management.
+
+#13 | ARIA AI Companion Box (#aria-message, #aria-portrait-svg, #aria-crew-tag)
+   - Location: Bottom-Left Overlay Bar (index.html #L312-L343)
+   - Brief: Persistent holographic AI mentor displaying onboarding instructions,
+     live hints, alert explanations, and jargon explanations on meter click.
+   - Importance: Keeps players unstuck when procedures fail or terms are new.
+
+#14 | Room Location Banner & Sol Badge (#hud-location-banner, #badge-hud-sol)
+   - Location: Top-Left Header & Top-Center Viewport (index.html #L21-L36, #L184-L188)
+   - Brief: Shows current Sol (#hud-sol), chapter label (#hud-chapter-tag), and
+     active room name (#hud-location-text) as Cadet Nova walks between rooms.
+   - Importance: Spatial orientation linking task room names to the map.
+
+#15 | Quick Airlock Door Button (#btn-quick-door-f)
+   - Location: Top Telemetry Bar Right (index.html #L133-L136)
+   - Brief: Shortcut ([E] Door / #icon-quick-door / #label-quick-door) to trigger
+     toggleOuterAirlockDoor() when near the EVA hatch.
+   - Importance: Discoverable mouse/tap equivalent of [F] at the airlock.
+
+
+=== TIER 3: STORY, PROGRESSION & SPECIAL EVENTS (MEDIUM IMPORTANCE) ===
+
+#16 | Mission Completion Celebration Modal (#modal-mission-complete)
+   - Location: Fullscreen Modal (index.html #L729-L787)
+   - Brief: Announces 100% task completion (#complete-modal-title), summary
+     (#complete-modal-narrative), unlocked next mission preview card
+     (#complete-unlock-card), and progression buttons (#btn-complete-next,
+     #btn-complete-stay).
+   - Importance: Drives smooth mission-to-mission progression across 10 chapters.
+
+#17 | 10-Second Solar Dust Storm Dilemma Modal (#modal-storm-dilemma, #btn-quick-dilemma)
+   - Location: Top Bar Trigger + Crisis Modal (index.html #L139-L142, #L1066-L1104)
+   - Brief: Timed emergency countdown (#storm-dilemma-timer) forcing a decision:
+     Option A Fold Solar Panels (#btn-dilemma-fold: safe, 0 kW solar) vs Option B
+     Leave Open (#btn-dilemma-open: keeps power, risks conduit damage / -1 heart).
+   - Importance: High-stakes resource/risk dilemma mechanic.
+
+#18 | Mission Failed (Game Over) Modal (#modal-gameover)
+   - Location: Fullscreen Modal (index.html #L1028-L1063)
+   - Brief: Shows lost hearts (#gameover-hearts), root cause (#gameover-reason),
+     NASA science explanation (#gameover-lesson), Retry Mission with restored
+     hearts (#btn-gameover-retry), and Restart from Sol 1 (#btn-gameover-restart).
+   - Importance: Recovers cleanly from failure states while teaching causality.
+
+#19 | Crew Status & Mission Tools Panel (#panel-trainer, #pill-trainer-collapsed)
+   - Location: Right Overlay (index.html #L245-L297)
+   - Brief: Displays Cadet Nova health (#crew-health-val, #crew-health-bar),
+     IVA/EVA suit pill (#suit-status-pill), chapter selector dropdown
+     (#chapter-select), weather mutator cycle button (#btn-weather-mutator), and
+     14-minute Mars-Earth radio delay test (#btn-ping-houston).
+   - Importance: Secondary status readout plus chapter navigation and replayability
+     tools; collapsible into #pill-trainer-collapsed (#trainer-health-text).
+
+#20 | Crew & Chapter Dialogue Overlay (#modal-dialogue)
+   - Location: Bottom Overlay Modal (index.html #L400-L449)
+   - Brief: Visual-novel style transmission card with scene illustration
+     (#dlg-scene-banner), character portrait (#dlg-portrait-box), speaker info
+     (#dlg-speaker-name, #dlg-role-pill, #dlg-step-counter), dialogue text
+     (#dlg-text), engineering trade-off box (#dlg-tradeoff-box), skip button
+     (#btn-skip-dialogue), and next button (#btn-next-dialogue).
+   - Importance: Delivers crew storytelling and engineering context (skippable).
+
+#21 | Onboarding & Ending Carousels (#modal-title-welcome, #modal-story-slides, #modal-game-guidelines, #modal-outro-story-slides)
+   - Location: Fullscreen Sequence Modals (index.html #L1147-L1409)
+   - Brief: Title screen (#btn-enroll-now, #btn-skip-direct-game), 5-slide intro
+     story carousel, 4-card Astronaut Field Manual (#btn-commence-mission), and
+     5-slide outro debrief carousel.
+   - Importance: First-time narrative framing and control tutorial (skippable).
+
+#22 | Sol 378 Victory Debrief & Printable Certificate (#modal-victory, #printable-certificate)
+   - Location: Fullscreen Endgame Modal + Print Layout (index.html #L791-L972)
+   - Brief: Final 1,000-point score calculation, tier badge (#victory-tier-badge),
+     4 trade-off report cards (Power, Radiation, Water, Hydroponics), earned
+     badges showcase (#rpt-badges-list), custom cadet name input
+     (#cert-cadet-name), print trigger (#btn-print-certificate), replay
+     (#btn-replay-mutator), and finish campaign (#btn-finish-mission).
+   - Importance: Culminating reward and educational assessment at Sol 378.
+
+
+=== TIER 4: SECONDARY TOOLS, REFERENCE & SETTINGS (OPTIONAL / ENRICHMENT) ===
+
+#23 | Engineer Raw Telemetry Mode (#hud-engineer-meters, #btn-hud-mode)
+   - Location: Top Telemetry Bar Right (index.html #L81-L123, #L151-L154)
+   - Brief: Hidden by default; toggled via #btn-hud-mode. Replaces Cadet pills
+     with 5 detailed numeric metrics: GEN/LOAD (#val-power), BATTERY (#val-battery),
+     ATMO/CO2 (#val-atmo + #spark-co2 rolling sparkline canvas), WATER
+     (#val-water), and FOOD/RAD (#val-env).
+   - Importance: Enrichment telemetry for advanced players wanting raw units.
+
+#24 | Codex Modal, DONKI Space Weather Modal & [Q] Hardware Card (#modal-codex, #modal-donki-weather, #hud-prop-card)
+   - Location: Top Bar Buttons (#btn-codex, #btn-donki-weather) & Floating Card (index.html #L346-L370, #L597-L625, #L1107-L1134)
+   - Brief: Optional science/progress reference views: 5 badges & 11 NASA fact
+     cards (#modal-codex), live/archived NASA GSFC solar flare feed
+     (#modal-donki-weather), and quick technical hardware specs triggered by [Q]
+     (#hud-prop-card).
+   - Importance: Optional NASA STEM reference and achievement browsing.
+
+#25 | Mission Settings & Audio Drawer (#modal-settings, #btn-settings)
+   - Location: Top-Right Menu Button + Compact Modal (index.html #L169-L172, #L975-L1026)
+   - Brief: Ambient music toggle (#btn-music), SFX toggle (#btn-sound), and
+     current chapter briefing replay (#btn-replay-dialogue).
+   - Importance: Convenience preferences and audio control.
+
+
+--------------------------------------------------------------------------------
+SECTION 2: UI REQUIREMENTS & FUNCTIONAL SPECIFICATION PROMPT
+--------------------------------------------------------------------------------
+(Copy and paste the prompt below when instructing a designer or AI coding agent
+to build, redesign, or audit the ASTRA-1 UI.)
+
+--- BEGIN PROMPT ---
+
+Design and implement the complete User Interface and interactive HUD architecture
+for "ASTRA-1: The Red Frontier" (a 2026 NASA Space Apps Junior Astronaut Mission
+Trainer set on Mars across a 10-mission / 378-Sol CHAPEA analog campaign,
+targeted cleanly at Junior Astronauts aged 7-12 while offering an optional
+Engineer Telemetry mode).
+
+### 1. Visual Design System & Ergonomics
+- **Aesthetic & Palette:** Deep-space sci-fi HUD over rich dark backgrounds
+  (`#020617` / `bg-slate-950`), translucent layered glass panels (`.hud-panel`
+  with subtle `border-sky-500/30` or `border-white/10`), high-contrast readable
+  typography (`Orbitron` for `.font-display` headings, `Inter` for clean prose,
+  `JetBrains Mono` / `.font-mono-tech` with `tabular-nums` for telemetry).
+- **Zero-Clip Viewport Budget:** The root shell (`h-screen w-screen
+  overflow-hidden flex flex-col`) keeps the HUD anchored cleanly along edges so
+  the central 3D WebGL (`#three-container`) / 2D (`#game-canvas`) habitat
+  remains unobstructed on both desktop and mobile screens.
+- **Clutter Reduction & Two-Tier Disclosure (`Simplified UI` Default):**
+  - Default `state.uiSimplified = true` keeps mission briefings and equipment
+    modals concise and scannable for kids.
+  - Provide live toggle buttons (`✨ Simplified UI` / `📜 Classic UI`) on both
+    the Mission Briefing (`#btn-toggle-ui-mode`) and Equipment Console
+    (`#btn-toggle-ui-mode-console`), plus collapsible secondary detail sections
+    (`#btn-toggle-console-info` "💡 Science & Telemetry" and
+    `#btn-story-science-more` "+ More").
+- **Input & Accessibility Parity:**
+  - Support keyboard (`WASD`/Arrows to move, `E` to interact with nearest
+    object/NPC, `F` to operate outer airlock door, `Q` for quick hardware card,
+    `ESC` to dismiss/abort active modals), mouse click-to-walk on the floor, and
+    touchscreen controls (`.dpad-btn`, `#btn-touch-e`, `#btn-touch-f`).
+  - Provide WCAG AA contrast, focus visibility, and unambiguous action buttons.
+
+### 2. Primary HUD Layout Zones (Always Accessible In-Game)
+1. **Top Telemetry Bar (`<header>`):**
+   - **Left:** Sol & campaign badge (`#badge-hud-sol` displaying `SOL XX / 378`),
+     mission tag (`#hud-chapter-tag`), and room subtitle (`#hud-location`).
+   - **Center:** Immediate Focus Objective Pill (`#active-objective-pill`)
+     showing a single-line `"TASK: <active objective>"` summary; clicking
+     expands/focuses the Mission Checklist.
+   - **Right Telemetry:**
+     - **Cadet Mode (Default, `#hud-cadet-meters`):** 3 simplified color-coded
+       safety pills (`Power`, `Life Support`, `Shield`). Clicking any pill makes
+       ARIA explain what it measures in kid-friendly terms.
+     - **Engineer Mode (Toggleable via `#btn-hud-mode`, `#hud-engineer-meters`):**
+       5 raw readouts (`GEN/LOAD kW`, `BATTERY %`, `ATMO / CO₂` + live `#spark-co2`
+       trend canvas, `WATER L | µS/cm`, `FOOD / RAD mSv/h`).
+     - **3-Heart Life Display (`#hud-hearts-container`):** Crisp horizontal
+       row of `❤️❤️❤️` indicating survival buffer before Mission Failed.
+     - **Top-Bar Utility Actions:** Quick Door shortcut (`#btn-quick-door-f`),
+       10s Dust Storm test (`#btn-quick-dilemma`), Live NASA DONKI Weather
+       (`#btn-donki-weather`), HUD Mode switch (`#btn-hud-mode`), Power Breaker
+       Grid (`#btn-power-grid`), Badges/Codex (`#btn-codex` showing `X/5`), and
+       Settings Menu (`#btn-settings`).
+
+2. **Center Playable Viewport (`<main>`):**
+   - Renders `#three-container` (default Three.js 3D habitat & Mars terrain) or
+     `#game-canvas` (2D fallback), keeping Cadet Nova smoothly centered.
+   - Floating **Location Pill (`#hud-location-banner`)** dynamically updates to
+     show the active room number and name.
+   - Conditional **Emergency Alert Banner (`#emergency-banner`)** appears only
+     when a live hazard fault (overload, high CO₂, leak, storm, flare) is active.
+   - Floating **Proximity Prompt (`#interact-prompt`)** above bottom bar shows
+     `[E]` or `[F]` keycap + object/door name when in range.
+   - Dismissible **Hardware Spec Card (`#hud-prop-card`)** opens on `[Q]` with
+     subsystem code, operational status, and summary.
+
+3. **Collapsible Left Overlay — Mission Checklist (`#panel-checklist`):**
+   - Displays current mission tasks (`#task-list` — 3 tasks per mission across
+     10 chapters = 30 total tasks), Sol badge, active crisis countdown bar
+     (`#task-timer-bar-container` during timed emergencies), and the green
+     `Complete Chapter & Advance Sols` button (`#btn-advance-chapter`) once all
+     tasks are verified.
+   - Minimizes via `#btn-toggle-checklist` into a compact floating pill
+     (`#pill-checklist-collapsed` showing `Tasks: X/Y`).
+
+4. **Collapsible Right Overlay — Crew Status & Tools (`#panel-trainer`):**
+   - Displays Cadet Nova health percentage & progress bar, IVA vs EVA suit
+     status pill (`#suit-status-pill`), locked/unlocked Mission Selector dropdown
+     (`#chapter-select`), replayable Space Weather Mutator button
+     (`#btn-weather-mutator`), and 14-minute Speed-of-Light Mars-Earth radio ping
+     simulator (`#btn-ping-houston`).
+   - Minimizes via `#btn-toggle-trainer` into `#pill-trainer-collapsed`.
+
+5. **Bottom Status Bar (ARIA Companion & Tool Pouch):**
+   - **Left (`ARIA • AI Companion`):** Pixel-art holographic SVG portrait
+     (`#aria-portrait-svg`), comms link tag (`#aria-crew-tag`), and live
+     guidance message box (`#aria-message`).
+   - **Right:** Collected hardware/tool pouch (`#inventory-list` displaying
+     acquired items) and responsive mobile D-Pad + E/F touch buttons.
+
+### 3. Modal Systems & Interactive Simulation Requirements
+1. **Onboarding & Outro Flow (`#modal-title-welcome` -> `#modal-story-slides` -> `#modal-game-guidelines`, and `#modal-outro-story-slides`):**
+   - Welcome splash with `ENROLL NOW` CTA + `Skip Intro` bypass.
+   - 5-slide story carousel with prev/next buttons, progress dots, and skip option.
+   - 4-card Controls & Field Manual (`Movement`, `Consoles & Crew`, `Airlock & Suit`, `3-Heart Safety`).
+2. **Mission Briefing (`#modal-story`):**
+   - Supports **Simplified View** (Goal banner + 3 visual Room/Action Task Cards +
+     1-line expandable Science Tip) and **Classic View** (full narrative + science +
+     dilemma blocks), plus optional A/B engineering trade-off decision cards.
+3. **Equipment & Hands-On Task Simulation Modal (`#modal-console`):**
+   - Renders equipment schematic (`#console-illustration`), status pill, metrics
+     grid (`#console-telemetry-grid`), and `#console-activity-mount` hosting all
+     **30 bespoke interactive mini-games** (`TASK_RENDERERS`): rotary valves,
+     hold-to-calibrate diagnostic scanners, slider/switch panels, cable wiring
+     puzzles, sample pickers, drill coring, Raman lasers, and uplink transmissions.
+   - **Unified Airlock Animation Requirement:**
+     - Both clicking/interacting with the `airlock_console` (`ch1_airlock`) AND
+       approaching/activating the outer EVA hatch (`door_airlock_eva` via `openAirlockExitProcedure()`) MUST use the single unified **3-column Airlock Astronaut Chamber animation** (`renderM1T1_AirlockPressure` inside `#modal-console`):
+       - **Col 1:** Analog dial gauge (`0.6` to `120.0 kPa`, red vacuum hazard
+         zone, green safe zone at `100–103 kPa`) + digital kPa and status readout.
+       - **Col 2:** Animated airlock cross-section featuring outer Mars door,
+         center Astronaut SVG silhouette, rising atmosphere pressure fill bar,
+         real-time `<canvas id="chamber-fx">` N₂/O₂ gas mist particle jets, floor
+         intake vent, sliding inner hatch door animation, and intake pipe flow.
+       - **Col 3:** Interactive pointer-draggable rotary brass valve wheel + step
+         button (`Turn Valve (+15 kPa)`). Completing pressure equalization syncs
+         cabin pressure (`101.3 kPa`), equips suit/check flags (`inSuit`,
+         `suitChecked`), and unlocks `outerDoorOpen`.
+     - Reaching an exterior position (`x <= 276`) allows returning directly inside
+       via the outer hatch without forcing a rotary valve delay.
+4. **Hazard, Progression & Reference Modals:**
+   - **Power Load Grid (`#modal-power`):** Toggle non-essential room breakers
+     vs essential life support/heating/water loops, plus backup generator control.
+   - **10-Second Solar Dust Storm Dilemma (`#modal-storm-dilemma`):** Real-time
+     countdown forcing Fold Panels vs Keep Open.
+   - **Mission Complete (`#modal-mission-complete`):** Celebrates mission clear,
+     previews newly unlocked chapter, advances campaign state.
+   - **Game Over (`#modal-gameover`):** Explains failure mode + NASA lesson;
+     provides `Retry Mission` (restores 3 hearts) or full restart.
+   - **Codex (`#modal-codex`) & NASA DONKI Weather (`#modal-donki-weather`):**
+     Track 5 Specialist Badges, 11 NASA Science Fact Cards, and solar flare alerts.
+   - **Crew Dialogue (`#modal-dialogue`):** Visual-novel portrait & scene card
+     with trade-off summary and `Next` / `Skip [ESC]`.
+   - **Settings (`#modal-settings`):** Music/SFX toggles and briefing replay.
+   - **Sol 378 Victory Debrief (`#modal-victory` & `#printable-certificate`):**
+     Displays 1,000-point campaign score breakdown, rank tier, 4 subsystem
+     report cards, badge grid, custom name input, and print-ready certificate.
+
+### 4. Verification Requirements
+- All chapters must remain sequentially locked until prerequisite chapters are
+  completed.
+- All 30 tasks must register valid interactive renderers in `AstraActivities`.
+- Every modal must support closing via header/footer buttons and `ESC`, and
+  `isAnyModalOpen()` / `closeAllModals()` must accurately cover all modal IDs
+  to prevent stuck movement inputs or overlapping overlays.
+
+--- END PROMPT ---
