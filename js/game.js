@@ -735,6 +735,17 @@ function updateGame(dt) {
                     state.player.targetX = null;
                     state.player.targetY = null;
                 }
+                const now = Date.now();
+                window._forceAirlockBeaconUntil = now + 8000;
+                if (!window._lastInnerLockHintAt || now - window._lastInnerLockHintAt > 2500) {
+                    window._lastInnerLockHintAt = now;
+                    if (typeof spawnFloatingText === 'function') {
+                        spawnFloatingText('🔒 PRESSURIZE AIRLOCK FIRST', state.player.x, state.player.y - 25, '#FDB773');
+                    }
+                    if (typeof setAria === 'function') {
+                        setAria('Inner bulkhead sealed! Press [E] at the Airlock Console to equalize pressure to 101.3 kPa first.');
+                    }
+                }
             }
             // Inside habitat (x >= 415), prevent crossing left into unpressurized airlock (x < 425)
             if (state.player.x >= 415 && (state.player.x + moveX) < 425) {
@@ -769,18 +780,58 @@ function updateGame(dt) {
     if (state.timerActive && state.taskTimer > 0) {
         state.taskTimer -= dt;
         if (state.taskTimer <= 0) {
-            state.taskTimer = 0;
-            if (typeof loseHeart === 'function') {
-                loseHeart('Time ran out! Emergency systems overloaded!');
-            }
-            if (state.hearts > 0) {
-                state.taskTimer = state.timerDuration || 75;
+            if (state.relaxedPace) {
+                state.taskTimer = 30;
+                if (typeof setAria === 'function') {
+                    setAria('Relaxed Pace: Take your time! Emergency buffer extended by 30s — follow the waypoint arrow.');
+                }
+            } else {
+                state.taskTimer = 0;
+                if (typeof loseHeart === 'function') {
+                    loseHeart('Time ran out! Emergency systems overloaded!');
+                }
+                if (state.hearts > 0) {
+                    state.taskTimer = state.timerDuration || 75;
+                }
             }
         }
     }
     const activeCh = (typeof CHAPTERS !== 'undefined') ? CHAPTERS[state.chapterIdx] : null;
     if (activeCh && activeCh.tasks && activeCh.tasks.every(t => t.done)) {
         state.timerActive = false;
+    }
+
+    // 20-second Auto-Hint Button Visibility (tracks chapter + completed count so wandering never resets timer)
+    if (typeof document !== 'undefined') {
+        const hintBtn = document.getElementById('btn-task-hint');
+        if (hintBtn && hintBtn.classList) {
+            const undone = (activeCh && activeCh.tasks) ? activeCh.tasks.filter(t => !t.done) : [];
+            const doneCount = (activeCh && activeCh.tasks) ? activeCh.tasks.filter(t => t.done).length : 0;
+            const hasUndone = undone.length > 0;
+            const progressKey = hasUndone ? `${state.chapterIdx}:${doneCount}` : null;
+
+            const storyModal = document.getElementById('modal-story');
+            const slidesModal = document.getElementById('modal-story-slides');
+            const storyOpen = (storyModal && storyModal.classList && !storyModal.classList.contains('hidden')) ||
+                              (slidesModal && slidesModal.classList && !slidesModal.classList.contains('hidden'));
+            if (progressKey !== window._taskIdleKey || storyOpen) {
+                window._taskIdleKey = progressKey;
+                window._taskIdleStartAt = Date.now();
+                const banner = document.getElementById('task-hint-banner');
+                if (banner && banner.classList) {
+                    banner.classList.add('hidden');
+                    if (banner.style) banner.style.display = 'none';
+                }
+            }
+            const showHint = hasUndone && !storyOpen && window._taskIdleStartAt && (Date.now() - window._taskIdleStartAt) > 20000;
+            if (showHint) {
+                hintBtn.classList.remove('hidden');
+                if (hintBtn.style) hintBtn.style.display = 'inline-flex';
+            } else {
+                hintBtn.classList.add('hidden');
+                if (hintBtn.style) hintBtn.style.display = 'none';
+            }
+        }
     }
     const isMoving = (dx !== 0 || dy !== 0);
     state.player.isMoving = isMoving;

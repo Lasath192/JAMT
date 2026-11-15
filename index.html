@@ -39,17 +39,23 @@
             </div>
         </div>
 
-        <!-- Center: Active Objective Pill -->
-        <div id="active-objective-pill" class="pill cursor-pointer border-[#FDB773] hover:border-[#FDB773] px-3 py-1.5 max-w-[180px] sm:max-w-xs md:max-w-md lg:max-w-lg truncate" title="Click to open / focus Mission Checklist">
-            <span class="w-2.5 h-2.5 rounded-full bg-[#EB895B] animate-ping shrink-0"></span>
-            <svg viewBox="0 0 20 20" class="w-4 h-4 shrink-0" aria-hidden="true">
-                <circle cx="10" cy="10" r="8" fill="#EB895B" stroke="#2d1212" stroke-width="1.5"/>
-                <circle cx="10" cy="10" r="3" fill="#FDB773"/>
-            </svg>
-            <div class="text-xs text-[#fff7f0] truncate flex items-center gap-1.5">
-                <span class="text-[#FDB773] font-black text-[10px] sm:text-xs uppercase tracking-wide shrink-0">TASK:</span>
-                <span id="active-objective-text" class="font-bold text-[#fff7f0] truncate">Inspect Airlock Pressure Console</span>
+        <!-- Center: Active Objective Pill + Auto-Hint Button -->
+        <div class="flex items-center gap-1.5 min-w-0">
+            <div id="active-objective-pill" class="pill cursor-pointer border-[#FDB773] hover:border-[#FDB773] px-3 py-1.5 max-w-[180px] sm:max-w-xs md:max-w-md lg:max-w-lg truncate" title="Click to open / focus Mission Checklist">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#EB895B] animate-ping shrink-0"></span>
+                <svg viewBox="0 0 20 20" class="w-4 h-4 shrink-0" aria-hidden="true">
+                    <circle cx="10" cy="10" r="8" fill="#EB895B" stroke="#2d1212" stroke-width="1.5"/>
+                    <circle cx="10" cy="10" r="3" fill="#FDB773"/>
+                </svg>
+                <div class="text-xs text-[#fff7f0] truncate flex items-center gap-1.5">
+                    <span class="text-[#FDB773] font-black text-[10px] sm:text-xs uppercase tracking-wide shrink-0">TASK:</span>
+                    <span id="active-objective-text" class="font-bold text-[#fff7f0] truncate">Inspect Airlock Pressure Console</span>
+                </div>
             </div>
+            <button id="btn-task-hint" type="button" style="display: none;" class="hidden btn-compact px-3 py-1.5 rounded-full bg-[#fde047] border-2 border-[#fff7f0] text-[#2d1212] text-xs font-black items-center gap-1.5 shadow-[0_0_16px_rgba(253,224,71,0.75)] hover:scale-[1.05] active:scale-[0.97] transition shrink-0 animate-pulse cursor-pointer z-30" title="Need a clue? Click for a task hint!" aria-label="Show task hint">
+                <i class="fa-solid fa-lightbulb"></i>
+                <span>Hint</span>
+            </button>
         </div>
 
         <!-- Right: Telemetry Meters, Pink SVG Hearts & Utility Controls -->
@@ -151,6 +157,20 @@
         </div>
     </header>
 
+    <!-- Floating Task Hint Banner (shown when player clicks the 20s Hint button) -->
+    <div id="task-hint-banner" style="display: none;" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-30 w-[92vw] max-w-md bg-[#2d1212]/95 border-2 border-[#fde047] rounded-2xl px-4 py-3 shadow-[0_10px_28px_rgba(0,0,0,0.65)] items-start gap-3 text-[#fff7f0]">
+        <div class="w-8 h-8 rounded-full bg-[#fde047] text-[#2d1212] flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fa-solid fa-lightbulb text-sm"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+            <div id="task-hint-banner-title" class="text-[11px] font-black uppercase tracking-wider text-[#fde047]">Mission Clue</div>
+            <div id="task-hint-banner-text" class="text-xs font-bold leading-snug text-[#fff7f0] mt-0.5">Follow the glowing yellow arrow!</div>
+        </div>
+        <button id="btn-close-hint-banner" type="button" class="text-[#f7cbb0] hover:text-[#fff7f0] text-sm px-1.5 py-0.5 cursor-pointer shrink-0" aria-label="Close hint">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
     <!-- =======================================================================
          ZONE B: MAIN VIEWPORT & FLOATING GAMEPLAY HUD OVERLAYS
          ======================================================================= -->
@@ -199,6 +219,17 @@
                         <button id="btn-toggle-checklist" class="w-7 h-7 rounded-lg bg-[#4a1d1d] hover:bg-[#b34e4e] border border-[#DA6556] text-[#fff7f0] cursor-pointer flex items-center justify-center transition" title="Minimize Checklist">
                             <i id="icon-toggle-checklist" class="fa-solid fa-chevron-left text-xs"></i>
                         </button>
+                    </div>
+                </div>
+
+                <!-- Overall Mission Progress Bar -->
+                <div class="mb-2.5">
+                    <div class="flex items-center justify-between text-[10px] font-extrabold text-[#f7cbb0] mb-1">
+                        <span>Mission Progress</span>
+                        <span id="checklist-progress-pct" class="text-[#FDB773]">0%</span>
+                    </div>
+                    <div class="progress h-2">
+                        <div id="checklist-progress-bar" class="progress-fill" style="width: 0%"></div>
                     </div>
                 </div>
 
@@ -917,6 +948,10 @@
                                 <span class="flex items-center gap-1.5"><i id="icon-hud-mode" class="fa-solid fa-user-astronaut text-[#4a1d1d]"></i> Telemetry Mode</span>
                                 <span id="label-hud-mode" class="font-black">Cadet</span>
                             </button>
+                            <button id="btn-pace-mode" class="w-full btn-secondary btn-compact px-3 text-xs flex items-center justify-between cursor-pointer" title="Toggle between Standard Timers and Relaxed Pace (1.5x Time) for younger cadets">
+                                <span class="flex items-center gap-1.5"><i class="fa-solid fa-hourglass-half text-[#FDB773]"></i> Mission Pace</span>
+                                <span id="label-pace-mode" class="font-black text-[#FDB773]">Standard</span>
+                            </button>
                             <button id="btn-judge-hub" class="w-full btn-primary btn-compact px-3 text-xs flex items-center justify-between cursor-pointer" title="Official NASA Open Data Judge Verification Hub (15-Sec Audit)">
                                 <span class="flex items-center gap-1.5"><i class="fa-solid fa-microscope text-[#2d1212]"></i> NASA Judge Verification</span>
                                 <span class="font-black text-[#2d1212] text-[10px] uppercase">15s Audit</span>
@@ -960,13 +995,10 @@
                                         <span id="label-music">Ambient: ON</span>
                                     </button>
                                 </div>
-                                <div id="settings-music-bar" class="progress-segmented">
-                                    <span class="progress-seg-pip filled"></span>
-                                    <span class="progress-seg-pip filled"></span>
-                                    <span class="progress-seg-pip filled"></span>
-                                    <span class="progress-seg-pip filled"></span>
-                                    <span class="progress-seg-pip filled"></span>
-                                    <span class="progress-seg-pip filled"></span>
+                                <div id="settings-music-bar" class="bg-[#341717] border border-[#DA6556] rounded-lg px-2.5 py-1.5 flex items-center gap-2">
+                                    <i class="fa-solid fa-volume-low text-[#f7cbb0] text-[10px]"></i>
+                                    <input id="slider-music-vol" type="range" min="0" max="100" step="5" value="100" aria-label="Ambient Music Volume" class="w-full h-2 accent-[#FDB773] cursor-pointer" />
+                                    <i class="fa-solid fa-volume-high text-[#FDB773] text-[10px]"></i>
                                 </div>
                             </div>
                             <div class="space-y-2">
@@ -974,17 +1006,21 @@
                                     <span class="font-bold text-[#fff7f0]">Sound Effects</span>
                                     <button id="btn-sound" class="btn-secondary btn-compact px-3 text-xs flex items-center gap-1.5 cursor-pointer">
                                         <i id="icon-sound" class="fa-solid fa-volume-high text-[#4fd1a0]"></i>
-                                        <span id="label-sound">SFX: ON</span>
+                                        <span id="label-sound">SFX: 100%</span>
                                     </button>
                                 </div>
-                                <div id="settings-sound-bar" class="progress-segmented">
-                                    <span class="progress-seg-pip filled-mint"></span>
-                                    <span class="progress-seg-pip filled-mint"></span>
-                                    <span class="progress-seg-pip filled-mint"></span>
-                                    <span class="progress-seg-pip filled-mint"></span>
-                                    <span class="progress-seg-pip filled-mint"></span>
-                                    <span class="progress-seg-pip filled-mint"></span>
+                                <div id="settings-sound-bar" class="bg-[#341717] border border-[#DA6556] rounded-lg px-2.5 py-1.5 flex items-center gap-2">
+                                    <i class="fa-solid fa-volume-low text-[#f7cbb0] text-[10px]"></i>
+                                    <input id="slider-sound-vol" type="range" min="0" max="100" step="5" value="100" aria-label="Sound Effects Volume" class="w-full h-2 accent-[#4fd1a0] cursor-pointer" />
+                                    <i class="fa-solid fa-volume-high text-[#4fd1a0] text-[10px]"></i>
                                 </div>
+                            </div>
+                            <div class="flex items-center justify-between gap-2 pt-1 border-t border-[#DA6556]/40">
+                                <span class="font-bold text-[#fff7f0]">ARIA Voice Readout</span>
+                                <button id="btn-aria-voice" class="btn-secondary btn-compact px-3 text-xs flex items-center gap-1.5 cursor-pointer" title="Read ARIA mission messages aloud for early readers">
+                                    <i id="icon-aria-voice" class="fa-solid fa-comment-dots text-[#f7cbb0]"></i>
+                                    <span id="label-aria-voice">Voice: OFF</span>
+                                </button>
                             </div>
                         </div>
 

@@ -215,6 +215,7 @@ function triggerNearestObjectInteraction() {
 // --- EQUIPMENT DIAGNOSTIC & CONSOLE MODAL ---
 function openObjectModal(obj) {
     window._activeConsoleObj = obj;
+    window._waypointTaskStartAt = Date.now();
     document.getElementById('console-room').textContent = obj.room.toUpperCase();
     document.getElementById('console-title').textContent = obj.name;
     
@@ -1840,16 +1841,36 @@ function updateUI() {
         }
 
         // Active Objective Pill (1-line focus for younger students)
-        const activeTask = ch.tasks.find(t => !t.done);
+        const activeTask = (typeof getActiveTargetTask === 'function') ? getActiveTargetTask() : ch.tasks.find(t => !t.done);
         const objTextEl = document.getElementById('active-objective-text');
         if (objTextEl) {
             objTextEl.textContent = activeTask ? activeTask.text : 'All Chapter Tasks Complete! Advance Sol when ready.';
         }
 
         const taskProgEl = document.getElementById('checklist-progress-text');
+        const doneCount = ch.tasks.filter(t => t.done).length;
+        const totalCount = ch.tasks.length || 1;
+        const pct = Math.round((doneCount / totalCount) * 100);
         if (taskProgEl) {
-            const doneCount = ch.tasks.filter(t => t.done).length;
             taskProgEl.textContent = `Tasks: ${doneCount}/${ch.tasks.length}`;
+        }
+        const progBarEl = document.getElementById('checklist-progress-bar');
+        if (progBarEl && progBarEl.style) {
+            progBarEl.style.width = `${pct}%`;
+        }
+        const progPctEl = document.getElementById('checklist-progress-pct');
+        if (progPctEl) {
+            progPctEl.textContent = `${pct}%`;
+        }
+    }
+
+    // Phase 1 CLT: Progressive Disclosure — hide Power Grid button while locked in Mission 1 Airlock
+    const btnPowerGrid = document.getElementById('btn-power-grid');
+    if (btnPowerGrid && btnPowerGrid.classList) {
+        if (state.chapterIdx === 0 && typeof window.isInnerAirlockLocked === 'function' && window.isInnerAirlockLocked()) {
+            btnPowerGrid.classList.add('hidden');
+        } else {
+            btnPowerGrid.classList.remove('hidden');
         }
     }
 
@@ -2182,27 +2203,22 @@ function initUIEventListeners() {
         const musicOn = !window.sfx || sfx.musicEnabled !== false;
         const soundOn = !window.sfx || sfx.enabled !== false;
 
+        const musicPct = musicOn ? Math.round(((window.sfx && typeof sfx.musicVolume === 'number') ? sfx.musicVolume : 1) * 100) : 0;
+        const soundPct = soundOn ? Math.round(((window.sfx && typeof sfx.sfxVolume === 'number') ? sfx.sfxVolume : 1) * 100) : 0;
+
         const mIcon = document.getElementById('icon-music');
         const mLabel = document.getElementById('label-music');
-        const mBar = document.getElementById('settings-music-bar');
+        const mSlider = document.getElementById('slider-music-vol');
         if (mIcon) mIcon.className = musicOn ? 'fa-solid fa-music text-[#FDB773]' : 'fa-solid fa-volume-off text-[#f7cbb0]';
-        if (mLabel) mLabel.textContent = musicOn ? 'Ambient: ON' : 'Ambient: OFF';
-        if (mBar && typeof mBar.querySelectorAll === 'function') {
-            Array.from(mBar.querySelectorAll('.progress-seg-pip')).forEach(pip => {
-                if (pip.classList) pip.classList.toggle('filled', musicOn);
-            });
-        }
+        if (mLabel) mLabel.textContent = musicOn ? `Ambient: ${musicPct}%` : 'Ambient: OFF';
+        if (mSlider) mSlider.value = String(musicPct);
 
         const sIcon = document.getElementById('icon-sound');
         const sLabel = document.getElementById('label-sound');
-        const sBar = document.getElementById('settings-sound-bar');
+        const sSlider = document.getElementById('slider-sound-vol');
         if (sIcon) sIcon.className = soundOn ? 'fa-solid fa-volume-high text-[#4fd1a0]' : 'fa-solid fa-volume-xmark text-[#DA6556]';
-        if (sLabel) sLabel.textContent = soundOn ? 'SFX: ON' : 'SFX: OFF';
-        if (sBar && typeof sBar.querySelectorAll === 'function') {
-            Array.from(sBar.querySelectorAll('.progress-seg-pip')).forEach(pip => {
-                if (pip.classList) pip.classList.toggle('filled-mint', soundOn);
-            });
-        }
+        if (sLabel) sLabel.textContent = soundOn ? `SFX: ${soundPct}%` : 'SFX: OFF';
+        if (sSlider) sSlider.value = String(soundPct);
     };
 
     const restoreFocusAfterClose = () => {
@@ -2392,6 +2408,10 @@ function initUIEventListeners() {
             if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
             const sm = document.getElementById('modal-story');
             if (sm) sm.classList.add('hidden');
+            if (state && state.timerPendingStart) {
+                state.timerPendingStart = false;
+                state.timerActive = true;
+            }
             const isSimplified = !state || state.uiSimplified !== false;
             if (!isSimplified && typeof CHAPTER_DIALOGUES !== 'undefined' && CHAPTER_DIALOGUES[state.chapterIdx]) {
                 startDialogueSequence(CHAPTER_DIALOGUES[state.chapterIdx], state.chapterIdx);
@@ -2399,15 +2419,30 @@ function initUIEventListeners() {
         });
     }
 
-    // Audio & Ambient Music Toggles (Synced with Settings Segmented Bars)
+    // Audio & Ambient Music Toggles + Real Range Sliders
     const btnMusic = document.getElementById('btn-music');
     if (btnMusic) {
         btnMusic.addEventListener('click', () => {
             if (window.sfx) {
                 sfx.startAmbientEngine();
-                sfx.musicEnabled = !sfx.musicEnabled;
+                if (sfx.musicEnabled) {
+                    sfx.setMusicVolume(0);
+                } else {
+                    sfx.setMusicVolume(sfx.musicVolume > 0 ? sfx.musicVolume : 1.0);
+                }
                 syncSettingsAudioUI();
                 if (sfx.musicEnabled) sfx.beep();
+            }
+        });
+    }
+
+    const sliderMusic = document.getElementById('slider-music-vol');
+    if (sliderMusic) {
+        sliderMusic.addEventListener('input', (e) => {
+            if (window.sfx) {
+                sfx.startAmbientEngine();
+                sfx.setMusicVolume(Number(e.target.value) / 100);
+                syncSettingsAudioUI();
             }
         });
     }
@@ -2417,9 +2452,116 @@ function initUIEventListeners() {
         btnSound.addEventListener('click', () => {
             if (window.sfx) {
                 sfx.startAmbientEngine();
-                sfx.enabled = !sfx.enabled;
+                if (sfx.enabled) {
+                    sfx.setSfxVolume(0);
+                } else {
+                    sfx.setSfxVolume(sfx.sfxVolume > 0 ? sfx.sfxVolume : 1.0);
+                }
                 syncSettingsAudioUI();
                 if (sfx.enabled) sfx.beep();
+            }
+        });
+    }
+
+    const sliderSound = document.getElementById('slider-sound-vol');
+    if (sliderSound) {
+        sliderSound.addEventListener('input', (e) => {
+            if (window.sfx) {
+                sfx.startAmbientEngine();
+                sfx.setSfxVolume(Number(e.target.value) / 100);
+                syncSettingsAudioUI();
+            }
+        });
+        sliderSound.addEventListener('change', () => {
+            if (window.sfx && sfx.enabled) sfx.beep();
+        });
+    }
+
+    // Phase 2 Flow & Pacing: Relaxed Pace Mode Toggle
+    const btnPaceMode = document.getElementById('btn-pace-mode');
+    if (btnPaceMode) {
+        btnPaceMode.addEventListener('click', () => {
+            if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+            state.relaxedPace = !state.relaxedPace;
+            const lbl = document.getElementById('label-pace-mode');
+            if (lbl) lbl.textContent = state.relaxedPace ? 'Relaxed' : 'Standard';
+            btnPaceMode.classList.toggle('border-[#4fd1a0]', state.relaxedPace);
+            if (state.relaxedPace && (state.timerActive || state.timerPendingStart)) {
+                state.taskTimer = Math.max(state.taskTimer, Math.round((state.timerDuration || 75) * 1.5));
+            }
+            setAria(state.relaxedPace
+                ? 'Relaxed Pace enabled: 50% more time and no time-out heart penalties.'
+                : 'Standard Pace enabled: normal mission emergency timers.');
+        });
+    }
+
+    // Phase 4 Accessibility: ARIA Read-Aloud Voice Toggle
+    const btnAriaVoice = document.getElementById('btn-aria-voice');
+    if (btnAriaVoice) {
+        btnAriaVoice.addEventListener('click', () => {
+            if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+            state.voiceEnabled = !state.voiceEnabled;
+            const lbl = document.getElementById('label-aria-voice');
+            if (lbl) lbl.textContent = state.voiceEnabled ? 'Voice: ON' : 'Voice: OFF';
+            const icon = document.getElementById('icon-aria-voice');
+            if (icon) {
+                icon.className = state.voiceEnabled
+                    ? 'fa-solid fa-comment-dots text-[#4fd1a0]'
+                    : 'fa-solid fa-comment-dots text-[#FDB773]';
+            }
+            if (!state.voiceEnabled && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                try { window.speechSynthesis.cancel(); } catch (e) {}
+            } else if (state.voiceEnabled) {
+                setAria('ARIA voice guidance is now active, Cadet!');
+            }
+        });
+    }
+
+    // 20-second Auto-Hint Button Click Handler
+    const btnTaskHint = document.getElementById('btn-task-hint');
+    if (btnTaskHint) {
+        btnTaskHint.addEventListener('click', () => {
+            if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+            const ch = (typeof CHAPTERS !== 'undefined') ? CHAPTERS[state.chapterIdx] : null;
+            const activeTask = (typeof getActiveTargetTask === 'function')
+                ? getActiveTargetTask()
+                : ((ch && ch.tasks) ? ch.tasks.find(t => !t.done) : null);
+            if (!activeTask) return;
+
+            const objId = (typeof TASK_OBJECT_MAP !== 'undefined') ? TASK_OBJECT_MAP[activeTask.id] : null;
+            const obj = (objId && typeof OBJECTS !== 'undefined') ? OBJECTS.find(o => o.id === objId) : null;
+            const stationName = obj ? (obj.label || obj.name || obj.id) : (activeTask.room || 'the marked station');
+            const guideHint = (typeof window.SIMPLIFIED_TASK_GUIDES !== 'undefined' && window.SIMPLIFIED_TASK_GUIDES[activeTask.id]?.hint)
+                ? window.SIMPLIFIED_TASK_GUIDES[activeTask.id].hint
+                : (activeTask.shortAction || activeTask.text);
+
+            window._forceHintBeaconUntil = Date.now() + 10000;
+            if (typeof spawnFloatingText === 'function' && state.player) {
+                spawnFloatingText('💡 Follow the arrow!', state.player.x, state.player.y - 25, '#fde047');
+            }
+            const hintMsg = `Head to ${stationName} and press [E]. ${guideHint}`;
+            const banner = document.getElementById('task-hint-banner');
+            const bannerTitle = document.getElementById('task-hint-banner-title');
+            const bannerText = document.getElementById('task-hint-banner-text');
+            if (banner && banner.classList) {
+                if (bannerTitle) bannerTitle.textContent = `Hint • ${stationName}`;
+                if (bannerText) bannerText.textContent = hintMsg;
+                banner.classList.remove('hidden');
+                if (banner.style) banner.style.display = 'flex';
+            }
+            if (typeof setAria === 'function') {
+                setAria(`Hint: ${hintMsg}`);
+            }
+        });
+    }
+
+    const btnCloseHintBanner = document.getElementById('btn-close-hint-banner');
+    if (btnCloseHintBanner) {
+        btnCloseHintBanner.addEventListener('click', () => {
+            const banner = document.getElementById('task-hint-banner');
+            if (banner && banner.classList) {
+                banner.classList.add('hidden');
+                if (banner.style) banner.style.display = 'none';
             }
         });
     }

@@ -1027,3 +1027,11 @@ canvas {
 details.nasa-telemetry-drawer summary::-webkit-details-marker {
     display: none;
 }
+
+/* Age 7-12 Touch Accessibility (>= 44px tap targets on touch/mobile) */
+@media (pointer: coarse), (max-width: 640px) {
+    .btn-compact,
+    #console-activity-mount button {
+        min-height: 44px;
+    }
+}

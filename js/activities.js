@@ -201,6 +201,7 @@ window.AstraActivities = (function () {
             hint: 'Align the antenna to Earth, then hold Transmit until upload hits 100%.'
         }
     };
+    if (typeof window !== 'undefined') window.SIMPLIFIED_TASK_GUIDES = SIMPLIFIED_TASK_GUIDES;
 
     /**
      * Creates an activity header with step pills (Simplified UI) or classic paragraph (Classic UI)

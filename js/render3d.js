@@ -9,6 +9,7 @@ let roomFloorDecals = {}, doorwayBadges = [], roomMachineryAnimations = [], tech
 let isThreeInitialized = false;
 let raycaster3D, mouse3D;
 let emergencyLight3D;
+let waypointArrow3D, waypointTargetRing3D;
 
 // World coordinates (1200 x 760) map to 3D centered at origin
 function to3DX(x) { return (x - 600) * 1.0; }
@@ -1991,6 +1992,39 @@ function build3DCadetNova() {
     nova3D.userData.lightTarget = lightTarget;
 
     scene3D.add(nova3D);
+
+    // 3D Waypoint Direction Arrow (orbits player feet pointing toward next active task)
+    waypointArrow3D = new THREE.Group();
+    const arrowMat = new THREE.MeshStandardMaterial({
+        color: 0xfdb773,
+        emissive: 0xeb895b,
+        emissiveIntensity: 0.9,
+        roughness: 0.25,
+        metalness: 0.2
+    });
+    const coneMesh = new THREE.Mesh(new THREE.ConeGeometry(5.5, 13, 12), arrowMat);
+    coneMesh.rotation.x = Math.PI / 2; // Tip points along +Z
+    coneMesh.position.z = 4;
+    waypointArrow3D.add(coneMesh);
+    const tailMesh = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.2, 7), arrowMat);
+    tailMesh.position.z = -4.5;
+    waypointArrow3D.add(tailMesh);
+    waypointArrow3D.visible = false;
+    scene3D.add(waypointArrow3D);
+
+    // 3D Pulsing Target Ring on the next active task's console
+    const targetRingGeo = new THREE.RingGeometry(24, 30, 32);
+    const targetRingMat = new THREE.MeshBasicMaterial({
+        color: 0xfdb773,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.85
+    });
+    waypointTargetRing3D = new THREE.Mesh(targetRingGeo, targetRingMat);
+    waypointTargetRing3D.rotation.x = -Math.PI / 2;
+    waypointTargetRing3D.position.y = 2.5;
+    waypointTargetRing3D.visible = false;
+    scene3D.add(waypointTargetRing3D);
 }
 
 // --- 3D ANIMATION & TELEMETRY SYNCHRONIZATION LOOP ---
@@ -2086,6 +2120,57 @@ function renderGame3D(now) {
                     ud.chestScreenMat.emissive.setHex(0x15803d);
                 }
             }
+        }
+    }
+
+    // 1b. Update 3D Waypoint Direction Indicator & Target Ring for Next Active Task (visible after >30s idle or airlock lock hint)
+    if (waypointArrow3D && waypointTargetRing3D && state && state.player) {
+        const ch = (typeof CHAPTERS !== 'undefined') ? CHAPTERS[state.chapterIdx] : null;
+        const activeTask = (typeof getActiveTargetTask === 'function')
+            ? getActiveTargetTask()
+            : ((ch && ch.tasks) ? ch.tasks.find(t => !t.done) : null);
+        const doneCount = (ch && ch.tasks) ? ch.tasks.filter(t => t.done).length : 0;
+        const progressKey = activeTask ? `${state.chapterIdx}:${doneCount}` : null;
+        if (progressKey !== window._taskIdleKey) {
+            window._taskIdleKey = progressKey;
+            window._taskIdleStartAt = Date.now();
+        }
+        const elapsedMs = window._taskIdleStartAt ? (Date.now() - window._taskIdleStartAt) : 0;
+        const forceBeacon = !!(window._forceHintBeaconUntil && Date.now() < window._forceHintBeaconUntil) || !!(window._forceAirlockBeaconUntil && Date.now() < window._forceAirlockBeaconUntil && state.chapterIdx === 0 && activeTask && activeTask.id === 'ch1_airlock');
+        const showWaypoint = !!activeTask && (forceBeacon || elapsedMs > 30000);
+
+        const targetObjId = (showWaypoint && typeof TASK_OBJECT_MAP !== 'undefined') ? TASK_OBJECT_MAP[activeTask.id] : null;
+        const targetObj = (targetObjId && typeof OBJECTS !== 'undefined') ? OBJECTS.find(o => o.id === targetObjId) : null;
+
+        if (targetObj) {
+            const tx = to3DX(targetObj.x);
+            const tz = to3DZ(targetObj.y);
+            waypointTargetRing3D.position.set(tx, 2.5, tz);
+            const pulse = 1 + Math.sin(now * 0.006) * 0.14;
+            waypointTargetRing3D.scale.set(pulse, pulse, 1);
+            waypointTargetRing3D.material.opacity = 0.55 + Math.sin(now * 0.006) * 0.3;
+            waypointTargetRing3D.visible = true;
+
+            const dx = targetObj.x - state.player.x;
+            const dy = targetObj.y - state.player.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist > 65) {
+                const ux = dx / dist;
+                const uz = dy / dist;
+                const orbitR = 32;
+                waypointArrow3D.position.set(
+                    to3DX(state.player.x) + ux * orbitR,
+                    7 + Math.sin(now * 0.007) * 2.0,
+                    to3DZ(state.player.y) + uz * orbitR
+                );
+                waypointArrow3D.rotation.y = Math.atan2(dx, dy);
+                waypointArrow3D.visible = true;
+            } else {
+                waypointArrow3D.visible = false;
+            }
+        } else {
+            waypointArrow3D.visible = false;
+            waypointTargetRing3D.visible = false;
         }
     }
 

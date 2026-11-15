@@ -1572,10 +1572,20 @@ function drawAstronaut(x, y, inSuit, now) {
     ctx.textAlign = 'center';
     ctx.fillText(wearSuit ? 'CADET NOVA [EVA]' : 'CADET NOVA', x, y - 37 + bob);
 
-    // Waypoint Guide Arrow
+    // Waypoint Guide Arrow (visible after >30s idle on active task or airlock lock hint)
     const currentTasks = CHAPTERS[state.chapterIdx]?.tasks || [];
-    const activeTask = currentTasks.find(t => !t.done);
-    if (activeTask) {
+    const activeTask = (typeof getActiveTargetTask === 'function')
+        ? getActiveTargetTask()
+        : (currentTasks.find(t => !t.done) || null);
+    const doneCount2D = currentTasks.filter(t => t.done).length;
+    const progressKey2D = activeTask ? `${state.chapterIdx}:${doneCount2D}` : null;
+    if (progressKey2D !== window._taskIdleKey) {
+        window._taskIdleKey = progressKey2D;
+        window._taskIdleStartAt = Date.now();
+    }
+    const forceBeacon2D = !!(window._forceHintBeaconUntil && Date.now() < window._forceHintBeaconUntil) || !!(window._forceAirlockBeaconUntil && Date.now() < window._forceAirlockBeaconUntil && state.chapterIdx === 0 && activeTask && activeTask.id === 'ch1_airlock');
+    const showWaypoint2D = !!activeTask && (forceBeacon2D || (window._taskIdleStartAt && (Date.now() - window._taskIdleStartAt) > 30000));
+    if (showWaypoint2D) {
         const targetObjId = TASK_OBJECT_MAP[activeTask.id];
         const targetObj = OBJECTS.find(o => o.id === targetObjId);
         if (targetObj) {

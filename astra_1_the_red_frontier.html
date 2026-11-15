@@ -1038,6 +1038,14 @@ details.nasa-telemetry-drawer summary::-webkit-details-marker {
     display: none;
 }
 
+/* Age 7-12 Touch Accessibility (>= 44px tap targets on touch/mobile) */
+@media (pointer: coarse), (max-width: 640px) {
+    .btn-compact,
+    #console-activity-mount button {
+        min-height: 44px;
+    }
+}
+
 </style>
     <script src="js/three.min.js"></script>
     <script>if (typeof THREE === 'undefined') document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
@@ -1070,17 +1078,23 @@ details.nasa-telemetry-drawer summary::-webkit-details-marker {
             </div>
         </div>
 
-        <!-- Center: Active Objective Pill -->
-        <div id="active-objective-pill" class="pill cursor-pointer border-[#FDB773] hover:border-[#FDB773] px-3 py-1.5 max-w-[180px] sm:max-w-xs md:max-w-md lg:max-w-lg truncate" title="Click to open / focus Mission Checklist">
-            <span class="w-2.5 h-2.5 rounded-full bg-[#EB895B] animate-ping shrink-0"></span>
-            <svg viewBox="0 0 20 20" class="w-4 h-4 shrink-0" aria-hidden="true">
-                <circle cx="10" cy="10" r="8" fill="#EB895B" stroke="#2d1212" stroke-width="1.5"/>
-                <circle cx="10" cy="10" r="3" fill="#FDB773"/>
-            </svg>
-            <div class="text-xs text-[#fff7f0] truncate flex items-center gap-1.5">
-                <span class="text-[#FDB773] font-black text-[10px] sm:text-xs uppercase tracking-wide shrink-0">TASK:</span>
-                <span id="active-objective-text" class="font-bold text-[#fff7f0] truncate">Inspect Airlock Pressure Console</span>
+        <!-- Center: Active Objective Pill + Auto-Hint Button -->
+        <div class="flex items-center gap-1.5 min-w-0">
+            <div id="active-objective-pill" class="pill cursor-pointer border-[#FDB773] hover:border-[#FDB773] px-3 py-1.5 max-w-[180px] sm:max-w-xs md:max-w-md lg:max-w-lg truncate" title="Click to open / focus Mission Checklist">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#EB895B] animate-ping shrink-0"></span>
+                <svg viewBox="0 0 20 20" class="w-4 h-4 shrink-0" aria-hidden="true">
+                    <circle cx="10" cy="10" r="8" fill="#EB895B" stroke="#2d1212" stroke-width="1.5"/>
+                    <circle cx="10" cy="10" r="3" fill="#FDB773"/>
+                </svg>
+                <div class="text-xs text-[#fff7f0] truncate flex items-center gap-1.5">
+                    <span class="text-[#FDB773] font-black text-[10px] sm:text-xs uppercase tracking-wide shrink-0">TASK:</span>
+                    <span id="active-objective-text" class="font-bold text-[#fff7f0] truncate">Inspect Airlock Pressure Console</span>
+                </div>
             </div>
+            <button id="btn-task-hint" type="button" style="display: none;" class="hidden btn-compact px-3 py-1.5 rounded-full bg-[#fde047] border-2 border-[#fff7f0] text-[#2d1212] text-xs font-black items-center gap-1.5 shadow-[0_0_16px_rgba(253,224,71,0.75)] hover:scale-[1.05] active:scale-[0.97] transition shrink-0 animate-pulse cursor-pointer z-30" title="Need a clue? Click for a task hint!" aria-label="Show task hint">
+                <i class="fa-solid fa-lightbulb"></i>
+                <span>Hint</span>
+            </button>
         </div>
 
         <!-- Right: Telemetry Meters, Pink SVG Hearts & Utility Controls -->
@@ -1182,6 +1196,20 @@ details.nasa-telemetry-drawer summary::-webkit-details-marker {
         </div>
     </header>
 
+    <!-- Floating Task Hint Banner (shown when player clicks the 20s Hint button) -->
+    <div id="task-hint-banner" style="display: none;" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-30 w-[92vw] max-w-md bg-[#2d1212]/95 border-2 border-[#fde047] rounded-2xl px-4 py-3 shadow-[0_10px_28px_rgba(0,0,0,0.65)] items-start gap-3 text-[#fff7f0]">
+        <div class="w-8 h-8 rounded-full bg-[#fde047] text-[#2d1212] flex items-center justify-center shrink-0 mt-0.5">
+            <i class="fa-solid fa-lightbulb text-sm"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+            <div id="task-hint-banner-title" class="text-[11px] font-black uppercase tracking-wider text-[#fde047]">Mission Clue</div>
+            <div id="task-hint-banner-text" class="text-xs font-bold leading-snug text-[#fff7f0] mt-0.5">Follow the glowing yellow arrow!</div>
+        </div>
+        <button id="btn-close-hint-banner" type="button" class="text-[#f7cbb0] hover:text-[#fff7f0] text-sm px-1.5 py-0.5 cursor-pointer shrink-0" aria-label="Close hint">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
     <!-- =======================================================================
          ZONE B: MAIN VIEWPORT & FLOATING GAMEPLAY HUD OVERLAYS
          ======================================================================= -->
@@ -1230,6 +1258,17 @@ details.nasa-telemetry-drawer summary::-webkit-details-marker {
                         <button id="btn-toggle-checklist" class="w-7 h-7 rounded-lg bg-[#4a1d1d] hover:bg-[#b34e4e] border border-[#DA6556] text-[#fff7f0] cursor-pointer flex items-center justify-center transition" title="Minimize Checklist">
                             <i id="icon-toggle-checklist" class="fa-solid fa-chevron-left text-xs"></i>
                         </button>
+                    </div>
+                </div>
+
+                <!-- Overall Mission Progress Bar -->
+                <div class="mb-2.5">
+                    <div class="flex items-center justify-between text-[10px] font-extrabold text-[#f7cbb0] mb-1">
+                        <span>Mission Progress</span>
+                        <span id="checklist-progress-pct" class="text-[#FDB773]">0%</span>
+                    </div>
+                    <div class="progress h-2">
+                        <div id="checklist-progress-bar" class="progress-fill" style="width: 0%"></div>
                     </div>
                 </div>
 
@@ -1948,6 +1987,10 @@ details.nasa-telemetry-drawer summary::-webkit-details-marker {
                                 <span class="flex items-center gap-1.5"><i id="icon-hud-mode" class="fa-solid fa-user-astronaut text-[#4a1d1d]"></i> Telemetry Mode</span>
                                 <span id="label-hud-mode" class="font-black">Cadet</span>
                             </button>
+                            <button id="btn-pace-mode" class="w-full btn-secondary btn-compact px-3 text-xs flex items-center justify-between cursor-pointer" title="Toggle between Standard Timers and Relaxed Pace (1.5x Time) for younger cadets">
+                                <span class="flex items-center gap-1.5"><i class="fa-solid fa-hourglass-half text-[#FDB773]"></i> Mission Pace</span>
+                                <span id="label-pace-mode" class="font-black text-[#FDB773]">Standard</span>
+                            </button>
                             <button id="btn-judge-hub" class="w-full btn-primary btn-compact px-3 text-xs flex items-center justify-between cursor-pointer" title="Official NASA Open Data Judge Verification Hub (15-Sec Audit)">
                                 <span class="flex items-center gap-1.5"><i class="fa-solid fa-microscope text-[#2d1212]"></i> NASA Judge Verification</span>
                                 <span class="font-black text-[#2d1212] text-[10px] uppercase">15s Audit</span>
@@ -1991,13 +2034,10 @@ details.nasa-telemetry-drawer summary::-webkit-details-marker {
                                         <span id="label-music">Ambient: ON</span>
                                     </button>
                                 </div>
-                                <div id="settings-music-bar" class="progress-segmented">
-                                    <span class="progress-seg-pip filled"></span>
-                                    <span class="progress-seg-pip filled"></span>
-                                    <span class="progress-seg-pip filled"></span>
-                                    <span class="progress-seg-pip filled"></span>
-                                    <span class="progress-seg-pip filled"></span>
-                                    <span class="progress-seg-pip filled"></span>
+                                <div id="settings-music-bar" class="bg-[#341717] border border-[#DA6556] rounded-lg px-2.5 py-1.5 flex items-center gap-2">
+                                    <i class="fa-solid fa-volume-low text-[#f7cbb0] text-[10px]"></i>
+                                    <input id="slider-music-vol" type="range" min="0" max="100" step="5" value="100" aria-label="Ambient Music Volume" class="w-full h-2 accent-[#FDB773] cursor-pointer" />
+                                    <i class="fa-solid fa-volume-high text-[#FDB773] text-[10px]"></i>
                                 </div>
                             </div>
                             <div class="space-y-2">
@@ -2005,17 +2045,21 @@ details.nasa-telemetry-drawer summary::-webkit-details-marker {
                                     <span class="font-bold text-[#fff7f0]">Sound Effects</span>
                                     <button id="btn-sound" class="btn-secondary btn-compact px-3 text-xs flex items-center gap-1.5 cursor-pointer">
                                         <i id="icon-sound" class="fa-solid fa-volume-high text-[#4fd1a0]"></i>
-                                        <span id="label-sound">SFX: ON</span>
+                                        <span id="label-sound">SFX: 100%</span>
                                     </button>
                                 </div>
-                                <div id="settings-sound-bar" class="progress-segmented">
-                                    <span class="progress-seg-pip filled-mint"></span>
-                                    <span class="progress-seg-pip filled-mint"></span>
-                                    <span class="progress-seg-pip filled-mint"></span>
-                                    <span class="progress-seg-pip filled-mint"></span>
-                                    <span class="progress-seg-pip filled-mint"></span>
-                                    <span class="progress-seg-pip filled-mint"></span>
+                                <div id="settings-sound-bar" class="bg-[#341717] border border-[#DA6556] rounded-lg px-2.5 py-1.5 flex items-center gap-2">
+                                    <i class="fa-solid fa-volume-low text-[#f7cbb0] text-[10px]"></i>
+                                    <input id="slider-sound-vol" type="range" min="0" max="100" step="5" value="100" aria-label="Sound Effects Volume" class="w-full h-2 accent-[#4fd1a0] cursor-pointer" />
+                                    <i class="fa-solid fa-volume-high text-[#4fd1a0] text-[10px]"></i>
                                 </div>
+                            </div>
+                            <div class="flex items-center justify-between gap-2 pt-1 border-t border-[#DA6556]/40">
+                                <span class="font-bold text-[#fff7f0]">ARIA Voice Readout</span>
+                                <button id="btn-aria-voice" class="btn-secondary btn-compact px-3 text-xs flex items-center gap-1.5 cursor-pointer" title="Read ARIA mission messages aloud for early readers">
+                                    <i id="icon-aria-voice" class="fa-solid fa-comment-dots text-[#f7cbb0]"></i>
+                                    <span id="label-aria-voice">Voice: OFF</span>
+                                </button>
                             </div>
                         </div>
 
@@ -2626,6 +2670,8 @@ class SoundFX {
     constructor() {
         this.enabled = true;
         this.musicEnabled = true;
+        this.musicVolume = 1.0;
+        this.sfxVolume = 1.0;
         this.ctx = null;
         this.ambientStarted = false;
         this.musicTimer = null;
@@ -2634,6 +2680,7 @@ class SoundFX {
         this.windGain = null;
         this.machineryOsc = null;
         this.machineryGain = null;
+        this.musicMasterGain = null;
         this.chordIdx = 0;
         this.lastStepSound = 0;
     }
@@ -2674,9 +2721,13 @@ class SoundFX {
             this.windGain = this.ctx.createGain();
             this.windGain.gain.setValueAtTime(0.015, this.ctx.currentTime);
 
+            this.musicMasterGain = this.ctx.createGain();
+            this.musicMasterGain.gain.setValueAtTime(this.musicEnabled ? this.musicVolume : 0, this.ctx.currentTime);
+            this.musicMasterGain.connect(this.ctx.destination);
+
             whiteNoise.connect(this.windFilter);
             this.windFilter.connect(this.windGain);
-            this.windGain.connect(this.ctx.destination);
+            this.windGain.connect(this.musicMasterGain);
             whiteNoise.start();
 
             // 2. Room-Specific Habitat Sub-Bass & Machinery Hum Oscillator
@@ -2688,7 +2739,7 @@ class SoundFX {
             this.machineryGain.gain.setValueAtTime(0.018, this.ctx.currentTime);
 
             this.machineryOsc.connect(this.machineryGain);
-            this.machineryGain.connect(this.ctx.destination);
+            this.machineryGain.connect(this.musicMasterGain);
             this.machineryOsc.start();
 
             // 3. Generative Sci-Fi Space Ambient Music Sequencer (Warm Ethereal Chords)
@@ -2717,12 +2768,12 @@ class SoundFX {
                     filter.frequency.setValueAtTime(650, now);
 
                     gain.gain.setValueAtTime(0.0001, now);
-                    gain.gain.linearRampToValueAtTime(0.016, now + 1.8);
+                    gain.gain.linearRampToValueAtTime(Math.max(0.0002, 0.016 * this.musicVolume), now + 1.8);
                     gain.gain.exponentialRampToValueAtTime(0.0001, now + 5.8);
 
                     osc.connect(filter);
                     filter.connect(gain);
-                    gain.connect(this.ctx.destination);
+                    gain.connect(this.musicMasterGain || this.ctx.destination);
 
                     osc.start(now);
                     osc.stop(now + 6.0);
@@ -2775,11 +2826,11 @@ class SoundFX {
         }
 
         if (this.windGain && this.windFilter) {
-            this.windGain.gain.setTargetAtTime(targetWindVol, now, 0.3);
+            this.windGain.gain.setTargetAtTime(Math.max(0.0001, targetWindVol * this.musicVolume), now, 0.3);
             this.windFilter.frequency.setTargetAtTime(targetWindFreq, now, 0.3);
         }
         if (this.machineryGain && this.machineryOsc) {
-            this.machineryGain.gain.setTargetAtTime(targetMachVol, now, 0.3);
+            this.machineryGain.gain.setTargetAtTime(Math.max(0.0001, targetMachVol * this.musicVolume), now, 0.3);
             this.machineryOsc.frequency.setTargetAtTime(targetMachFreq, now, 0.3);
         }
 
@@ -2791,8 +2842,28 @@ class SoundFX {
         }
     }
 
+    setMusicVolume(level) {
+        this.musicVolume = Math.max(0, Math.min(1, level));
+        this.musicEnabled = this.musicVolume > 0;
+        if (this.ambientStarted && this.ctx) {
+            const now = this.ctx.currentTime;
+            if (this.musicMasterGain) {
+                this.musicMasterGain.gain.setTargetAtTime(this.musicEnabled ? this.musicVolume : 0, now, 0.05);
+            }
+            if (!this.musicEnabled) {
+                if (this.windGain) this.windGain.gain.setTargetAtTime(0.0001, now, 0.15);
+                if (this.machineryGain) this.machineryGain.gain.setTargetAtTime(0.0001, now, 0.15);
+            }
+        }
+    }
+
+    setSfxVolume(level) {
+        this.sfxVolume = Math.max(0, Math.min(1, level));
+        this.enabled = this.sfxVolume > 0;
+    }
+
     playTone(freq, type = 'sine', duration = 0.12, vol = 0.08) {
-        if (!this.enabled) return;
+        if (!this.enabled || this.sfxVolume <= 0) return;
         try {
             this.init();
             if (!this.ctx) return;
@@ -2800,7 +2871,7 @@ class SoundFX {
             const gain = this.ctx.createGain();
             osc.type = type;
             osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-            gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+            gain.gain.setValueAtTime(Math.max(0.001, vol * this.sfxVolume), this.ctx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
             osc.connect(gain);
             gain.connect(this.ctx.destination);
@@ -4331,6 +4402,9 @@ const state = {
     uiSimplified: true,
     gridOverloadSeconds: 0,
     inventory: [],
+    relaxedPace: false,
+    voiceEnabled: false,
+    timerPendingStart: false,
     unlockedFacts: ['nasa_donki', 'nasa_osdr', 'nasa_curiosity_meda', 'chapea_habitat', 'chapea_comms'],
     earnedBadges: [],
     loads: {
@@ -4447,7 +4521,20 @@ function loseHeart(reasonText) {
     if (typeof spawnFloatingText === 'function' && state.player) {
         spawnFloatingText('-1 💔 ' + (reasonText || 'Danger!'), state.player.x, state.player.y - 25, '#ef4444');
     }
-    setAria('⚠️ HEART LOST! ' + reasonText);
+    let guidance = 'Check your mission tasks and station systems.';
+    const lower = (reasonText || '').toLowerCase();
+    if (lower.includes('co2') || lower.includes('o2') || lower.includes('oxygen') || lower.includes('air') || lower.includes('filter')) {
+        guidance = 'Tip: Open Life Support / ECLSS or the Greenhouse to restore air and scrub CO₂.';
+    } else if (lower.includes('power') || lower.includes('grid') || lower.includes('battery') || lower.includes('solar')) {
+        guidance = 'Tip: Open the Power Grid to shed non-essential loads or boost generation.';
+    } else if (lower.includes('water') || lower.includes('hydro')) {
+        guidance = 'Tip: Check Water Reclamation or Hydroponics to restore water reserves.';
+    } else if (lower.includes('radiation') || lower.includes('storm') || lower.includes('dust') || lower.includes('shelter')) {
+        guidance = 'Tip: Move into a shielded interior module or activate storm protection.';
+    } else if (lower.includes('time') || lower.includes('overload')) {
+        guidance = 'Tip: Follow the glowing waypoint arrow to resolve the active emergency task.';
+    }
+    setAria(`⚠️ HEART LOST! ${reasonText} ${guidance}`);
     if (typeof updateUI === 'function') updateUI();
     if (state.hearts <= 0) {
         triggerGameOver(reasonText);
@@ -4481,6 +4568,15 @@ function addItem(itemName) {
 function setAria(msg) {
     const el = document.getElementById('aria-message');
     if (el) el.textContent = `"${msg}"`;
+    if (state.voiceEnabled && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        try {
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance(msg);
+            utter.rate = 1.02;
+            utter.pitch = 1.05;
+            window.speechSynthesis.speak(utter);
+        } catch (e) {}
+    }
 }
 
 // --- CALCULATE POWER TELEMETRY ---
@@ -4615,15 +4711,20 @@ function loadChapter(idx, showBriefing = true, bypassLock = false) {
     }
     // Configure emergency countdown timer per mission
     if (idx === 3 || idx === 4 || idx === 5 || idx === 7) {
-        state.timerActive = true;
-        state.timerDuration = 75;
-        state.taskTimer = 75;
+        const dur = state.relaxedPace ? Math.round(75 * 1.5) : 75;
+        state.timerActive = false;
+        state.timerPendingStart = true;
+        state.timerDuration = dur;
+        state.taskTimer = dur;
     } else if (idx === 8) {
-        state.timerActive = true;
-        state.timerDuration = 60;
-        state.taskTimer = 60;
+        const dur = state.relaxedPace ? Math.round(60 * 1.5) : 60;
+        state.timerActive = false;
+        state.timerPendingStart = true;
+        state.timerDuration = dur;
+        state.taskTimer = dur;
     } else {
         state.timerActive = false;
+        state.timerPendingStart = false;
         state.timerDuration = 75;
         state.taskTimer = 75;
     }
@@ -5184,6 +5285,20 @@ function isTaskDone(taskId) {
     return t ? !!t.done : false;
 }
 
+function getActiveTargetTask() {
+    if (typeof CHAPTERS === 'undefined' || !state) return null;
+    const ch = CHAPTERS[state.chapterIdx];
+    if (!ch || !ch.tasks) return null;
+    const undone = ch.tasks.filter(t => !t.done);
+    if (undone.length === 0) return null;
+    if (typeof isInnerAirlockLocked === 'function' && isInnerAirlockLocked()) {
+        const airlockTask = undone.find(t => t.id === 'ch1_airlock');
+        if (airlockTask) return airlockTask;
+    }
+    return undone[0];
+}
+if (typeof window !== 'undefined') window.getActiveTargetTask = getActiveTargetTask;
+
 function completeTask(taskId) {
     const ch = CHAPTERS[state.chapterIdx];
     if (!ch) return;
@@ -5191,6 +5306,26 @@ function completeTask(taskId) {
     if (t && !t.done) {
         t.done = true;
         if (typeof sfx !== 'undefined' && sfx.success) sfx.success();
+
+        // Phase 3 SDT: Live Crew NPC reaction on task completion
+        if (typeof CREW_NPCS !== 'undefined' && typeof spawnFloatingText === 'function') {
+            let refX = state.player ? state.player.x : 700;
+            let refY = state.player ? state.player.y : 350;
+            if (typeof TASK_OBJECT_MAP !== 'undefined' && typeof OBJECTS !== 'undefined') {
+                const objId = TASK_OBJECT_MAP[taskId];
+                const obj = objId ? OBJECTS[objId] : null;
+                if (obj) { refX = obj.x; refY = obj.y; }
+            }
+            let bestNpc = null;
+            let bestDist = Infinity;
+            for (const npc of CREW_NPCS) {
+                const d = Math.hypot((npc.x || 0) - refX, (npc.y || 0) - refY);
+                if (d < bestDist) { bestDist = d; bestNpc = npc; }
+            }
+            if (bestNpc) {
+                spawnFloatingText('★ Great job, Cadet!', bestNpc.x, bestNpc.y - 30, '#4fd1a0');
+            }
+        }
 
         // Check if this task completion completes the whole mission!
         const allDone = ch.tasks.every(item => item.done);
@@ -6928,10 +7063,20 @@ function drawAstronaut(x, y, inSuit, now) {
     ctx.textAlign = 'center';
     ctx.fillText(wearSuit ? 'CADET NOVA [EVA]' : 'CADET NOVA', x, y - 37 + bob);
 
-    // Waypoint Guide Arrow
+    // Waypoint Guide Arrow (visible after >30s idle on active task or airlock lock hint)
     const currentTasks = CHAPTERS[state.chapterIdx]?.tasks || [];
-    const activeTask = currentTasks.find(t => !t.done);
-    if (activeTask) {
+    const activeTask = (typeof getActiveTargetTask === 'function')
+        ? getActiveTargetTask()
+        : (currentTasks.find(t => !t.done) || null);
+    const doneCount2D = currentTasks.filter(t => t.done).length;
+    const progressKey2D = activeTask ? `${state.chapterIdx}:${doneCount2D}` : null;
+    if (progressKey2D !== window._taskIdleKey) {
+        window._taskIdleKey = progressKey2D;
+        window._taskIdleStartAt = Date.now();
+    }
+    const forceBeacon2D = !!(window._forceHintBeaconUntil && Date.now() < window._forceHintBeaconUntil) || !!(window._forceAirlockBeaconUntil && Date.now() < window._forceAirlockBeaconUntil && state.chapterIdx === 0 && activeTask && activeTask.id === 'ch1_airlock');
+    const showWaypoint2D = !!activeTask && (forceBeacon2D || (window._taskIdleStartAt && (Date.now() - window._taskIdleStartAt) > 30000));
+    if (showWaypoint2D) {
         const targetObjId = TASK_OBJECT_MAP[activeTask.id];
         const targetObj = OBJECTS.find(o => o.id === targetObjId);
         if (targetObj) {
@@ -7490,6 +7635,7 @@ let roomFloorDecals = {}, doorwayBadges = [], roomMachineryAnimations = [], tech
 let isThreeInitialized = false;
 let raycaster3D, mouse3D;
 let emergencyLight3D;
+let waypointArrow3D, waypointTargetRing3D;
 
 // World coordinates (1200 x 760) map to 3D centered at origin
 function to3DX(x) { return (x - 600) * 1.0; }
@@ -9472,6 +9618,39 @@ function build3DCadetNova() {
     nova3D.userData.lightTarget = lightTarget;
 
     scene3D.add(nova3D);
+
+    // 3D Waypoint Direction Arrow (orbits player feet pointing toward next active task)
+    waypointArrow3D = new THREE.Group();
+    const arrowMat = new THREE.MeshStandardMaterial({
+        color: 0xfdb773,
+        emissive: 0xeb895b,
+        emissiveIntensity: 0.9,
+        roughness: 0.25,
+        metalness: 0.2
+    });
+    const coneMesh = new THREE.Mesh(new THREE.ConeGeometry(5.5, 13, 12), arrowMat);
+    coneMesh.rotation.x = Math.PI / 2; // Tip points along +Z
+    coneMesh.position.z = 4;
+    waypointArrow3D.add(coneMesh);
+    const tailMesh = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.2, 7), arrowMat);
+    tailMesh.position.z = -4.5;
+    waypointArrow3D.add(tailMesh);
+    waypointArrow3D.visible = false;
+    scene3D.add(waypointArrow3D);
+
+    // 3D Pulsing Target Ring on the next active task's console
+    const targetRingGeo = new THREE.RingGeometry(24, 30, 32);
+    const targetRingMat = new THREE.MeshBasicMaterial({
+        color: 0xfdb773,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.85
+    });
+    waypointTargetRing3D = new THREE.Mesh(targetRingGeo, targetRingMat);
+    waypointTargetRing3D.rotation.x = -Math.PI / 2;
+    waypointTargetRing3D.position.y = 2.5;
+    waypointTargetRing3D.visible = false;
+    scene3D.add(waypointTargetRing3D);
 }
 
 // --- 3D ANIMATION & TELEMETRY SYNCHRONIZATION LOOP ---
@@ -9567,6 +9746,57 @@ function renderGame3D(now) {
                     ud.chestScreenMat.emissive.setHex(0x15803d);
                 }
             }
+        }
+    }
+
+    // 1b. Update 3D Waypoint Direction Indicator & Target Ring for Next Active Task (visible after >30s idle or airlock lock hint)
+    if (waypointArrow3D && waypointTargetRing3D && state && state.player) {
+        const ch = (typeof CHAPTERS !== 'undefined') ? CHAPTERS[state.chapterIdx] : null;
+        const activeTask = (typeof getActiveTargetTask === 'function')
+            ? getActiveTargetTask()
+            : ((ch && ch.tasks) ? ch.tasks.find(t => !t.done) : null);
+        const doneCount = (ch && ch.tasks) ? ch.tasks.filter(t => t.done).length : 0;
+        const progressKey = activeTask ? `${state.chapterIdx}:${doneCount}` : null;
+        if (progressKey !== window._taskIdleKey) {
+            window._taskIdleKey = progressKey;
+            window._taskIdleStartAt = Date.now();
+        }
+        const elapsedMs = window._taskIdleStartAt ? (Date.now() - window._taskIdleStartAt) : 0;
+        const forceBeacon = !!(window._forceHintBeaconUntil && Date.now() < window._forceHintBeaconUntil) || !!(window._forceAirlockBeaconUntil && Date.now() < window._forceAirlockBeaconUntil && state.chapterIdx === 0 && activeTask && activeTask.id === 'ch1_airlock');
+        const showWaypoint = !!activeTask && (forceBeacon || elapsedMs > 30000);
+
+        const targetObjId = (showWaypoint && typeof TASK_OBJECT_MAP !== 'undefined') ? TASK_OBJECT_MAP[activeTask.id] : null;
+        const targetObj = (targetObjId && typeof OBJECTS !== 'undefined') ? OBJECTS.find(o => o.id === targetObjId) : null;
+
+        if (targetObj) {
+            const tx = to3DX(targetObj.x);
+            const tz = to3DZ(targetObj.y);
+            waypointTargetRing3D.position.set(tx, 2.5, tz);
+            const pulse = 1 + Math.sin(now * 0.006) * 0.14;
+            waypointTargetRing3D.scale.set(pulse, pulse, 1);
+            waypointTargetRing3D.material.opacity = 0.55 + Math.sin(now * 0.006) * 0.3;
+            waypointTargetRing3D.visible = true;
+
+            const dx = targetObj.x - state.player.x;
+            const dy = targetObj.y - state.player.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist > 65) {
+                const ux = dx / dist;
+                const uz = dy / dist;
+                const orbitR = 32;
+                waypointArrow3D.position.set(
+                    to3DX(state.player.x) + ux * orbitR,
+                    7 + Math.sin(now * 0.007) * 2.0,
+                    to3DZ(state.player.y) + uz * orbitR
+                );
+                waypointArrow3D.rotation.y = Math.atan2(dx, dy);
+                waypointArrow3D.visible = true;
+            } else {
+                waypointArrow3D.visible = false;
+            }
+        } else {
+            waypointArrow3D.visible = false;
+            waypointTargetRing3D.visible = false;
         }
     }
 
@@ -10021,6 +10251,7 @@ window.AstraActivities = (function () {
             hint: 'Align the antenna to Earth, then hold Transmit until upload hits 100%.'
         }
     };
+    if (typeof window !== 'undefined') window.SIMPLIFIED_TASK_GUIDES = SIMPLIFIED_TASK_GUIDES;
 
     /**
      * Creates an activity header with step pills (Simplified UI) or classic paragraph (Classic UI)
@@ -13733,6 +13964,7 @@ function triggerNearestObjectInteraction() {
 // --- EQUIPMENT DIAGNOSTIC & CONSOLE MODAL ---
 function openObjectModal(obj) {
     window._activeConsoleObj = obj;
+    window._waypointTaskStartAt = Date.now();
     document.getElementById('console-room').textContent = obj.room.toUpperCase();
     document.getElementById('console-title').textContent = obj.name;
     
@@ -15358,16 +15590,36 @@ function updateUI() {
         }
 
         // Active Objective Pill (1-line focus for younger students)
-        const activeTask = ch.tasks.find(t => !t.done);
+        const activeTask = (typeof getActiveTargetTask === 'function') ? getActiveTargetTask() : ch.tasks.find(t => !t.done);
         const objTextEl = document.getElementById('active-objective-text');
         if (objTextEl) {
             objTextEl.textContent = activeTask ? activeTask.text : 'All Chapter Tasks Complete! Advance Sol when ready.';
         }
 
         const taskProgEl = document.getElementById('checklist-progress-text');
+        const doneCount = ch.tasks.filter(t => t.done).length;
+        const totalCount = ch.tasks.length || 1;
+        const pct = Math.round((doneCount / totalCount) * 100);
         if (taskProgEl) {
-            const doneCount = ch.tasks.filter(t => t.done).length;
             taskProgEl.textContent = `Tasks: ${doneCount}/${ch.tasks.length}`;
+        }
+        const progBarEl = document.getElementById('checklist-progress-bar');
+        if (progBarEl && progBarEl.style) {
+            progBarEl.style.width = `${pct}%`;
+        }
+        const progPctEl = document.getElementById('checklist-progress-pct');
+        if (progPctEl) {
+            progPctEl.textContent = `${pct}%`;
+        }
+    }
+
+    // Phase 1 CLT: Progressive Disclosure — hide Power Grid button while locked in Mission 1 Airlock
+    const btnPowerGrid = document.getElementById('btn-power-grid');
+    if (btnPowerGrid && btnPowerGrid.classList) {
+        if (state.chapterIdx === 0 && typeof window.isInnerAirlockLocked === 'function' && window.isInnerAirlockLocked()) {
+            btnPowerGrid.classList.add('hidden');
+        } else {
+            btnPowerGrid.classList.remove('hidden');
         }
     }
 
@@ -15700,27 +15952,22 @@ function initUIEventListeners() {
         const musicOn = !window.sfx || sfx.musicEnabled !== false;
         const soundOn = !window.sfx || sfx.enabled !== false;
 
+        const musicPct = musicOn ? Math.round(((window.sfx && typeof sfx.musicVolume === 'number') ? sfx.musicVolume : 1) * 100) : 0;
+        const soundPct = soundOn ? Math.round(((window.sfx && typeof sfx.sfxVolume === 'number') ? sfx.sfxVolume : 1) * 100) : 0;
+
         const mIcon = document.getElementById('icon-music');
         const mLabel = document.getElementById('label-music');
-        const mBar = document.getElementById('settings-music-bar');
+        const mSlider = document.getElementById('slider-music-vol');
         if (mIcon) mIcon.className = musicOn ? 'fa-solid fa-music text-[#FDB773]' : 'fa-solid fa-volume-off text-[#f7cbb0]';
-        if (mLabel) mLabel.textContent = musicOn ? 'Ambient: ON' : 'Ambient: OFF';
-        if (mBar && typeof mBar.querySelectorAll === 'function') {
-            Array.from(mBar.querySelectorAll('.progress-seg-pip')).forEach(pip => {
-                if (pip.classList) pip.classList.toggle('filled', musicOn);
-            });
-        }
+        if (mLabel) mLabel.textContent = musicOn ? `Ambient: ${musicPct}%` : 'Ambient: OFF';
+        if (mSlider) mSlider.value = String(musicPct);
 
         const sIcon = document.getElementById('icon-sound');
         const sLabel = document.getElementById('label-sound');
-        const sBar = document.getElementById('settings-sound-bar');
+        const sSlider = document.getElementById('slider-sound-vol');
         if (sIcon) sIcon.className = soundOn ? 'fa-solid fa-volume-high text-[#4fd1a0]' : 'fa-solid fa-volume-xmark text-[#DA6556]';
-        if (sLabel) sLabel.textContent = soundOn ? 'SFX: ON' : 'SFX: OFF';
-        if (sBar && typeof sBar.querySelectorAll === 'function') {
-            Array.from(sBar.querySelectorAll('.progress-seg-pip')).forEach(pip => {
-                if (pip.classList) pip.classList.toggle('filled-mint', soundOn);
-            });
-        }
+        if (sLabel) sLabel.textContent = soundOn ? `SFX: ${soundPct}%` : 'SFX: OFF';
+        if (sSlider) sSlider.value = String(soundPct);
     };
 
     const restoreFocusAfterClose = () => {
@@ -15910,6 +16157,10 @@ function initUIEventListeners() {
             if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
             const sm = document.getElementById('modal-story');
             if (sm) sm.classList.add('hidden');
+            if (state && state.timerPendingStart) {
+                state.timerPendingStart = false;
+                state.timerActive = true;
+            }
             const isSimplified = !state || state.uiSimplified !== false;
             if (!isSimplified && typeof CHAPTER_DIALOGUES !== 'undefined' && CHAPTER_DIALOGUES[state.chapterIdx]) {
                 startDialogueSequence(CHAPTER_DIALOGUES[state.chapterIdx], state.chapterIdx);
@@ -15917,15 +16168,30 @@ function initUIEventListeners() {
         });
     }
 
-    // Audio & Ambient Music Toggles (Synced with Settings Segmented Bars)
+    // Audio & Ambient Music Toggles + Real Range Sliders
     const btnMusic = document.getElementById('btn-music');
     if (btnMusic) {
         btnMusic.addEventListener('click', () => {
             if (window.sfx) {
                 sfx.startAmbientEngine();
-                sfx.musicEnabled = !sfx.musicEnabled;
+                if (sfx.musicEnabled) {
+                    sfx.setMusicVolume(0);
+                } else {
+                    sfx.setMusicVolume(sfx.musicVolume > 0 ? sfx.musicVolume : 1.0);
+                }
                 syncSettingsAudioUI();
                 if (sfx.musicEnabled) sfx.beep();
+            }
+        });
+    }
+
+    const sliderMusic = document.getElementById('slider-music-vol');
+    if (sliderMusic) {
+        sliderMusic.addEventListener('input', (e) => {
+            if (window.sfx) {
+                sfx.startAmbientEngine();
+                sfx.setMusicVolume(Number(e.target.value) / 100);
+                syncSettingsAudioUI();
             }
         });
     }
@@ -15935,9 +16201,116 @@ function initUIEventListeners() {
         btnSound.addEventListener('click', () => {
             if (window.sfx) {
                 sfx.startAmbientEngine();
-                sfx.enabled = !sfx.enabled;
+                if (sfx.enabled) {
+                    sfx.setSfxVolume(0);
+                } else {
+                    sfx.setSfxVolume(sfx.sfxVolume > 0 ? sfx.sfxVolume : 1.0);
+                }
                 syncSettingsAudioUI();
                 if (sfx.enabled) sfx.beep();
+            }
+        });
+    }
+
+    const sliderSound = document.getElementById('slider-sound-vol');
+    if (sliderSound) {
+        sliderSound.addEventListener('input', (e) => {
+            if (window.sfx) {
+                sfx.startAmbientEngine();
+                sfx.setSfxVolume(Number(e.target.value) / 100);
+                syncSettingsAudioUI();
+            }
+        });
+        sliderSound.addEventListener('change', () => {
+            if (window.sfx && sfx.enabled) sfx.beep();
+        });
+    }
+
+    // Phase 2 Flow & Pacing: Relaxed Pace Mode Toggle
+    const btnPaceMode = document.getElementById('btn-pace-mode');
+    if (btnPaceMode) {
+        btnPaceMode.addEventListener('click', () => {
+            if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+            state.relaxedPace = !state.relaxedPace;
+            const lbl = document.getElementById('label-pace-mode');
+            if (lbl) lbl.textContent = state.relaxedPace ? 'Relaxed' : 'Standard';
+            btnPaceMode.classList.toggle('border-[#4fd1a0]', state.relaxedPace);
+            if (state.relaxedPace && (state.timerActive || state.timerPendingStart)) {
+                state.taskTimer = Math.max(state.taskTimer, Math.round((state.timerDuration || 75) * 1.5));
+            }
+            setAria(state.relaxedPace
+                ? 'Relaxed Pace enabled: 50% more time and no time-out heart penalties.'
+                : 'Standard Pace enabled: normal mission emergency timers.');
+        });
+    }
+
+    // Phase 4 Accessibility: ARIA Read-Aloud Voice Toggle
+    const btnAriaVoice = document.getElementById('btn-aria-voice');
+    if (btnAriaVoice) {
+        btnAriaVoice.addEventListener('click', () => {
+            if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+            state.voiceEnabled = !state.voiceEnabled;
+            const lbl = document.getElementById('label-aria-voice');
+            if (lbl) lbl.textContent = state.voiceEnabled ? 'Voice: ON' : 'Voice: OFF';
+            const icon = document.getElementById('icon-aria-voice');
+            if (icon) {
+                icon.className = state.voiceEnabled
+                    ? 'fa-solid fa-comment-dots text-[#4fd1a0]'
+                    : 'fa-solid fa-comment-dots text-[#FDB773]';
+            }
+            if (!state.voiceEnabled && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                try { window.speechSynthesis.cancel(); } catch (e) {}
+            } else if (state.voiceEnabled) {
+                setAria('ARIA voice guidance is now active, Cadet!');
+            }
+        });
+    }
+
+    // 20-second Auto-Hint Button Click Handler
+    const btnTaskHint = document.getElementById('btn-task-hint');
+    if (btnTaskHint) {
+        btnTaskHint.addEventListener('click', () => {
+            if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
+            const ch = (typeof CHAPTERS !== 'undefined') ? CHAPTERS[state.chapterIdx] : null;
+            const activeTask = (typeof getActiveTargetTask === 'function')
+                ? getActiveTargetTask()
+                : ((ch && ch.tasks) ? ch.tasks.find(t => !t.done) : null);
+            if (!activeTask) return;
+
+            const objId = (typeof TASK_OBJECT_MAP !== 'undefined') ? TASK_OBJECT_MAP[activeTask.id] : null;
+            const obj = (objId && typeof OBJECTS !== 'undefined') ? OBJECTS.find(o => o.id === objId) : null;
+            const stationName = obj ? (obj.label || obj.name || obj.id) : (activeTask.room || 'the marked station');
+            const guideHint = (typeof window.SIMPLIFIED_TASK_GUIDES !== 'undefined' && window.SIMPLIFIED_TASK_GUIDES[activeTask.id]?.hint)
+                ? window.SIMPLIFIED_TASK_GUIDES[activeTask.id].hint
+                : (activeTask.shortAction || activeTask.text);
+
+            window._forceHintBeaconUntil = Date.now() + 10000;
+            if (typeof spawnFloatingText === 'function' && state.player) {
+                spawnFloatingText('💡 Follow the arrow!', state.player.x, state.player.y - 25, '#fde047');
+            }
+            const hintMsg = `Head to ${stationName} and press [E]. ${guideHint}`;
+            const banner = document.getElementById('task-hint-banner');
+            const bannerTitle = document.getElementById('task-hint-banner-title');
+            const bannerText = document.getElementById('task-hint-banner-text');
+            if (banner && banner.classList) {
+                if (bannerTitle) bannerTitle.textContent = `Hint • ${stationName}`;
+                if (bannerText) bannerText.textContent = hintMsg;
+                banner.classList.remove('hidden');
+                if (banner.style) banner.style.display = 'flex';
+            }
+            if (typeof setAria === 'function') {
+                setAria(`Hint: ${hintMsg}`);
+            }
+        });
+    }
+
+    const btnCloseHintBanner = document.getElementById('btn-close-hint-banner');
+    if (btnCloseHintBanner) {
+        btnCloseHintBanner.addEventListener('click', () => {
+            const banner = document.getElementById('task-hint-banner');
+            if (banner && banner.classList) {
+                banner.classList.add('hidden');
+                if (banner.style) banner.style.display = 'none';
             }
         });
     }
@@ -17270,6 +17643,17 @@ function updateGame(dt) {
                     state.player.targetX = null;
                     state.player.targetY = null;
                 }
+                const now = Date.now();
+                window._forceAirlockBeaconUntil = now + 8000;
+                if (!window._lastInnerLockHintAt || now - window._lastInnerLockHintAt > 2500) {
+                    window._lastInnerLockHintAt = now;
+                    if (typeof spawnFloatingText === 'function') {
+                        spawnFloatingText('🔒 PRESSURIZE AIRLOCK FIRST', state.player.x, state.player.y - 25, '#FDB773');
+                    }
+                    if (typeof setAria === 'function') {
+                        setAria('Inner bulkhead sealed! Press [E] at the Airlock Console to equalize pressure to 101.3 kPa first.');
+                    }
+                }
             }
             // Inside habitat (x >= 415), prevent crossing left into unpressurized airlock (x < 425)
             if (state.player.x >= 415 && (state.player.x + moveX) < 425) {
@@ -17304,18 +17688,58 @@ function updateGame(dt) {
     if (state.timerActive && state.taskTimer > 0) {
         state.taskTimer -= dt;
         if (state.taskTimer <= 0) {
-            state.taskTimer = 0;
-            if (typeof loseHeart === 'function') {
-                loseHeart('Time ran out! Emergency systems overloaded!');
-            }
-            if (state.hearts > 0) {
-                state.taskTimer = state.timerDuration || 75;
+            if (state.relaxedPace) {
+                state.taskTimer = 30;
+                if (typeof setAria === 'function') {
+                    setAria('Relaxed Pace: Take your time! Emergency buffer extended by 30s — follow the waypoint arrow.');
+                }
+            } else {
+                state.taskTimer = 0;
+                if (typeof loseHeart === 'function') {
+                    loseHeart('Time ran out! Emergency systems overloaded!');
+                }
+                if (state.hearts > 0) {
+                    state.taskTimer = state.timerDuration || 75;
+                }
             }
         }
     }
     const activeCh = (typeof CHAPTERS !== 'undefined') ? CHAPTERS[state.chapterIdx] : null;
     if (activeCh && activeCh.tasks && activeCh.tasks.every(t => t.done)) {
         state.timerActive = false;
+    }
+
+    // 20-second Auto-Hint Button Visibility (tracks chapter + completed count so wandering never resets timer)
+    if (typeof document !== 'undefined') {
+        const hintBtn = document.getElementById('btn-task-hint');
+        if (hintBtn && hintBtn.classList) {
+            const undone = (activeCh && activeCh.tasks) ? activeCh.tasks.filter(t => !t.done) : [];
+            const doneCount = (activeCh && activeCh.tasks) ? activeCh.tasks.filter(t => t.done).length : 0;
+            const hasUndone = undone.length > 0;
+            const progressKey = hasUndone ? `${state.chapterIdx}:${doneCount}` : null;
+
+            const storyModal = document.getElementById('modal-story');
+            const slidesModal = document.getElementById('modal-story-slides');
+            const storyOpen = (storyModal && storyModal.classList && !storyModal.classList.contains('hidden')) ||
+                              (slidesModal && slidesModal.classList && !slidesModal.classList.contains('hidden'));
+            if (progressKey !== window._taskIdleKey || storyOpen) {
+                window._taskIdleKey = progressKey;
+                window._taskIdleStartAt = Date.now();
+                const banner = document.getElementById('task-hint-banner');
+                if (banner && banner.classList) {
+                    banner.classList.add('hidden');
+                    if (banner.style) banner.style.display = 'none';
+                }
+            }
+            const showHint = hasUndone && !storyOpen && window._taskIdleStartAt && (Date.now() - window._taskIdleStartAt) > 20000;
+            if (showHint) {
+                hintBtn.classList.remove('hidden');
+                if (hintBtn.style) hintBtn.style.display = 'inline-flex';
+            } else {
+                hintBtn.classList.add('hidden');
+                if (hintBtn.style) hintBtn.style.display = 'none';
+            }
+        }
     }
     const isMoving = (dx !== 0 || dy !== 0);
     state.player.isMoving = isMoving;

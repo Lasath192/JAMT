@@ -35,6 +35,9 @@ const state = {
     uiSimplified: true,
     gridOverloadSeconds: 0,
     inventory: [],
+    relaxedPace: false,
+    voiceEnabled: false,
+    timerPendingStart: false,
     unlockedFacts: ['nasa_donki', 'nasa_osdr', 'nasa_curiosity_meda', 'chapea_habitat', 'chapea_comms'],
     earnedBadges: [],
     loads: {
@@ -151,7 +154,20 @@ function loseHeart(reasonText) {
     if (typeof spawnFloatingText === 'function' && state.player) {
         spawnFloatingText('-1 💔 ' + (reasonText || 'Danger!'), state.player.x, state.player.y - 25, '#ef4444');
     }
-    setAria('⚠️ HEART LOST! ' + reasonText);
+    let guidance = 'Check your mission tasks and station systems.';
+    const lower = (reasonText || '').toLowerCase();
+    if (lower.includes('co2') || lower.includes('o2') || lower.includes('oxygen') || lower.includes('air') || lower.includes('filter')) {
+        guidance = 'Tip: Open Life Support / ECLSS or the Greenhouse to restore air and scrub CO₂.';
+    } else if (lower.includes('power') || lower.includes('grid') || lower.includes('battery') || lower.includes('solar')) {
+        guidance = 'Tip: Open the Power Grid to shed non-essential loads or boost generation.';
+    } else if (lower.includes('water') || lower.includes('hydro')) {
+        guidance = 'Tip: Check Water Reclamation or Hydroponics to restore water reserves.';
+    } else if (lower.includes('radiation') || lower.includes('storm') || lower.includes('dust') || lower.includes('shelter')) {
+        guidance = 'Tip: Move into a shielded interior module or activate storm protection.';
+    } else if (lower.includes('time') || lower.includes('overload')) {
+        guidance = 'Tip: Follow the glowing waypoint arrow to resolve the active emergency task.';
+    }
+    setAria(`⚠️ HEART LOST! ${reasonText} ${guidance}`);
     if (typeof updateUI === 'function') updateUI();
     if (state.hearts <= 0) {
         triggerGameOver(reasonText);
@@ -185,6 +201,15 @@ function addItem(itemName) {
 function setAria(msg) {
     const el = document.getElementById('aria-message');
     if (el) el.textContent = `"${msg}"`;
+    if (state.voiceEnabled && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        try {
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance(msg);
+            utter.rate = 1.02;
+            utter.pitch = 1.05;
+            window.speechSynthesis.speak(utter);
+        } catch (e) {}
+    }
 }
 
 // --- CALCULATE POWER TELEMETRY ---
@@ -319,15 +344,20 @@ function loadChapter(idx, showBriefing = true, bypassLock = false) {
     }
     // Configure emergency countdown timer per mission
     if (idx === 3 || idx === 4 || idx === 5 || idx === 7) {
-        state.timerActive = true;
-        state.timerDuration = 75;
-        state.taskTimer = 75;
+        const dur = state.relaxedPace ? Math.round(75 * 1.5) : 75;
+        state.timerActive = false;
+        state.timerPendingStart = true;
+        state.timerDuration = dur;
+        state.taskTimer = dur;
     } else if (idx === 8) {
-        state.timerActive = true;
-        state.timerDuration = 60;
-        state.taskTimer = 60;
+        const dur = state.relaxedPace ? Math.round(60 * 1.5) : 60;
+        state.timerActive = false;
+        state.timerPendingStart = true;
+        state.timerDuration = dur;
+        state.taskTimer = dur;
     } else {
         state.timerActive = false;
+        state.timerPendingStart = false;
         state.timerDuration = 75;
         state.taskTimer = 75;
     }
@@ -888,6 +918,20 @@ function isTaskDone(taskId) {
     return t ? !!t.done : false;
 }
 
+function getActiveTargetTask() {
+    if (typeof CHAPTERS === 'undefined' || !state) return null;
+    const ch = CHAPTERS[state.chapterIdx];
+    if (!ch || !ch.tasks) return null;
+    const undone = ch.tasks.filter(t => !t.done);
+    if (undone.length === 0) return null;
+    if (typeof isInnerAirlockLocked === 'function' && isInnerAirlockLocked()) {
+        const airlockTask = undone.find(t => t.id === 'ch1_airlock');
+        if (airlockTask) return airlockTask;
+    }
+    return undone[0];
+}
+if (typeof window !== 'undefined') window.getActiveTargetTask = getActiveTargetTask;
+
 function completeTask(taskId) {
     const ch = CHAPTERS[state.chapterIdx];
     if (!ch) return;
@@ -895,6 +939,26 @@ function completeTask(taskId) {
     if (t && !t.done) {
         t.done = true;
         if (typeof sfx !== 'undefined' && sfx.success) sfx.success();
+
+        // Phase 3 SDT: Live Crew NPC reaction on task completion
+        if (typeof CREW_NPCS !== 'undefined' && typeof spawnFloatingText === 'function') {
+            let refX = state.player ? state.player.x : 700;
+            let refY = state.player ? state.player.y : 350;
+            if (typeof TASK_OBJECT_MAP !== 'undefined' && typeof OBJECTS !== 'undefined') {
+                const objId = TASK_OBJECT_MAP[taskId];
+                const obj = objId ? OBJECTS[objId] : null;
+                if (obj) { refX = obj.x; refY = obj.y; }
+            }
+            let bestNpc = null;
+            let bestDist = Infinity;
+            for (const npc of CREW_NPCS) {
+                const d = Math.hypot((npc.x || 0) - refX, (npc.y || 0) - refY);
+                if (d < bestDist) { bestDist = d; bestNpc = npc; }
+            }
+            if (bestNpc) {
+                spawnFloatingText('★ Great job, Cadet!', bestNpc.x, bestNpc.y - 30, '#4fd1a0');
+            }
+        }
 
         // Check if this task completion completes the whole mission!
         const allDone = ch.tasks.every(item => item.done);

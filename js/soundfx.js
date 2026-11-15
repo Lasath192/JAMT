@@ -7,6 +7,8 @@ class SoundFX {
     constructor() {
         this.enabled = true;
         this.musicEnabled = true;
+        this.musicVolume = 1.0;
+        this.sfxVolume = 1.0;
         this.ctx = null;
         this.ambientStarted = false;
         this.musicTimer = null;
@@ -15,6 +17,7 @@ class SoundFX {
         this.windGain = null;
         this.machineryOsc = null;
         this.machineryGain = null;
+        this.musicMasterGain = null;
         this.chordIdx = 0;
         this.lastStepSound = 0;
     }
@@ -55,9 +58,13 @@ class SoundFX {
             this.windGain = this.ctx.createGain();
             this.windGain.gain.setValueAtTime(0.015, this.ctx.currentTime);
 
+            this.musicMasterGain = this.ctx.createGain();
+            this.musicMasterGain.gain.setValueAtTime(this.musicEnabled ? this.musicVolume : 0, this.ctx.currentTime);
+            this.musicMasterGain.connect(this.ctx.destination);
+
             whiteNoise.connect(this.windFilter);
             this.windFilter.connect(this.windGain);
-            this.windGain.connect(this.ctx.destination);
+            this.windGain.connect(this.musicMasterGain);
             whiteNoise.start();
 
             // 2. Room-Specific Habitat Sub-Bass & Machinery Hum Oscillator
@@ -69,7 +76,7 @@ class SoundFX {
             this.machineryGain.gain.setValueAtTime(0.018, this.ctx.currentTime);
 
             this.machineryOsc.connect(this.machineryGain);
-            this.machineryGain.connect(this.ctx.destination);
+            this.machineryGain.connect(this.musicMasterGain);
             this.machineryOsc.start();
 
             // 3. Generative Sci-Fi Space Ambient Music Sequencer (Warm Ethereal Chords)
@@ -98,12 +105,12 @@ class SoundFX {
                     filter.frequency.setValueAtTime(650, now);
 
                     gain.gain.setValueAtTime(0.0001, now);
-                    gain.gain.linearRampToValueAtTime(0.016, now + 1.8);
+                    gain.gain.linearRampToValueAtTime(Math.max(0.0002, 0.016 * this.musicVolume), now + 1.8);
                     gain.gain.exponentialRampToValueAtTime(0.0001, now + 5.8);
 
                     osc.connect(filter);
                     filter.connect(gain);
-                    gain.connect(this.ctx.destination);
+                    gain.connect(this.musicMasterGain || this.ctx.destination);
 
                     osc.start(now);
                     osc.stop(now + 6.0);
@@ -156,11 +163,11 @@ class SoundFX {
         }
 
         if (this.windGain && this.windFilter) {
-            this.windGain.gain.setTargetAtTime(targetWindVol, now, 0.3);
+            this.windGain.gain.setTargetAtTime(Math.max(0.0001, targetWindVol * this.musicVolume), now, 0.3);
             this.windFilter.frequency.setTargetAtTime(targetWindFreq, now, 0.3);
         }
         if (this.machineryGain && this.machineryOsc) {
-            this.machineryGain.gain.setTargetAtTime(targetMachVol, now, 0.3);
+            this.machineryGain.gain.setTargetAtTime(Math.max(0.0001, targetMachVol * this.musicVolume), now, 0.3);
             this.machineryOsc.frequency.setTargetAtTime(targetMachFreq, now, 0.3);
         }
 
@@ -172,8 +179,28 @@ class SoundFX {
         }
     }
 
+    setMusicVolume(level) {
+        this.musicVolume = Math.max(0, Math.min(1, level));
+        this.musicEnabled = this.musicVolume > 0;
+        if (this.ambientStarted && this.ctx) {
+            const now = this.ctx.currentTime;
+            if (this.musicMasterGain) {
+                this.musicMasterGain.gain.setTargetAtTime(this.musicEnabled ? this.musicVolume : 0, now, 0.05);
+            }
+            if (!this.musicEnabled) {
+                if (this.windGain) this.windGain.gain.setTargetAtTime(0.0001, now, 0.15);
+                if (this.machineryGain) this.machineryGain.gain.setTargetAtTime(0.0001, now, 0.15);
+            }
+        }
+    }
+
+    setSfxVolume(level) {
+        this.sfxVolume = Math.max(0, Math.min(1, level));
+        this.enabled = this.sfxVolume > 0;
+    }
+
     playTone(freq, type = 'sine', duration = 0.12, vol = 0.08) {
-        if (!this.enabled) return;
+        if (!this.enabled || this.sfxVolume <= 0) return;
         try {
             this.init();
             if (!this.ctx) return;
@@ -181,7 +208,7 @@ class SoundFX {
             const gain = this.ctx.createGain();
             osc.type = type;
             osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-            gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+            gain.gain.setValueAtTime(Math.max(0.001, vol * this.sfxVolume), this.ctx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
             osc.connect(gain);
             gain.connect(this.ctx.destination);
