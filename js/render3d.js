@@ -1661,35 +1661,67 @@ function build3DCrewNPCs() {
         });
         const darkMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 });
 
-        const legGeo = new THREE.CylinderGeometry(2, 2.2, 12, 8);
-        const lLeg = new THREE.Mesh(legGeo, darkMat);
-        lLeg.position.set(-3.5, 6, 0);
-        lLeg.castShadow = true;
-        group.add(lLeg);
+        // Left Leg (hip pivot group)
+        const leftLegGroup = new THREE.Group();
+        leftLegGroup.position.set(-3.5, 11, 0);
+        const lLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(2, 2.2, 11, 8), darkMat);
+        lLegMesh.position.y = -5.5;
+        lLegMesh.castShadow = true;
+        leftLegGroup.add(lLegMesh);
+        group.add(leftLegGroup);
 
-        const rLeg = new THREE.Mesh(legGeo, darkMat);
-        rLeg.position.set(3.5, 6, 0);
-        rLeg.castShadow = true;
-        group.add(rLeg);
+        // Right Leg (hip pivot group)
+        const rightLegGroup = new THREE.Group();
+        rightLegGroup.position.set(3.5, 11, 0);
+        const rLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(2, 2.2, 11, 8), darkMat);
+        rLegMesh.position.y = -5.5;
+        rLegMesh.castShadow = true;
+        rightLegGroup.add(rLegMesh);
+        group.add(rightLegGroup);
 
+        // Torso
         const torsoGeo = new THREE.BoxGeometry(12, 14, 8);
         const torso = new THREE.Mesh(torsoGeo, suitMat);
         torso.position.y = 18;
         torso.castShadow = true;
         group.add(torso);
 
-        const armGeo = new THREE.CylinderGeometry(1.6, 1.8, 11, 8);
-        const lArm = new THREE.Mesh(armGeo, suitMat);
-        lArm.position.set(-7.5, 17, 0);
-        lArm.rotation.z = Math.PI * 0.05;
-        lArm.castShadow = true;
-        group.add(lArm);
+        // Left Arm (shoulder pivot group)
+        const armGeo = new THREE.CylinderGeometry(1.6, 1.8, 10, 8);
+        const leftArmGroup = new THREE.Group();
+        leftArmGroup.position.set(-7.5, 22, 0);
+        const lArmMesh = new THREE.Mesh(armGeo, suitMat);
+        lArmMesh.position.y = -4.5;
+        lArmMesh.castShadow = true;
+        leftArmGroup.add(lArmMesh);
+        group.add(leftArmGroup);
 
-        const rArm = new THREE.Mesh(armGeo, suitMat);
-        rArm.position.set(7.5, 17, 0);
-        rArm.rotation.z = -Math.PI * 0.05;
-        rArm.castShadow = true;
-        group.add(rArm);
+        // Right Arm (shoulder pivot group)
+        const rightArmGroup = new THREE.Group();
+        rightArmGroup.position.set(7.5, 22, 0);
+        const rArmMesh = new THREE.Mesh(armGeo, suitMat);
+        rArmMesh.position.y = -4.5;
+        rArmMesh.castShadow = true;
+        rightArmGroup.add(rArmMesh);
+        group.add(rightArmGroup);
+
+        // Handheld Diagnostics Datapad (attached to torso or hands)
+        const padGroup = new THREE.Group();
+        padGroup.position.set(0, 18, 6.5);
+        const padBody = new THREE.Mesh(new THREE.BoxGeometry(6, 4.5, 1), darkMat);
+        padGroup.add(padBody);
+
+        const screenCol = npc.assignedRoom === 'greenhouse' ? 0x22c55e :
+                         npc.assignedRoom === 'power' ? 0xf59e0b :
+                         npc.assignedRoom === 'shelter' ? 0xc084fc : 0x38bdf8;
+        const padScreen = new THREE.Mesh(
+            new THREE.BoxGeometry(5.2, 3.8, 0.4),
+            new THREE.MeshStandardMaterial({ color: screenCol, emissive: screenCol, emissiveIntensity: 0.85 })
+        );
+        padScreen.position.z = 0.5;
+        padGroup.add(padScreen);
+        padGroup.visible = false;
+        group.add(padGroup);
 
         if (npc.helmetOn) {
             const helmGeo = new THREE.SphereGeometry(6, 16, 16);
@@ -1721,7 +1753,15 @@ function build3DCrewNPCs() {
         }
 
         scene3D.add(group);
-        crew3DMeshes[npc.id] = { mesh: group, data: npc };
+        crew3DMeshes[npc.id] = {
+            mesh: group,
+            leftLeg: leftLegGroup,
+            rightLeg: rightLegGroup,
+            leftArm: leftArmGroup,
+            rightArm: rightArmGroup,
+            datapad: padGroup,
+            data: npc
+        };
     });
 }
 
@@ -2039,6 +2079,78 @@ function renderGame3D(now) {
         camera3D.position.x += (camTargetX - camera3D.position.x) * 0.08;
         camera3D.position.z += (camTargetZ - camera3D.position.z) * 0.08;
         camera3D.lookAt(nova3D.position.x, 22, nova3D.position.z - 25);
+    }
+
+    // 2b. Update Autonomous Crew NPCs (Position, Facing Rotation, Walk Cycle & Handheld Diagnostics)
+    if (crew3DMeshes && typeof CREW_NPCS !== 'undefined') {
+        CREW_NPCS.forEach(npc => {
+            const entry = crew3DMeshes[npc.id];
+            if (!entry || !entry.mesh) return;
+
+            const targetX = to3DX(npc.x);
+            const targetZ = to3DZ(npc.y);
+            const grp = entry.mesh;
+
+            // Smooth position interpolation
+            grp.position.x += (targetX - grp.position.x) * 0.15;
+            grp.position.z += (targetZ - grp.position.z) * 0.15;
+
+            // Facing rotation
+            let targetRot = 0;
+            const facing = npc.facing || 'down';
+            if (facing === 'down') targetRot = 0;
+            else if (facing === 'up') targetRot = Math.PI;
+            else if (facing === 'left') targetRot = Math.PI * 0.5;
+            else if (facing === 'right') targetRot = -Math.PI * 0.5;
+
+            // If player is talking to this NPC, turn towards player
+            if (typeof window !== 'undefined' && window.activeDialogueNPCId === npc.id && state && state.player) {
+                const dx = state.player.x - npc.x;
+                const dy = state.player.y - npc.y;
+                targetRot = Math.atan2(dx, dy);
+            }
+
+            // Smooth rotation interpolation
+            let diff = targetRot - grp.rotation.y;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            grp.rotation.y += diff * 0.15;
+
+            const isMoving = !!npc.isMoving;
+            const isWorking = npc.ai && (npc.ai.state === 'working' || npc.ai.state === 'inspecting');
+            const isTalking = (typeof window !== 'undefined' && window.activeDialogueNPCId === npc.id);
+
+            if (isMoving) {
+                const legSwing = Math.sin(now * 0.015) * 0.5;
+                const armSwing = Math.sin(now * 0.015) * 0.4;
+                if (entry.leftLeg) entry.leftLeg.rotation.x = legSwing;
+                if (entry.rightLeg) entry.rightLeg.rotation.x = -legSwing;
+                if (entry.leftArm) entry.leftArm.rotation.x = -armSwing;
+                if (entry.rightArm) entry.rightArm.rotation.x = armSwing;
+                grp.position.y = Math.abs(Math.sin(now * 0.015)) * 1.2;
+                if (entry.datapad) entry.datapad.visible = false;
+            } else if (isWorking || isTalking) {
+                if (entry.leftLeg) entry.leftLeg.rotation.x = 0;
+                if (entry.rightLeg) entry.rightLeg.rotation.x = 0;
+                grp.position.y = 0;
+
+                // Raise arms towards workstation/datapad
+                if (entry.leftArm) entry.leftArm.rotation.x = -0.75 + Math.sin(now * 0.005) * 0.08;
+                if (entry.rightArm) entry.rightArm.rotation.x = -0.75 + Math.cos(now * 0.006) * 0.08;
+                if (entry.datapad) {
+                    entry.datapad.visible = true;
+                    entry.datapad.position.y = 18 + Math.sin(now * 0.004) * 0.5;
+                }
+            } else {
+                // Waiting/idle
+                if (entry.leftLeg) entry.leftLeg.rotation.x = 0;
+                if (entry.rightLeg) entry.rightLeg.rotation.x = 0;
+                if (entry.leftArm) entry.leftArm.rotation.x = 0;
+                if (entry.rightArm) entry.rightArm.rotation.x = 0;
+                grp.position.y = 0;
+                if (entry.datapad) entry.datapad.visible = false;
+            }
+        });
     }
 
     // 3. Dynamic Floor Decal Fade-Out & Location Tracking

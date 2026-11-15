@@ -79,6 +79,7 @@ function isAnyModalOpen() {
 }
 
 function closeAllModals() {
+    window.activeDialogueNPCId = null;
     ['modal-console', 'modal-power', 'modal-codex', 'modal-dialogue', 'modal-story', 'modal-victory', 'modal-mission-complete', 'modal-airlock-exit'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
@@ -107,6 +108,15 @@ function startDialogueSequence(dialogueArray, chapterBannerIdx = state.chapterId
 function renderCurrentDialogueStep() {
     const step = activeDialogueQueue[activeDialogueIndex];
     if (!step) return;
+
+    // Link speaker to crew NPC so NPC pauses, faces astronaut, and enters dialogue state
+    if (typeof CREW_NPCS !== 'undefined') {
+        const matchingNPC = CREW_NPCS.find(n => 
+            (step.portrait && n.id === step.portrait) || 
+            (step.speaker && n.name.toLowerCase().includes(step.speaker.toLowerCase()))
+        );
+        window.activeDialogueNPCId = matchingNPC ? matchingNPC.id : null;
+    }
 
     const portraitBox = document.getElementById('dlg-portrait-box');
     if (portraitBox && typeof getCharacterPortraitSVG === 'function') {
@@ -144,6 +154,7 @@ function advanceDialogueStep() {
         if (window.sfx && typeof sfx.success === 'function') sfx.success();
         const dlgModal = document.getElementById('modal-dialogue');
         if (dlgModal) dlgModal.classList.add('hidden');
+        window.activeDialogueNPCId = null;
     }
 }
 
@@ -198,6 +209,7 @@ function triggerNearestObjectInteraction() {
     }
     const npc = getNearestCrewNPC();
     if (npc && npc.dialogues) {
+        window.activeDialogueNPCId = npc.id;
         if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
         startDialogueSequence(npc.dialogues, state.chapterIdx);
     }
@@ -2036,6 +2048,7 @@ function initUIEventListeners() {
         if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
         const dlgModal = document.getElementById('modal-dialogue');
         if (dlgModal) dlgModal.classList.add('hidden');
+        window.activeDialogueNPCId = null;
     });
 
     const btnReplayDlg = document.getElementById('btn-replay-dialogue');

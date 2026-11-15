@@ -444,8 +444,169 @@ function closePropDetailsModal() {
 }
 window.closePropDetailsModal = closePropDetailsModal;
 
+// --- AUTONOMOUS NPC BEHAVIOUR & ROOM ROUTINES ENGINE ---
+function initNPCAI(npc) {
+    const routine = (typeof NPC_ACTIVITY_ROUTINES !== 'undefined' && NPC_ACTIVITY_ROUTINES[npc.id]) ? NPC_ACTIVITY_ROUTINES[npc.id] : null;
+    const initialWait = 1.0 + Math.random() * 2.5; // Staggered start times so crew don't move in lockstep
+    npc.ai = {
+        state: 'waiting',
+        timer: initialWait,
+        speed: 42 + (Math.random() * 6 - 3), // Realistic 39-45 px/s walking speed
+        targetX: npc.x,
+        targetY: npc.y,
+        targetFacing: npc.facing || 'down',
+        waypointIndex: -1,
+        currentWaypoint: null,
+        isConversing: false,
+        animTimer: 0
+    };
+    npc.assignedRoom = routine ? routine.assignedRoom : (npc.assignedRoom || 'lab');
+    npc.isMoving = false;
+    npc.activityText = routine ? routine.defaultStatus : 'Conducting outpost operations';
+}
+window.initNPCAI = initNPCAI;
+
+function selectNextNPCWaypoint(npc) {
+    const ai = npc.ai;
+    const routine = (typeof NPC_ACTIVITY_ROUTINES !== 'undefined' && NPC_ACTIVITY_ROUTINES[npc.id]) ? NPC_ACTIVITY_ROUTINES[npc.id] : null;
+    if (!routine || !routine.waypoints || routine.waypoints.length === 0) return;
+
+    // Advance to next workstation in the room routine
+    ai.waypointIndex = (ai.waypointIndex + 1) % routine.waypoints.length;
+    const wp = routine.waypoints[ai.waypointIndex];
+
+    ai.currentWaypoint = wp;
+    ai.targetX = wp.x;
+    ai.targetY = wp.y;
+    ai.targetFacing = wp.facing || 'down';
+    ai.state = 'walking';
+    npc.activityText = wp.moveText || `Walking to ${wp.name}...`;
+}
+window.selectNextNPCWaypoint = selectNextNPCWaypoint;
+
+function updateAutonomousNPCs(dt, now) {
+    if (typeof CREW_NPCS === 'undefined') return;
+
+    // Check if a dialogue conversation is currently active on screen
+    const dlgModal = document.getElementById('modal-dialogue');
+    const isDialogueOpen = dlgModal && !dlgModal.classList.contains('hidden');
+
+    CREW_NPCS.forEach(npc => {
+        if (!npc.ai) {
+            initNPCAI(npc);
+        }
+
+        const ai = npc.ai;
+
+        // Check if this NPC is currently talking to Cadet Nova
+        const isThisNPCInDialogue = isDialogueOpen && (
+            (window.activeDialogueNPCId === npc.id) ||
+            (window.activeDialogueQueue && window.activeDialogueQueue.some(d => d.portrait === npc.id || d.speaker === npc.name))
+        );
+
+        if (isThisNPCInDialogue) {
+            ai.isConversing = true;
+            npc.isMoving = false;
+            // Face the player during conversation
+            if (state && state.player) {
+                const pdx = state.player.x - npc.x;
+                const pdy = state.player.y - npc.y;
+                if (Math.abs(pdx) > Math.abs(pdy)) {
+                    npc.facing = pdx > 0 ? 'right' : 'left';
+                } else {
+                    npc.facing = pdy > 0 ? 'down' : 'up';
+                }
+            }
+            npc.activityText = 'In dialogue with Cadet Nova';
+            return;
+        } else if (ai.isConversing) {
+            // Dialogue just ended: gently pause and resume autonomous routine
+            ai.isConversing = false;
+            ai.state = 'waiting';
+            ai.timer = 1.8;
+            npc.activityText = 'Resuming outpost maintenance...';
+        }
+
+        // Proximity check with Cadet Nova
+        const distToPlayer = (state && state.player) ? Math.hypot(state.player.x - npc.x, state.player.y - npc.y) : 999;
+
+        // Proximity avoidance: If walking and player is directly in the path (< 36px), pause temporarily
+        if (ai.state === 'walking' && distToPlayer < 36) {
+            npc.isMoving = false;
+            return; // Wait for cadet to step aside
+        }
+
+        // State Machine
+        if (ai.state === 'idle' || ai.state === 'waiting') {
+            npc.isMoving = false;
+            ai.timer -= dt;
+            if (ai.timer <= 0) {
+                selectNextNPCWaypoint(npc);
+            }
+        } else if (ai.state === 'walking') {
+            const dx = ai.targetX - npc.x;
+            const dy = ai.targetY - npc.y;
+            const dist = Math.hypot(dx, dy);
+
+            if (dist > 3.0) {
+                npc.isMoving = true;
+                const step = Math.min(dist, ai.speed * dt);
+                const nextX = npc.x + (dx / dist) * step;
+                const nextY = npc.y + (dy / dist) * step;
+
+                // Strict room bounding enforcement: NPC can NEVER cross room threshold or wander into another room
+                const bounds = (typeof NPC_ROOM_BOUNDS !== 'undefined' && NPC_ROOM_BOUNDS[npc.assignedRoom]) 
+                    ? NPC_ROOM_BOUNDS[npc.assignedRoom] 
+                    : { minX: 45, maxX: 1145, minY: 55, maxY: 705 };
+
+                npc.x = Math.max(bounds.minX, Math.min(bounds.maxX, nextX));
+                npc.y = Math.max(bounds.minY, Math.min(bounds.maxY, nextY));
+
+                // Natural turning towards movement heading
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    npc.facing = dx > 0 ? 'right' : 'left';
+                } else {
+                    npc.facing = dy > 0 ? 'down' : 'up';
+                }
+            } else {
+                // Arrived at destination workstation
+                npc.x = ai.targetX;
+                npc.y = ai.targetY;
+                npc.isMoving = false;
+                npc.facing = ai.targetFacing || npc.facing;
+
+                const wp = ai.currentWaypoint;
+                if (wp) {
+                    ai.state = wp.action || 'working';
+                    ai.timer = (wp.duration || 5.0) + (Math.random() * 2.0 - 1.0);
+                    npc.activityText = wp.workText || 'Performing workstation operations';
+                } else {
+                    ai.state = 'waiting';
+                    ai.timer = 3.0;
+                }
+            }
+        } else if (ai.state === 'working' || ai.state === 'inspecting') {
+            npc.isMoving = false;
+            if (ai.targetFacing) npc.facing = ai.targetFacing;
+            ai.timer -= dt;
+            if (ai.timer <= 0) {
+                // Finished workstation task: short pause before transitioning to next
+                ai.state = 'waiting';
+                ai.timer = 2.0 + Math.random() * 1.5;
+                npc.activityText = 'Logging completed diagnostics...';
+            }
+        }
+    });
+}
+window.updateAutonomousNPCs = updateAutonomousNPCs;
+
 // --- GAME LOGIC UPDATE ---
 function updateGame(dt) {
+    // 0. Update autonomous crew NPC movement and room-specific background routines
+    if (typeof updateAutonomousNPCs === 'function') {
+        updateAutonomousNPCs(dt, performance.now());
+    }
+
     if (typeof isAnyModalOpen === 'function' && isAnyModalOpen()) return;
     if (!state.player) return;
 
@@ -747,6 +908,9 @@ function initGame() {
     // interact-prompt click handled in js/ui.js with full modal & range safety
     initTouchControls();
     initCanvasPointer();
+    if (typeof CREW_NPCS !== 'undefined' && typeof initNPCAI === 'function') {
+        CREW_NPCS.forEach(initNPCAI);
+    }
     if (typeof initThreeScene === 'function') initThreeScene();
     if (typeof onThreeResize === 'function') onThreeResize();
     if (typeof resizeCanvas === 'function') resizeCanvas();

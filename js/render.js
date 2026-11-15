@@ -1103,7 +1103,12 @@ function drawRoomDetails(now) {
 }
 
 function drawCrewNPC(npc, now) {
-    const bob = Math.sin(now * 0.004 + npc.x) * 2;
+    const isMoving = !!npc.isMoving;
+    const facing = npc.facing || 'down';
+    const bob = isMoving ? Math.abs(Math.sin(now * 0.016)) * 2.5 : Math.sin(now * 0.003 + npc.x) * 1.5;
+    const legSwing = isMoving ? Math.sin(now * 0.016) * 4.5 : 0;
+    const isWorking = npc.ai && (npc.ai.state === 'working' || npc.ai.state === 'inspecting');
+    const isTalking = (typeof window !== 'undefined' && window.activeDialogueNPCId === npc.id);
 
     // 1. Soft 3D Ground Drop Shadow
     ctx.save();
@@ -1113,14 +1118,17 @@ function drawCrewNPC(npc, now) {
     ctx.beginPath(); ctx.ellipse(npc.x, npc.y + 16, 11, 4, 0, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
 
-    // 2. 3D Legs
+    // 2. 3D Legs (with directional walking swing)
     const legGrad = ctx.createLinearGradient(npc.x - 7, npc.y, npc.x + 7, npc.y);
     legGrad.addColorStop(0, '#0f172a');
     legGrad.addColorStop(0.5, '#334155');
     legGrad.addColorStop(1, '#0f172a');
     ctx.fillStyle = legGrad;
-    ctx.beginPath(); ctx.roundRect(npc.x - 6, npc.y + 6, 5, 10, 2); ctx.fill();
-    ctx.beginPath(); ctx.roundRect(npc.x + 1, npc.y + 6, 5, 10, 2); ctx.fill();
+
+    const leftLegY = npc.y + 6 + (isMoving ? legSwing : 0);
+    const rightLegY = npc.y + 6 - (isMoving ? legSwing : 0);
+    ctx.beginPath(); ctx.roundRect(npc.x - 6, leftLegY, 5, 10, 2); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(npc.x + 1, rightLegY, 5, 10, 2); ctx.fill();
 
     // 3. Volumetric Shaded Torso
     const suitGrad = ctx.createLinearGradient(npc.x - 10, npc.y, npc.x + 10, npc.y);
@@ -1133,47 +1141,107 @@ function drawCrewNPC(npc, now) {
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Chest Collar & Insignia
-    ctx.fillStyle = '#cbd5e1';
-    ctx.fillRect(npc.x - 7, npc.y + 2 + bob, 14, 2.5);
+    // Torso Details (front vs back vs profile)
+    if (facing !== 'up') {
+        // Chest Collar & Insignia
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillRect(npc.x - 7, npc.y + 2 + bob, 14, 2.5);
+    } else {
+        // Back life-support pack seam
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(npc.x - 5, npc.y - 5 + bob, 10, 10);
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(npc.x - 5, npc.y - 5 + bob, 10, 10);
+    }
 
-    // 4. Head / Helmet
+    // 4. Arms & Handheld Equipment / Datapad
+    if (isWorking || isTalking) {
+        // Holding glowing datapad or diagnostics tool
+        const toolGlowCol = npc.assignedRoom === 'greenhouse' ? '#22c55e' :
+                           npc.assignedRoom === 'power' ? '#f59e0b' :
+                           npc.assignedRoom === 'shelter' ? '#c084fc' : '#38bdf8';
+        
+        // Forearms raised
+        ctx.fillStyle = suitGrad;
+        ctx.fillRect(npc.x - 11, npc.y - 3 + bob, 4, 9);
+        ctx.fillRect(npc.x + 7, npc.y - 3 + bob, 4, 9);
+
+        // Datapad device body
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(npc.x - 7, npc.y - 2 + bob, 14, 9);
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(npc.x - 7, npc.y - 2 + bob, 14, 9);
+
+        // Glowing screen
+        ctx.fillStyle = toolGlowCol;
+        ctx.fillRect(npc.x - 5.5, npc.y - 0.5 + bob, 11, 6);
+
+        // Screen scanline / data pulse
+        ctx.fillStyle = '#ffffff';
+        const scanY = npc.y + (Math.sin(now * 0.01) * 2) + 2 + bob;
+        ctx.fillRect(npc.x - 5.5, scanY, 11, 1);
+    } else if (isMoving) {
+        // Walking arms swinging opposite to legs
+        const armSwing = Math.sin(now * 0.016) * 3;
+        ctx.fillStyle = suitGrad;
+        ctx.fillRect(npc.x - 12, npc.y - 6 + bob - armSwing, 4, 12);
+        ctx.fillRect(npc.x + 8, npc.y - 6 + bob + armSwing, 4, 12);
+    }
+
+    // 5. Head / Helmet with 4-Way Directional Facing
+    const headX = npc.x + (facing === 'left' ? -2 : (facing === 'right' ? 2 : 0));
     if (npc.helmetOn) {
-        const helmGrad = ctx.createRadialGradient(npc.x - 3, npc.y - 17 + bob, 1, npc.x, npc.y - 15 + bob, 10);
+        const helmGrad = ctx.createRadialGradient(headX - 3, npc.y - 17 + bob, 1, headX, npc.y - 15 + bob, 10);
         helmGrad.addColorStop(0, '#ffffff');
         helmGrad.addColorStop(0.7, '#64748b');
         helmGrad.addColorStop(1, '#1e293b');
         ctx.fillStyle = helmGrad;
-        ctx.beginPath(); ctx.arc(npc.x, npc.y - 15 + bob, 9.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(headX, npc.y - 15 + bob, 9.5, 0, Math.PI * 2); ctx.fill();
 
-        // Visor
-        const visorGrad = ctx.createLinearGradient(npc.x - 6, npc.y - 18 + bob, npc.x + 6, npc.y - 12 + bob);
-        visorGrad.addColorStop(0, '#7dd3fc');
-        visorGrad.addColorStop(0.5, '#0284c7');
-        visorGrad.addColorStop(1, '#0c4a6e');
-        ctx.fillStyle = visorGrad;
-        ctx.beginPath(); ctx.roundRect(npc.x - 5.5, npc.y - 18 + bob, 11, 7, 3); ctx.fill();
+        if (facing !== 'up') {
+            // Visor with directional offset
+            const visorOffX = facing === 'left' ? -3 : (facing === 'right' ? 3 : 0);
+            const visorGrad = ctx.createLinearGradient(headX - 6 + visorOffX, npc.y - 18 + bob, headX + 6 + visorOffX, npc.y - 12 + bob);
+            visorGrad.addColorStop(0, '#7dd3fc');
+            visorGrad.addColorStop(0.5, '#0284c7');
+            visorGrad.addColorStop(1, '#0c4a6e');
+            ctx.fillStyle = visorGrad;
+            ctx.beginPath(); ctx.roundRect(headX - 5.5 + visorOffX, npc.y - 18 + bob, (facing === 'left' || facing === 'right') ? 8 : 11, 7, 3); ctx.fill();
+        }
     } else {
         // Face
-        const faceGrad = ctx.createRadialGradient(npc.x - 2, npc.y - 17 + bob, 1, npc.x, npc.y - 15 + bob, 8.5);
+        const faceGrad = ctx.createRadialGradient(headX - 2, npc.y - 17 + bob, 1, headX, npc.y - 15 + bob, 8.5);
         faceGrad.addColorStop(0, '#fff7ed');
         faceGrad.addColorStop(0.7, npc.skinColor);
         faceGrad.addColorStop(1, '#c2410c');
         ctx.fillStyle = faceGrad;
-        ctx.beginPath(); ctx.arc(npc.x, npc.y - 15 + bob, 8.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(headX, npc.y - 15 + bob, 8.5, 0, Math.PI * 2); ctx.fill();
 
         // Hair
         ctx.fillStyle = npc.hairColor;
-        ctx.beginPath(); ctx.arc(npc.x, npc.y - 18 + bob, 9, Math.PI * 0.9, Math.PI * 2.1); ctx.fill();
-        ctx.fillRect(npc.x - 8, npc.y - 18 + bob, 4, 8);
+        if (facing === 'up') {
+            // Full back of hair
+            ctx.beginPath(); ctx.arc(headX, npc.y - 15 + bob, 9, 0, Math.PI * 2); ctx.fill();
+        } else {
+            ctx.beginPath(); ctx.arc(headX, npc.y - 18 + bob, 9, Math.PI * 0.9, Math.PI * 2.1); ctx.fill();
+            ctx.fillRect(headX - 8, npc.y - 18 + bob, 4, 8);
 
-        // Eyes
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(npc.x - 3, npc.y - 15 + bob, 2, 2.5);
-        ctx.fillRect(npc.x + 2, npc.y - 15 + bob, 2, 2.5);
+            // Eyes (directional)
+            ctx.fillStyle = '#0f172a';
+            if (facing === 'left') {
+                ctx.fillRect(headX - 5, npc.y - 15 + bob, 2, 2.5);
+            } else if (facing === 'right') {
+                ctx.fillRect(headX + 3, npc.y - 15 + bob, 2, 2.5);
+            } else {
+                ctx.fillRect(headX - 3, npc.y - 15 + bob, 2, 2.5);
+                ctx.fillRect(headX + 2, npc.y - 15 + bob, 2, 2.5);
+            }
+        }
     }
 
-    // 5. Floating Name & Health Bar
+    // 6. Floating Name & Health Bar
     ctx.font = 'bold 9.5px "Inter", sans-serif';
     ctx.fillStyle = '#f8fafc';
     ctx.textAlign = 'center';
@@ -1186,19 +1254,69 @@ function drawCrewNPC(npc, now) {
     ctx.fillStyle = '#38bdf8';
     ctx.fillRect(npc.x - 17, npc.y - 28 + bob, 34 * (npc.energy / 100), 2);
 
-    // 6. Interaction Dialogue Bubble
+    // 7. Dynamic Activity Badge / Status Pill
+    const pillY = npc.y - 48 + bob;
+    let badgeText = npc.activityText || 'Station Duty';
+    let badgeColor = '#38bdf8';
+    let badgeBg = 'rgba(15, 23, 42, 0.9)';
+
+    if (isTalking) {
+        badgeText = '💬 TRANSMITTING WITH NOVA';
+        badgeColor = '#facc15';
+        badgeBg = 'rgba(30, 27, 75, 0.92)';
+    } else if (npc.ai) {
+        if (npc.ai.state === 'working') {
+            badgeText = `⚙️ ${npc.activityText || 'Operating Console'}`;
+            badgeColor = '#38bdf8';
+        } else if (npc.ai.state === 'inspecting') {
+            badgeText = `🔍 ${npc.activityText || 'Inspecting Module'}`;
+            badgeColor = '#f59e0b';
+        } else if (npc.isMoving) {
+            badgeText = `🚶 Transit: ${npc.activityText || 'Moving'}`;
+            badgeColor = '#22c55e';
+        } else {
+            badgeText = `⏱️ ${npc.activityText || 'Observing Station'}`;
+            badgeColor = '#94a3b8';
+        }
+    }
+
+    ctx.font = 'bold 8px "Inter", monospace';
+    const textWidth = ctx.measureText(badgeText).width;
+    const pillW = Math.max(textWidth + 18, 70);
+
+    ctx.fillStyle = badgeBg;
+    ctx.strokeStyle = badgeColor;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(npc.x - pillW / 2, pillY - 7, pillW, 14, 5);
+    ctx.fill();
+    ctx.stroke();
+
+    // Pulsing LED indicator dot
+    ctx.fillStyle = badgeColor;
+    ctx.beginPath();
+    ctx.arc(npc.x - pillW / 2 + 7, pillY, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Badge label
+    ctx.fillStyle = '#f8fafc';
+    ctx.textAlign = 'left';
+    ctx.fillText(badgeText, npc.x - pillW / 2 + 13, pillY + 2.5);
+    ctx.textAlign = 'center';
+
+    // 8. Interaction Dialogue Bubble
     const distToPlayer = Math.hypot(state.player.x - npc.x, state.player.y - npc.y);
-    if (distToPlayer < 95) {
+    if (distToPlayer < 95 && !isTalking) {
         ctx.fillStyle = 'rgba(9, 13, 22, 0.94)';
         ctx.strokeStyle = '#fde047';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.roundRect(npc.x - 102, npc.y - 68 + bob, 204, 26, 8);
+        ctx.roundRect(npc.x - 105, npc.y - 74 + bob, 210, 24, 7);
         ctx.fill();
         ctx.stroke();
         ctx.fillStyle = '#fef08a';
         ctx.font = 'bold 9px "Inter", sans-serif';
-        ctx.fillText(`[E] Talk: "${npc.quote}"`, npc.x, npc.y - 55 + bob);
+        ctx.fillText(`[F] Talk: "${npc.quote}"`, npc.x, npc.y - 60 + bob);
     }
 }
 

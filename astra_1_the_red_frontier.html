@@ -2503,11 +2503,299 @@ const TASK_OBJECT_MAP = {
     ch10_final_report: 'lab_console'
 };
 
+// --- AUTONOMOUS NPC ROOM BOUNDARIES & WORKSTATION ACTIVITY ROUTINES ---
+// Strict spatial limits guaranteeing NPCs remain within their assigned modules at all times
+const NPC_ROOM_BOUNDS = {
+    power: { roomId: 'power', roomName: '2. Electrical Power Room', minX: 450, maxX: 615, minY: 75, maxY: 215 },
+    greenhouse: { roomId: 'greenhouse', roomName: '5. Hydroponic Greenhouse', minX: 695, maxX: 850, minY: 550, maxY: 685 },
+    lab: { roomId: 'lab', roomName: '6. Laboratory & Medical Bay', minX: 930, maxX: 1120, minY: 80, maxY: 320 },
+    shelter: { roomId: 'shelter', roomName: '7. Radiation Shelter & Quarters', minX: 935, maxX: 1115, minY: 425, maxY: 680 }
+};
+
+const NPC_ACTIVITY_ROUTINES = {
+    vance: {
+        assignedRoom: 'lab',
+        defaultStatus: 'Overseeing habitat operational readiness',
+        waypoints: [
+            {
+                id: 'wp_vance_comms',
+                name: 'DSN Telemetry Server Rack',
+                x: 1030, y: 305,
+                facing: 'down',
+                action: 'working',
+                workText: 'Uplinking telemetry to DSN Earth relay',
+                moveText: 'Heading to Deep Space Comms Rack',
+                duration: 6.5
+            },
+            {
+                id: 'wp_vance_bench',
+                name: 'Specimen Centrifuge Bench',
+                x: 1105, y: 175,
+                facing: 'right',
+                action: 'inspecting',
+                workText: 'Analyzing regolith core sample spectra',
+                moveText: 'Walking to Specimen Centrifuge Bench',
+                duration: 5.5
+            },
+            {
+                id: 'wp_vance_med',
+                name: 'Bio-Diagnostic Stasis Exam Pod',
+                x: 1030, y: 105,
+                facing: 'up',
+                action: 'inspecting',
+                workText: 'Auditing medical diagnostic telemetry',
+                moveText: 'Checking Bio-Diagnostic Pod',
+                duration: 5.0
+            },
+            {
+                id: 'wp_vance_console',
+                name: 'Mission Readiness Console',
+                x: 990, y: 175,
+                facing: 'right',
+                action: 'working',
+                workText: 'Reviewing outpost mission operations',
+                moveText: 'Moving to Mission Operations Console',
+                duration: 7.0
+            },
+            {
+                id: 'wp_vance_post',
+                name: 'Command Observation Post',
+                x: 960, y: 240,
+                facing: 'down',
+                action: 'idle',
+                workText: 'Overseeing habitat operational readiness',
+                moveText: 'Returning to Commander Station',
+                duration: 4.5
+            },
+            {
+                id: 'wp_vance_archive',
+                name: 'Sample Storage Archive',
+                x: 960, y: 120,
+                facing: 'up',
+                action: 'inspecting',
+                workText: 'Cataloguing biological & mineral canisters',
+                moveText: 'Inspecting Sample Canister Archive',
+                duration: 5.0
+            }
+        ]
+    },
+    lin: {
+        assignedRoom: 'greenhouse',
+        defaultStatus: 'Tending hydroponic dwarf wheat & microgreens',
+        waypoints: [
+            {
+                id: 'wp_lin_crops',
+                name: 'Vertical Aeroponic Salad Racks',
+                x: 770, y: 665,
+                facing: 'down',
+                action: 'working',
+                workText: 'Pruning dwarf wheat & checking PAR sensor',
+                moveText: 'Moving to Vertical Hydroponic Racks',
+                duration: 6.5
+            },
+            {
+                id: 'wp_lin_micro',
+                name: 'Microgreen Germination Incubator',
+                x: 710, y: 620,
+                facing: 'left',
+                action: 'inspecting',
+                workText: 'Checking humidity in germination chamber',
+                moveText: 'Inspecting Microgreen Incubator',
+                duration: 5.0
+            },
+            {
+                id: 'wp_lin_nutrients',
+                name: 'Automated Nutrient Dosing Buffer',
+                x: 830, y: 620,
+                facing: 'right',
+                action: 'working',
+                workText: 'Balancing automated N-P-K nutrient buffer',
+                moveText: 'Walking to Nutrient Dosing Station',
+                duration: 6.0
+            },
+            {
+                id: 'wp_lin_console',
+                name: 'Greenhouse Climate Bio-Console',
+                x: 775, y: 580,
+                facing: 'down',
+                action: 'working',
+                workText: 'Calibrating aeroponic drip irrigation cycle',
+                moveText: 'Checking Greenhouse Master Console',
+                duration: 5.5
+            },
+            {
+                id: 'wp_lin_observe',
+                name: 'Seedling Observation Post',
+                x: 830, y: 655,
+                facing: 'left',
+                action: 'idle',
+                workText: 'Observing microgreen crop growth rates',
+                moveText: 'Returning to Crop Observation Area',
+                duration: 4.5
+            },
+            {
+                id: 'wp_lin_lines',
+                name: 'Aeroponic Delivery Drip Lines',
+                x: 715, y: 565,
+                facing: 'right',
+                action: 'inspecting',
+                workText: 'Inspecting drip lines for mineral deposits',
+                moveText: 'Checking Aeroponic Feeder Lines',
+                duration: 5.0
+            }
+        ]
+    },
+    philip: {
+        assignedRoom: 'power',
+        defaultStatus: 'Monitoring grid load & high-voltage stability',
+        waypoints: [
+            {
+                id: 'wp_phil_bat1',
+                name: 'Li-Ion Battery Banks Alpha & Beta',
+                x: 480, y: 100,
+                facing: 'left',
+                action: 'inspecting',
+                workText: 'Inspecting Li-Ion battery bank telemetry',
+                moveText: 'Heading to Li-Ion Battery Banks',
+                duration: 6.0
+            },
+            {
+                id: 'wp_phil_bat3',
+                name: 'Li-Ion Battery Bank Gamma',
+                x: 475, y: 140,
+                facing: 'left',
+                action: 'working',
+                workText: 'Testing bus voltage on backup battery string',
+                moveText: 'Inspecting Backup Battery String',
+                duration: 5.5
+            },
+            {
+                id: 'wp_phil_xfr',
+                name: 'HV Step-Down Transformer',
+                x: 535, y: 85,
+                facing: 'up',
+                action: 'working',
+                workText: 'Calibrating 480V step-down transformer',
+                moveText: 'Moving to HV Transformer Unit',
+                duration: 6.5
+            },
+            {
+                id: 'wp_phil_brk',
+                name: 'Primary Distribution Breakers',
+                x: 590, y: 110,
+                facing: 'right',
+                action: 'inspecting',
+                workText: 'Verifying solid-state distribution breakers',
+                moveText: 'Inspecting Primary Breakers Bus A',
+                duration: 5.0
+            },
+            {
+                id: 'wp_phil_inv',
+                name: 'Inverter & Auxiliary Switchgear',
+                x: 595, y: 145,
+                facing: 'right',
+                action: 'working',
+                workText: 'Monitoring DC-DC inverter wave harmonics',
+                moveText: 'Testing Inverter Switchgear Bus B',
+                duration: 5.5
+            },
+            {
+                id: 'wp_phil_console',
+                name: 'Power Telemetry & HV Console',
+                x: 535, y: 165,
+                facing: 'up',
+                action: 'working',
+                workText: 'Balancing outpost kilowatt power grid',
+                moveText: 'Returning to Power Grid Console',
+                duration: 7.0
+            },
+            {
+                id: 'wp_phil_post',
+                name: 'Chief Engineer Post',
+                x: 465, y: 175,
+                facing: 'right',
+                action: 'idle',
+                workText: 'Auditing high-voltage circuit stability',
+                moveText: 'Returning to Engineer Station',
+                duration: 4.5
+            }
+        ]
+    },
+    maya: {
+        assignedRoom: 'shelter',
+        defaultStatus: 'Evaluating crew vitals & radiation storm shield',
+        waypoints: [
+            {
+                id: 'wp_maya_shield',
+                name: 'Water-Jacket Storm Shielding',
+                x: 1030, y: 440,
+                facing: 'up',
+                action: 'inspecting',
+                workText: 'Checking water-shield radiation dosimeters',
+                moveText: 'Inspecting Water-Wall Radiation Shield',
+                duration: 6.0
+            },
+            {
+                id: 'wp_maya_bunk1',
+                name: 'Crew Bunk Alpha (Philip)',
+                x: 1090, y: 465,
+                facing: 'right',
+                action: 'working',
+                workText: 'Checking circadian lighting & sleep monitors',
+                moveText: 'Checking Crew Berth S-01 Sensors',
+                duration: 5.0
+            },
+            {
+                id: 'wp_maya_bunk2',
+                name: 'Crew Bunk Beta (Nova)',
+                x: 1090, y: 630,
+                facing: 'right',
+                action: 'working',
+                workText: 'Recording crew biometric baseline readings',
+                moveText: 'Reviewing Stasis Berth S-02 Biometrics',
+                duration: 5.5
+            },
+            {
+                id: 'wp_maya_rations',
+                name: 'Emergency Rations & Trauma Kit',
+                x: 1030, y: 665,
+                facing: 'down',
+                action: 'inspecting',
+                workText: 'Inventorying trauma supplies & dosimeter pens',
+                moveText: 'Inspecting Emergency Trauma Kit',
+                duration: 5.0
+            },
+            {
+                id: 'wp_maya_console',
+                name: 'Radiation Shelter Master Console',
+                x: 990, y: 555,
+                facing: 'right',
+                action: 'working',
+                workText: 'Tracking solar particle flux & space weather',
+                moveText: 'Moving to Radiation Master Console',
+                duration: 7.0
+            },
+            {
+                id: 'wp_maya_post',
+                name: 'Flight Surgeon Post',
+                x: 965, y: 500,
+                facing: 'down',
+                action: 'idle',
+                workText: 'Evaluating crew cardiovascular resilience',
+                moveText: 'Returning to Surgeon Station',
+                duration: 4.5
+            }
+        ]
+    }
+};
+
 const CREW_NPCS = [
     {
         id: 'vance',
         name: 'Cmdr. Vance',
         x: 960, y: 240,
+        assignedRoom: 'lab',
+        facing: 'down',
         suitColor: '#0284c7',
         hairColor: '#fde047',
         skinColor: '#fed7aa',
@@ -2536,6 +2824,8 @@ const CREW_NPCS = [
         id: 'lin',
         name: 'Dr. Elena Lin',
         x: 830, y: 635,
+        assignedRoom: 'greenhouse',
+        facing: 'left',
         suitColor: '#16a34a',
         hairColor: '#ea580c',
         skinColor: '#ffedd5',
@@ -2564,6 +2854,8 @@ const CREW_NPCS = [
         id: 'philip',
         name: 'Eng. Philip',
         x: 465, y: 175,
+        assignedRoom: 'power',
+        facing: 'right',
         suitColor: '#9a3412',
         hairColor: '#1e293b',
         skinColor: '#fdba74',
@@ -2593,6 +2885,8 @@ const CREW_NPCS = [
         id: 'maya',
         name: 'Dr. Maya Patel',
         x: 965, y: 500,
+        assignedRoom: 'shelter',
+        facing: 'down',
         suitColor: '#9333ea',
         hairColor: '#475569',
         skinColor: '#fed7aa',
@@ -2783,7 +3077,7 @@ const CHAPTER_DIALOGUES = {
 };
 
 if (typeof module !== 'undefined') {
-    module.exports = { CHAPTERS, OBJECTS, TASK_OBJECT_MAP, CHAPTER_DIALOGUES };
+    module.exports = { CHAPTERS, OBJECTS, TASK_OBJECT_MAP, CHAPTER_DIALOGUES, CREW_NPCS, NPC_ROOM_BOUNDS, NPC_ACTIVITY_ROUTINES };
 }
 
 if (typeof window !== 'undefined') {
@@ -2791,6 +3085,9 @@ if (typeof window !== 'undefined') {
     window.OBJECTS = OBJECTS;
     window.TASK_OBJECT_MAP = TASK_OBJECT_MAP;
     window.CHAPTER_DIALOGUES = CHAPTER_DIALOGUES;
+    window.CREW_NPCS = CREW_NPCS;
+    window.NPC_ROOM_BOUNDS = NPC_ROOM_BOUNDS;
+    window.NPC_ACTIVITY_ROUTINES = NPC_ACTIVITY_ROUTINES;
 }
 
 
@@ -4866,7 +5163,12 @@ function drawRoomDetails(now) {
 }
 
 function drawCrewNPC(npc, now) {
-    const bob = Math.sin(now * 0.004 + npc.x) * 2;
+    const isMoving = !!npc.isMoving;
+    const facing = npc.facing || 'down';
+    const bob = isMoving ? Math.abs(Math.sin(now * 0.016)) * 2.5 : Math.sin(now * 0.003 + npc.x) * 1.5;
+    const legSwing = isMoving ? Math.sin(now * 0.016) * 4.5 : 0;
+    const isWorking = npc.ai && (npc.ai.state === 'working' || npc.ai.state === 'inspecting');
+    const isTalking = (typeof window !== 'undefined' && window.activeDialogueNPCId === npc.id);
 
     // 1. Soft 3D Ground Drop Shadow
     ctx.save();
@@ -4876,14 +5178,17 @@ function drawCrewNPC(npc, now) {
     ctx.beginPath(); ctx.ellipse(npc.x, npc.y + 16, 11, 4, 0, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
 
-    // 2. 3D Legs
+    // 2. 3D Legs (with directional walking swing)
     const legGrad = ctx.createLinearGradient(npc.x - 7, npc.y, npc.x + 7, npc.y);
     legGrad.addColorStop(0, '#0f172a');
     legGrad.addColorStop(0.5, '#334155');
     legGrad.addColorStop(1, '#0f172a');
     ctx.fillStyle = legGrad;
-    ctx.beginPath(); ctx.roundRect(npc.x - 6, npc.y + 6, 5, 10, 2); ctx.fill();
-    ctx.beginPath(); ctx.roundRect(npc.x + 1, npc.y + 6, 5, 10, 2); ctx.fill();
+
+    const leftLegY = npc.y + 6 + (isMoving ? legSwing : 0);
+    const rightLegY = npc.y + 6 - (isMoving ? legSwing : 0);
+    ctx.beginPath(); ctx.roundRect(npc.x - 6, leftLegY, 5, 10, 2); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(npc.x + 1, rightLegY, 5, 10, 2); ctx.fill();
 
     // 3. Volumetric Shaded Torso
     const suitGrad = ctx.createLinearGradient(npc.x - 10, npc.y, npc.x + 10, npc.y);
@@ -4896,47 +5201,107 @@ function drawCrewNPC(npc, now) {
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Chest Collar & Insignia
-    ctx.fillStyle = '#cbd5e1';
-    ctx.fillRect(npc.x - 7, npc.y + 2 + bob, 14, 2.5);
+    // Torso Details (front vs back vs profile)
+    if (facing !== 'up') {
+        // Chest Collar & Insignia
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillRect(npc.x - 7, npc.y + 2 + bob, 14, 2.5);
+    } else {
+        // Back life-support pack seam
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(npc.x - 5, npc.y - 5 + bob, 10, 10);
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(npc.x - 5, npc.y - 5 + bob, 10, 10);
+    }
 
-    // 4. Head / Helmet
+    // 4. Arms & Handheld Equipment / Datapad
+    if (isWorking || isTalking) {
+        // Holding glowing datapad or diagnostics tool
+        const toolGlowCol = npc.assignedRoom === 'greenhouse' ? '#22c55e' :
+                           npc.assignedRoom === 'power' ? '#f59e0b' :
+                           npc.assignedRoom === 'shelter' ? '#c084fc' : '#38bdf8';
+        
+        // Forearms raised
+        ctx.fillStyle = suitGrad;
+        ctx.fillRect(npc.x - 11, npc.y - 3 + bob, 4, 9);
+        ctx.fillRect(npc.x + 7, npc.y - 3 + bob, 4, 9);
+
+        // Datapad device body
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(npc.x - 7, npc.y - 2 + bob, 14, 9);
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(npc.x - 7, npc.y - 2 + bob, 14, 9);
+
+        // Glowing screen
+        ctx.fillStyle = toolGlowCol;
+        ctx.fillRect(npc.x - 5.5, npc.y - 0.5 + bob, 11, 6);
+
+        // Screen scanline / data pulse
+        ctx.fillStyle = '#ffffff';
+        const scanY = npc.y + (Math.sin(now * 0.01) * 2) + 2 + bob;
+        ctx.fillRect(npc.x - 5.5, scanY, 11, 1);
+    } else if (isMoving) {
+        // Walking arms swinging opposite to legs
+        const armSwing = Math.sin(now * 0.016) * 3;
+        ctx.fillStyle = suitGrad;
+        ctx.fillRect(npc.x - 12, npc.y - 6 + bob - armSwing, 4, 12);
+        ctx.fillRect(npc.x + 8, npc.y - 6 + bob + armSwing, 4, 12);
+    }
+
+    // 5. Head / Helmet with 4-Way Directional Facing
+    const headX = npc.x + (facing === 'left' ? -2 : (facing === 'right' ? 2 : 0));
     if (npc.helmetOn) {
-        const helmGrad = ctx.createRadialGradient(npc.x - 3, npc.y - 17 + bob, 1, npc.x, npc.y - 15 + bob, 10);
+        const helmGrad = ctx.createRadialGradient(headX - 3, npc.y - 17 + bob, 1, headX, npc.y - 15 + bob, 10);
         helmGrad.addColorStop(0, '#ffffff');
         helmGrad.addColorStop(0.7, '#64748b');
         helmGrad.addColorStop(1, '#1e293b');
         ctx.fillStyle = helmGrad;
-        ctx.beginPath(); ctx.arc(npc.x, npc.y - 15 + bob, 9.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(headX, npc.y - 15 + bob, 9.5, 0, Math.PI * 2); ctx.fill();
 
-        // Visor
-        const visorGrad = ctx.createLinearGradient(npc.x - 6, npc.y - 18 + bob, npc.x + 6, npc.y - 12 + bob);
-        visorGrad.addColorStop(0, '#7dd3fc');
-        visorGrad.addColorStop(0.5, '#0284c7');
-        visorGrad.addColorStop(1, '#0c4a6e');
-        ctx.fillStyle = visorGrad;
-        ctx.beginPath(); ctx.roundRect(npc.x - 5.5, npc.y - 18 + bob, 11, 7, 3); ctx.fill();
+        if (facing !== 'up') {
+            // Visor with directional offset
+            const visorOffX = facing === 'left' ? -3 : (facing === 'right' ? 3 : 0);
+            const visorGrad = ctx.createLinearGradient(headX - 6 + visorOffX, npc.y - 18 + bob, headX + 6 + visorOffX, npc.y - 12 + bob);
+            visorGrad.addColorStop(0, '#7dd3fc');
+            visorGrad.addColorStop(0.5, '#0284c7');
+            visorGrad.addColorStop(1, '#0c4a6e');
+            ctx.fillStyle = visorGrad;
+            ctx.beginPath(); ctx.roundRect(headX - 5.5 + visorOffX, npc.y - 18 + bob, (facing === 'left' || facing === 'right') ? 8 : 11, 7, 3); ctx.fill();
+        }
     } else {
         // Face
-        const faceGrad = ctx.createRadialGradient(npc.x - 2, npc.y - 17 + bob, 1, npc.x, npc.y - 15 + bob, 8.5);
+        const faceGrad = ctx.createRadialGradient(headX - 2, npc.y - 17 + bob, 1, headX, npc.y - 15 + bob, 8.5);
         faceGrad.addColorStop(0, '#fff7ed');
         faceGrad.addColorStop(0.7, npc.skinColor);
         faceGrad.addColorStop(1, '#c2410c');
         ctx.fillStyle = faceGrad;
-        ctx.beginPath(); ctx.arc(npc.x, npc.y - 15 + bob, 8.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(headX, npc.y - 15 + bob, 8.5, 0, Math.PI * 2); ctx.fill();
 
         // Hair
         ctx.fillStyle = npc.hairColor;
-        ctx.beginPath(); ctx.arc(npc.x, npc.y - 18 + bob, 9, Math.PI * 0.9, Math.PI * 2.1); ctx.fill();
-        ctx.fillRect(npc.x - 8, npc.y - 18 + bob, 4, 8);
+        if (facing === 'up') {
+            // Full back of hair
+            ctx.beginPath(); ctx.arc(headX, npc.y - 15 + bob, 9, 0, Math.PI * 2); ctx.fill();
+        } else {
+            ctx.beginPath(); ctx.arc(headX, npc.y - 18 + bob, 9, Math.PI * 0.9, Math.PI * 2.1); ctx.fill();
+            ctx.fillRect(headX - 8, npc.y - 18 + bob, 4, 8);
 
-        // Eyes
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(npc.x - 3, npc.y - 15 + bob, 2, 2.5);
-        ctx.fillRect(npc.x + 2, npc.y - 15 + bob, 2, 2.5);
+            // Eyes (directional)
+            ctx.fillStyle = '#0f172a';
+            if (facing === 'left') {
+                ctx.fillRect(headX - 5, npc.y - 15 + bob, 2, 2.5);
+            } else if (facing === 'right') {
+                ctx.fillRect(headX + 3, npc.y - 15 + bob, 2, 2.5);
+            } else {
+                ctx.fillRect(headX - 3, npc.y - 15 + bob, 2, 2.5);
+                ctx.fillRect(headX + 2, npc.y - 15 + bob, 2, 2.5);
+            }
+        }
     }
 
-    // 5. Floating Name & Health Bar
+    // 6. Floating Name & Health Bar
     ctx.font = 'bold 9.5px "Inter", sans-serif';
     ctx.fillStyle = '#f8fafc';
     ctx.textAlign = 'center';
@@ -4949,19 +5314,69 @@ function drawCrewNPC(npc, now) {
     ctx.fillStyle = '#38bdf8';
     ctx.fillRect(npc.x - 17, npc.y - 28 + bob, 34 * (npc.energy / 100), 2);
 
-    // 6. Interaction Dialogue Bubble
+    // 7. Dynamic Activity Badge / Status Pill
+    const pillY = npc.y - 48 + bob;
+    let badgeText = npc.activityText || 'Station Duty';
+    let badgeColor = '#38bdf8';
+    let badgeBg = 'rgba(15, 23, 42, 0.9)';
+
+    if (isTalking) {
+        badgeText = '💬 TRANSMITTING WITH NOVA';
+        badgeColor = '#facc15';
+        badgeBg = 'rgba(30, 27, 75, 0.92)';
+    } else if (npc.ai) {
+        if (npc.ai.state === 'working') {
+            badgeText = `⚙️ ${npc.activityText || 'Operating Console'}`;
+            badgeColor = '#38bdf8';
+        } else if (npc.ai.state === 'inspecting') {
+            badgeText = `🔍 ${npc.activityText || 'Inspecting Module'}`;
+            badgeColor = '#f59e0b';
+        } else if (npc.isMoving) {
+            badgeText = `🚶 Transit: ${npc.activityText || 'Moving'}`;
+            badgeColor = '#22c55e';
+        } else {
+            badgeText = `⏱️ ${npc.activityText || 'Observing Station'}`;
+            badgeColor = '#94a3b8';
+        }
+    }
+
+    ctx.font = 'bold 8px "Inter", monospace';
+    const textWidth = ctx.measureText(badgeText).width;
+    const pillW = Math.max(textWidth + 18, 70);
+
+    ctx.fillStyle = badgeBg;
+    ctx.strokeStyle = badgeColor;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(npc.x - pillW / 2, pillY - 7, pillW, 14, 5);
+    ctx.fill();
+    ctx.stroke();
+
+    // Pulsing LED indicator dot
+    ctx.fillStyle = badgeColor;
+    ctx.beginPath();
+    ctx.arc(npc.x - pillW / 2 + 7, pillY, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Badge label
+    ctx.fillStyle = '#f8fafc';
+    ctx.textAlign = 'left';
+    ctx.fillText(badgeText, npc.x - pillW / 2 + 13, pillY + 2.5);
+    ctx.textAlign = 'center';
+
+    // 8. Interaction Dialogue Bubble
     const distToPlayer = Math.hypot(state.player.x - npc.x, state.player.y - npc.y);
-    if (distToPlayer < 95) {
+    if (distToPlayer < 95 && !isTalking) {
         ctx.fillStyle = 'rgba(9, 13, 22, 0.94)';
         ctx.strokeStyle = '#fde047';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.roundRect(npc.x - 102, npc.y - 68 + bob, 204, 26, 8);
+        ctx.roundRect(npc.x - 105, npc.y - 74 + bob, 210, 24, 7);
         ctx.fill();
         ctx.stroke();
         ctx.fillStyle = '#fef08a';
         ctx.font = 'bold 9px "Inter", sans-serif';
-        ctx.fillText(`[E] Talk: "${npc.quote}"`, npc.x, npc.y - 55 + bob);
+        ctx.fillText(`[F] Talk: "${npc.quote}"`, npc.x, npc.y - 60 + bob);
     }
 }
 
@@ -7429,35 +7844,67 @@ function build3DCrewNPCs() {
         });
         const darkMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 });
 
-        const legGeo = new THREE.CylinderGeometry(2, 2.2, 12, 8);
-        const lLeg = new THREE.Mesh(legGeo, darkMat);
-        lLeg.position.set(-3.5, 6, 0);
-        lLeg.castShadow = true;
-        group.add(lLeg);
+        // Left Leg (hip pivot group)
+        const leftLegGroup = new THREE.Group();
+        leftLegGroup.position.set(-3.5, 11, 0);
+        const lLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(2, 2.2, 11, 8), darkMat);
+        lLegMesh.position.y = -5.5;
+        lLegMesh.castShadow = true;
+        leftLegGroup.add(lLegMesh);
+        group.add(leftLegGroup);
 
-        const rLeg = new THREE.Mesh(legGeo, darkMat);
-        rLeg.position.set(3.5, 6, 0);
-        rLeg.castShadow = true;
-        group.add(rLeg);
+        // Right Leg (hip pivot group)
+        const rightLegGroup = new THREE.Group();
+        rightLegGroup.position.set(3.5, 11, 0);
+        const rLegMesh = new THREE.Mesh(new THREE.CylinderGeometry(2, 2.2, 11, 8), darkMat);
+        rLegMesh.position.y = -5.5;
+        rLegMesh.castShadow = true;
+        rightLegGroup.add(rLegMesh);
+        group.add(rightLegGroup);
 
+        // Torso
         const torsoGeo = new THREE.BoxGeometry(12, 14, 8);
         const torso = new THREE.Mesh(torsoGeo, suitMat);
         torso.position.y = 18;
         torso.castShadow = true;
         group.add(torso);
 
-        const armGeo = new THREE.CylinderGeometry(1.6, 1.8, 11, 8);
-        const lArm = new THREE.Mesh(armGeo, suitMat);
-        lArm.position.set(-7.5, 17, 0);
-        lArm.rotation.z = Math.PI * 0.05;
-        lArm.castShadow = true;
-        group.add(lArm);
+        // Left Arm (shoulder pivot group)
+        const armGeo = new THREE.CylinderGeometry(1.6, 1.8, 10, 8);
+        const leftArmGroup = new THREE.Group();
+        leftArmGroup.position.set(-7.5, 22, 0);
+        const lArmMesh = new THREE.Mesh(armGeo, suitMat);
+        lArmMesh.position.y = -4.5;
+        lArmMesh.castShadow = true;
+        leftArmGroup.add(lArmMesh);
+        group.add(leftArmGroup);
 
-        const rArm = new THREE.Mesh(armGeo, suitMat);
-        rArm.position.set(7.5, 17, 0);
-        rArm.rotation.z = -Math.PI * 0.05;
-        rArm.castShadow = true;
-        group.add(rArm);
+        // Right Arm (shoulder pivot group)
+        const rightArmGroup = new THREE.Group();
+        rightArmGroup.position.set(7.5, 22, 0);
+        const rArmMesh = new THREE.Mesh(armGeo, suitMat);
+        rArmMesh.position.y = -4.5;
+        rArmMesh.castShadow = true;
+        rightArmGroup.add(rArmMesh);
+        group.add(rightArmGroup);
+
+        // Handheld Diagnostics Datapad (attached to torso or hands)
+        const padGroup = new THREE.Group();
+        padGroup.position.set(0, 18, 6.5);
+        const padBody = new THREE.Mesh(new THREE.BoxGeometry(6, 4.5, 1), darkMat);
+        padGroup.add(padBody);
+
+        const screenCol = npc.assignedRoom === 'greenhouse' ? 0x22c55e :
+                         npc.assignedRoom === 'power' ? 0xf59e0b :
+                         npc.assignedRoom === 'shelter' ? 0xc084fc : 0x38bdf8;
+        const padScreen = new THREE.Mesh(
+            new THREE.BoxGeometry(5.2, 3.8, 0.4),
+            new THREE.MeshStandardMaterial({ color: screenCol, emissive: screenCol, emissiveIntensity: 0.85 })
+        );
+        padScreen.position.z = 0.5;
+        padGroup.add(padScreen);
+        padGroup.visible = false;
+        group.add(padGroup);
 
         if (npc.helmetOn) {
             const helmGeo = new THREE.SphereGeometry(6, 16, 16);
@@ -7489,7 +7936,15 @@ function build3DCrewNPCs() {
         }
 
         scene3D.add(group);
-        crew3DMeshes[npc.id] = { mesh: group, data: npc };
+        crew3DMeshes[npc.id] = {
+            mesh: group,
+            leftLeg: leftLegGroup,
+            rightLeg: rightLegGroup,
+            leftArm: leftArmGroup,
+            rightArm: rightArmGroup,
+            datapad: padGroup,
+            data: npc
+        };
     });
 }
 
@@ -7807,6 +8262,78 @@ function renderGame3D(now) {
         camera3D.position.x += (camTargetX - camera3D.position.x) * 0.08;
         camera3D.position.z += (camTargetZ - camera3D.position.z) * 0.08;
         camera3D.lookAt(nova3D.position.x, 22, nova3D.position.z - 25);
+    }
+
+    // 2b. Update Autonomous Crew NPCs (Position, Facing Rotation, Walk Cycle & Handheld Diagnostics)
+    if (crew3DMeshes && typeof CREW_NPCS !== 'undefined') {
+        CREW_NPCS.forEach(npc => {
+            const entry = crew3DMeshes[npc.id];
+            if (!entry || !entry.mesh) return;
+
+            const targetX = to3DX(npc.x);
+            const targetZ = to3DZ(npc.y);
+            const grp = entry.mesh;
+
+            // Smooth position interpolation
+            grp.position.x += (targetX - grp.position.x) * 0.15;
+            grp.position.z += (targetZ - grp.position.z) * 0.15;
+
+            // Facing rotation
+            let targetRot = 0;
+            const facing = npc.facing || 'down';
+            if (facing === 'down') targetRot = 0;
+            else if (facing === 'up') targetRot = Math.PI;
+            else if (facing === 'left') targetRot = Math.PI * 0.5;
+            else if (facing === 'right') targetRot = -Math.PI * 0.5;
+
+            // If player is talking to this NPC, turn towards player
+            if (typeof window !== 'undefined' && window.activeDialogueNPCId === npc.id && state && state.player) {
+                const dx = state.player.x - npc.x;
+                const dy = state.player.y - npc.y;
+                targetRot = Math.atan2(dx, dy);
+            }
+
+            // Smooth rotation interpolation
+            let diff = targetRot - grp.rotation.y;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            grp.rotation.y += diff * 0.15;
+
+            const isMoving = !!npc.isMoving;
+            const isWorking = npc.ai && (npc.ai.state === 'working' || npc.ai.state === 'inspecting');
+            const isTalking = (typeof window !== 'undefined' && window.activeDialogueNPCId === npc.id);
+
+            if (isMoving) {
+                const legSwing = Math.sin(now * 0.015) * 0.5;
+                const armSwing = Math.sin(now * 0.015) * 0.4;
+                if (entry.leftLeg) entry.leftLeg.rotation.x = legSwing;
+                if (entry.rightLeg) entry.rightLeg.rotation.x = -legSwing;
+                if (entry.leftArm) entry.leftArm.rotation.x = -armSwing;
+                if (entry.rightArm) entry.rightArm.rotation.x = armSwing;
+                grp.position.y = Math.abs(Math.sin(now * 0.015)) * 1.2;
+                if (entry.datapad) entry.datapad.visible = false;
+            } else if (isWorking || isTalking) {
+                if (entry.leftLeg) entry.leftLeg.rotation.x = 0;
+                if (entry.rightLeg) entry.rightLeg.rotation.x = 0;
+                grp.position.y = 0;
+
+                // Raise arms towards workstation/datapad
+                if (entry.leftArm) entry.leftArm.rotation.x = -0.75 + Math.sin(now * 0.005) * 0.08;
+                if (entry.rightArm) entry.rightArm.rotation.x = -0.75 + Math.cos(now * 0.006) * 0.08;
+                if (entry.datapad) {
+                    entry.datapad.visible = true;
+                    entry.datapad.position.y = 18 + Math.sin(now * 0.004) * 0.5;
+                }
+            } else {
+                // Waiting/idle
+                if (entry.leftLeg) entry.leftLeg.rotation.x = 0;
+                if (entry.rightLeg) entry.rightLeg.rotation.x = 0;
+                if (entry.leftArm) entry.leftArm.rotation.x = 0;
+                if (entry.rightArm) entry.rightArm.rotation.x = 0;
+                grp.position.y = 0;
+                if (entry.datapad) entry.datapad.visible = false;
+            }
+        });
     }
 
     // 3. Dynamic Floor Decal Fade-Out & Location Tracking
@@ -11126,6 +11653,7 @@ function isAnyModalOpen() {
 }
 
 function closeAllModals() {
+    window.activeDialogueNPCId = null;
     ['modal-console', 'modal-power', 'modal-codex', 'modal-dialogue', 'modal-story', 'modal-victory', 'modal-mission-complete', 'modal-airlock-exit'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.add('hidden');
@@ -11154,6 +11682,15 @@ function startDialogueSequence(dialogueArray, chapterBannerIdx = state.chapterId
 function renderCurrentDialogueStep() {
     const step = activeDialogueQueue[activeDialogueIndex];
     if (!step) return;
+
+    // Link speaker to crew NPC so NPC pauses, faces astronaut, and enters dialogue state
+    if (typeof CREW_NPCS !== 'undefined') {
+        const matchingNPC = CREW_NPCS.find(n => 
+            (step.portrait && n.id === step.portrait) || 
+            (step.speaker && n.name.toLowerCase().includes(step.speaker.toLowerCase()))
+        );
+        window.activeDialogueNPCId = matchingNPC ? matchingNPC.id : null;
+    }
 
     const portraitBox = document.getElementById('dlg-portrait-box');
     if (portraitBox && typeof getCharacterPortraitSVG === 'function') {
@@ -11191,6 +11728,7 @@ function advanceDialogueStep() {
         if (window.sfx && typeof sfx.success === 'function') sfx.success();
         const dlgModal = document.getElementById('modal-dialogue');
         if (dlgModal) dlgModal.classList.add('hidden');
+        window.activeDialogueNPCId = null;
     }
 }
 
@@ -11245,6 +11783,7 @@ function triggerNearestObjectInteraction() {
     }
     const npc = getNearestCrewNPC();
     if (npc && npc.dialogues) {
+        window.activeDialogueNPCId = npc.id;
         if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
         startDialogueSequence(npc.dialogues, state.chapterIdx);
     }
@@ -13083,6 +13622,7 @@ function initUIEventListeners() {
         if (window.sfx && typeof sfx.beep === 'function') sfx.beep();
         const dlgModal = document.getElementById('modal-dialogue');
         if (dlgModal) dlgModal.classList.add('hidden');
+        window.activeDialogueNPCId = null;
     });
 
     const btnReplayDlg = document.getElementById('btn-replay-dialogue');
@@ -14188,8 +14728,169 @@ function closePropDetailsModal() {
 }
 window.closePropDetailsModal = closePropDetailsModal;
 
+// --- AUTONOMOUS NPC BEHAVIOUR & ROOM ROUTINES ENGINE ---
+function initNPCAI(npc) {
+    const routine = (typeof NPC_ACTIVITY_ROUTINES !== 'undefined' && NPC_ACTIVITY_ROUTINES[npc.id]) ? NPC_ACTIVITY_ROUTINES[npc.id] : null;
+    const initialWait = 1.0 + Math.random() * 2.5; // Staggered start times so crew don't move in lockstep
+    npc.ai = {
+        state: 'waiting',
+        timer: initialWait,
+        speed: 42 + (Math.random() * 6 - 3), // Realistic 39-45 px/s walking speed
+        targetX: npc.x,
+        targetY: npc.y,
+        targetFacing: npc.facing || 'down',
+        waypointIndex: -1,
+        currentWaypoint: null,
+        isConversing: false,
+        animTimer: 0
+    };
+    npc.assignedRoom = routine ? routine.assignedRoom : (npc.assignedRoom || 'lab');
+    npc.isMoving = false;
+    npc.activityText = routine ? routine.defaultStatus : 'Conducting outpost operations';
+}
+window.initNPCAI = initNPCAI;
+
+function selectNextNPCWaypoint(npc) {
+    const ai = npc.ai;
+    const routine = (typeof NPC_ACTIVITY_ROUTINES !== 'undefined' && NPC_ACTIVITY_ROUTINES[npc.id]) ? NPC_ACTIVITY_ROUTINES[npc.id] : null;
+    if (!routine || !routine.waypoints || routine.waypoints.length === 0) return;
+
+    // Advance to next workstation in the room routine
+    ai.waypointIndex = (ai.waypointIndex + 1) % routine.waypoints.length;
+    const wp = routine.waypoints[ai.waypointIndex];
+
+    ai.currentWaypoint = wp;
+    ai.targetX = wp.x;
+    ai.targetY = wp.y;
+    ai.targetFacing = wp.facing || 'down';
+    ai.state = 'walking';
+    npc.activityText = wp.moveText || `Walking to ${wp.name}...`;
+}
+window.selectNextNPCWaypoint = selectNextNPCWaypoint;
+
+function updateAutonomousNPCs(dt, now) {
+    if (typeof CREW_NPCS === 'undefined') return;
+
+    // Check if a dialogue conversation is currently active on screen
+    const dlgModal = document.getElementById('modal-dialogue');
+    const isDialogueOpen = dlgModal && !dlgModal.classList.contains('hidden');
+
+    CREW_NPCS.forEach(npc => {
+        if (!npc.ai) {
+            initNPCAI(npc);
+        }
+
+        const ai = npc.ai;
+
+        // Check if this NPC is currently talking to Cadet Nova
+        const isThisNPCInDialogue = isDialogueOpen && (
+            (window.activeDialogueNPCId === npc.id) ||
+            (window.activeDialogueQueue && window.activeDialogueQueue.some(d => d.portrait === npc.id || d.speaker === npc.name))
+        );
+
+        if (isThisNPCInDialogue) {
+            ai.isConversing = true;
+            npc.isMoving = false;
+            // Face the player during conversation
+            if (state && state.player) {
+                const pdx = state.player.x - npc.x;
+                const pdy = state.player.y - npc.y;
+                if (Math.abs(pdx) > Math.abs(pdy)) {
+                    npc.facing = pdx > 0 ? 'right' : 'left';
+                } else {
+                    npc.facing = pdy > 0 ? 'down' : 'up';
+                }
+            }
+            npc.activityText = 'In dialogue with Cadet Nova';
+            return;
+        } else if (ai.isConversing) {
+            // Dialogue just ended: gently pause and resume autonomous routine
+            ai.isConversing = false;
+            ai.state = 'waiting';
+            ai.timer = 1.8;
+            npc.activityText = 'Resuming outpost maintenance...';
+        }
+
+        // Proximity check with Cadet Nova
+        const distToPlayer = (state && state.player) ? Math.hypot(state.player.x - npc.x, state.player.y - npc.y) : 999;
+
+        // Proximity avoidance: If walking and player is directly in the path (< 36px), pause temporarily
+        if (ai.state === 'walking' && distToPlayer < 36) {
+            npc.isMoving = false;
+            return; // Wait for cadet to step aside
+        }
+
+        // State Machine
+        if (ai.state === 'idle' || ai.state === 'waiting') {
+            npc.isMoving = false;
+            ai.timer -= dt;
+            if (ai.timer <= 0) {
+                selectNextNPCWaypoint(npc);
+            }
+        } else if (ai.state === 'walking') {
+            const dx = ai.targetX - npc.x;
+            const dy = ai.targetY - npc.y;
+            const dist = Math.hypot(dx, dy);
+
+            if (dist > 3.0) {
+                npc.isMoving = true;
+                const step = Math.min(dist, ai.speed * dt);
+                const nextX = npc.x + (dx / dist) * step;
+                const nextY = npc.y + (dy / dist) * step;
+
+                // Strict room bounding enforcement: NPC can NEVER cross room threshold or wander into another room
+                const bounds = (typeof NPC_ROOM_BOUNDS !== 'undefined' && NPC_ROOM_BOUNDS[npc.assignedRoom]) 
+                    ? NPC_ROOM_BOUNDS[npc.assignedRoom] 
+                    : { minX: 45, maxX: 1145, minY: 55, maxY: 705 };
+
+                npc.x = Math.max(bounds.minX, Math.min(bounds.maxX, nextX));
+                npc.y = Math.max(bounds.minY, Math.min(bounds.maxY, nextY));
+
+                // Natural turning towards movement heading
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    npc.facing = dx > 0 ? 'right' : 'left';
+                } else {
+                    npc.facing = dy > 0 ? 'down' : 'up';
+                }
+            } else {
+                // Arrived at destination workstation
+                npc.x = ai.targetX;
+                npc.y = ai.targetY;
+                npc.isMoving = false;
+                npc.facing = ai.targetFacing || npc.facing;
+
+                const wp = ai.currentWaypoint;
+                if (wp) {
+                    ai.state = wp.action || 'working';
+                    ai.timer = (wp.duration || 5.0) + (Math.random() * 2.0 - 1.0);
+                    npc.activityText = wp.workText || 'Performing workstation operations';
+                } else {
+                    ai.state = 'waiting';
+                    ai.timer = 3.0;
+                }
+            }
+        } else if (ai.state === 'working' || ai.state === 'inspecting') {
+            npc.isMoving = false;
+            if (ai.targetFacing) npc.facing = ai.targetFacing;
+            ai.timer -= dt;
+            if (ai.timer <= 0) {
+                // Finished workstation task: short pause before transitioning to next
+                ai.state = 'waiting';
+                ai.timer = 2.0 + Math.random() * 1.5;
+                npc.activityText = 'Logging completed diagnostics...';
+            }
+        }
+    });
+}
+window.updateAutonomousNPCs = updateAutonomousNPCs;
+
 // --- GAME LOGIC UPDATE ---
 function updateGame(dt) {
+    // 0. Update autonomous crew NPC movement and room-specific background routines
+    if (typeof updateAutonomousNPCs === 'function') {
+        updateAutonomousNPCs(dt, performance.now());
+    }
+
     if (typeof isAnyModalOpen === 'function' && isAnyModalOpen()) return;
     if (!state.player) return;
 
@@ -14491,6 +15192,9 @@ function initGame() {
     // interact-prompt click handled in js/ui.js with full modal & range safety
     initTouchControls();
     initCanvasPointer();
+    if (typeof CREW_NPCS !== 'undefined' && typeof initNPCAI === 'function') {
+        CREW_NPCS.forEach(initNPCAI);
+    }
     if (typeof initThreeScene === 'function') initThreeScene();
     if (typeof onThreeResize === 'function') onThreeResize();
     if (typeof resizeCanvas === 'function') resizeCanvas();

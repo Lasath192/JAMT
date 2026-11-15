@@ -281,7 +281,6 @@ if (legacy.rankTier !== 'Commander Tier' && legacy.rankTier !== 'Officer Tier') 
 
 console.log('✓ All 10 missions, 30 tasks, interactive activities, and certification debrief passed verification successfully!');
 
-
 if (!legacy.rankTier || !legacy.rank) {
     throw new Error('Mission legacy calculation failed!');
 }
@@ -289,5 +288,80 @@ console.log(`✓ Sol 378 Debrief: Calculated ${legacy.rankTier} (${legacy.rank})
 
 showVictoryModal();
 console.log('✓ showVictoryModal() executed cleanly with all report cards & certificates');
-console.log('✓ ALL GUIDS, CHAPTERS, TELEMETRY LOOPS, AND TASKS VERIFIED CORRECT!\n');
+
+// --- 4. AUDIT NPC AUTONOMOUS MOVEMENT & ROOM RESTRICTION ---
+console.log('--- AUDITING NPC AUTONOMOUS MOVEMENT & ROOM-SPECIFIC ACTIVITIES ---');
+
+if (typeof CREW_NPCS === 'undefined' || CREW_NPCS.length !== 4) {
+    throw new Error('CREW_NPCS array missing or incomplete!');
+}
+
+CREW_NPCS.forEach(npc => {
+    if (!npc.assignedRoom) throw new Error(`NPC ${npc.name} (${npc.id}) is missing assignedRoom!`);
+    const bounds = NPC_ROOM_BOUNDS[npc.assignedRoom];
+    if (!bounds) throw new Error(`No room bounds defined for room '${npc.assignedRoom}' of NPC ${npc.id}`);
+    const routines = NPC_ACTIVITY_ROUTINES[npc.id];
+    if (!routines || routines.length < 2) {
+        throw new Error(`NPC ${npc.id} must have at least 2 distinct activity waypoints!`);
+    }
+    // Check initial position is inside room bounds
+    if (npc.x < bounds.minX || npc.x > bounds.maxX || npc.y < bounds.minY || npc.y > bounds.maxY) {
+        throw new Error(`Initial position of NPC ${npc.id} (${npc.x}, ${npc.y}) is outside room bounds!`);
+    }
+});
+console.log('✓ Verified: All 4 crew NPCs have assigned rooms, strict boundaries, and multi-station routines.');
+
+// Initialize NPC AI
+CREW_NPCS.forEach(initNPCAI);
+
+// Run 200 simulation steps (~10 seconds of game time)
+state.player.x = 100; // Place player far away in EVA terrain so player doesn't trigger proximity pause
+state.player.y = 380;
+
+let hasWalked = false;
+let hasWorked = false;
+
+for (let frame = 0; frame < 200; frame++) {
+    updateAutonomousNPCs(0.05, frame * 50);
+
+    // Verify all NPCs remain strictly inside their assigned room bounds on every single frame
+    CREW_NPCS.forEach(npc => {
+        const bounds = NPC_ROOM_BOUNDS[npc.assignedRoom];
+        if (npc.x < bounds.minX || npc.x > bounds.maxX || npc.y < bounds.minY || npc.y > bounds.maxY) {
+            throw new Error(`Boundary Violation! NPC ${npc.id} escaped room to (${npc.x}, ${npc.y})`);
+        }
+        if (npc.isMoving) hasWalked = true;
+        if (npc.ai && (npc.ai.state === 'working' || npc.ai.state === 'inspecting')) hasWorked = true;
+    });
+}
+
+if (!hasWalked || !hasWorked) {
+    throw new Error(`NPC AI states failed to transition! hasWalked=${hasWalked}, hasWorked=${hasWorked}`);
+}
+console.log('✓ Verified: Autonomous NPCs walk and work at stations while strictly respecting room boundaries.');
+
+// Verify Proximity Interlock
+const vance = CREW_NPCS.find(n => n.id === 'vance');
+state.player.x = vance.x + 15; // Move player directly next to Vance
+state.player.y = vance.y;
+updateAutonomousNPCs(0.05, 10000);
+if (vance.isMoving) {
+    throw new Error('Proximity pause failed! NPC moved while player was standing directly adjacent.');
+}
+console.log('✓ Verified: Crew NPCs smoothly pause movement when player approaches to prevent collisions.');
+
+// Verify Dialogue Interlock
+window.activeDialogueNPCId = 'vance';
+vance.ai.state = 'walking';
+updateAutonomousNPCs(0.05, 10050);
+if (vance.isMoving) {
+    throw new Error('Dialogue interlock failed! NPC moved while comms dialogue was active.');
+}
+closeAllModals();
+if (window.activeDialogueNPCId !== null) {
+    throw new Error('closeAllModals failed to clear activeDialogueNPCId!');
+}
+console.log('✓ Verified: Dialogue interlock pauses NPC and faces player during transmissions.');
+
+console.log('✓ ALL GUIDS, CHAPTERS, TELEMETRY LOOPS, NPC ROUTINES, AND TASKS VERIFIED CORRECT!\n');
 process.exit(0);

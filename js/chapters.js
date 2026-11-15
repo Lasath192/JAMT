@@ -543,11 +543,299 @@ const TASK_OBJECT_MAP = {
     ch10_final_report: 'lab_console'
 };
 
+// --- AUTONOMOUS NPC ROOM BOUNDARIES & WORKSTATION ACTIVITY ROUTINES ---
+// Strict spatial limits guaranteeing NPCs remain within their assigned modules at all times
+const NPC_ROOM_BOUNDS = {
+    power: { roomId: 'power', roomName: '2. Electrical Power Room', minX: 450, maxX: 615, minY: 75, maxY: 215 },
+    greenhouse: { roomId: 'greenhouse', roomName: '5. Hydroponic Greenhouse', minX: 695, maxX: 850, minY: 550, maxY: 685 },
+    lab: { roomId: 'lab', roomName: '6. Laboratory & Medical Bay', minX: 930, maxX: 1120, minY: 80, maxY: 320 },
+    shelter: { roomId: 'shelter', roomName: '7. Radiation Shelter & Quarters', minX: 935, maxX: 1115, minY: 425, maxY: 680 }
+};
+
+const NPC_ACTIVITY_ROUTINES = {
+    vance: {
+        assignedRoom: 'lab',
+        defaultStatus: 'Overseeing habitat operational readiness',
+        waypoints: [
+            {
+                id: 'wp_vance_comms',
+                name: 'DSN Telemetry Server Rack',
+                x: 1030, y: 305,
+                facing: 'down',
+                action: 'working',
+                workText: 'Uplinking telemetry to DSN Earth relay',
+                moveText: 'Heading to Deep Space Comms Rack',
+                duration: 6.5
+            },
+            {
+                id: 'wp_vance_bench',
+                name: 'Specimen Centrifuge Bench',
+                x: 1105, y: 175,
+                facing: 'right',
+                action: 'inspecting',
+                workText: 'Analyzing regolith core sample spectra',
+                moveText: 'Walking to Specimen Centrifuge Bench',
+                duration: 5.5
+            },
+            {
+                id: 'wp_vance_med',
+                name: 'Bio-Diagnostic Stasis Exam Pod',
+                x: 1030, y: 105,
+                facing: 'up',
+                action: 'inspecting',
+                workText: 'Auditing medical diagnostic telemetry',
+                moveText: 'Checking Bio-Diagnostic Pod',
+                duration: 5.0
+            },
+            {
+                id: 'wp_vance_console',
+                name: 'Mission Readiness Console',
+                x: 990, y: 175,
+                facing: 'right',
+                action: 'working',
+                workText: 'Reviewing outpost mission operations',
+                moveText: 'Moving to Mission Operations Console',
+                duration: 7.0
+            },
+            {
+                id: 'wp_vance_post',
+                name: 'Command Observation Post',
+                x: 960, y: 240,
+                facing: 'down',
+                action: 'idle',
+                workText: 'Overseeing habitat operational readiness',
+                moveText: 'Returning to Commander Station',
+                duration: 4.5
+            },
+            {
+                id: 'wp_vance_archive',
+                name: 'Sample Storage Archive',
+                x: 960, y: 120,
+                facing: 'up',
+                action: 'inspecting',
+                workText: 'Cataloguing biological & mineral canisters',
+                moveText: 'Inspecting Sample Canister Archive',
+                duration: 5.0
+            }
+        ]
+    },
+    lin: {
+        assignedRoom: 'greenhouse',
+        defaultStatus: 'Tending hydroponic dwarf wheat & microgreens',
+        waypoints: [
+            {
+                id: 'wp_lin_crops',
+                name: 'Vertical Aeroponic Salad Racks',
+                x: 770, y: 665,
+                facing: 'down',
+                action: 'working',
+                workText: 'Pruning dwarf wheat & checking PAR sensor',
+                moveText: 'Moving to Vertical Hydroponic Racks',
+                duration: 6.5
+            },
+            {
+                id: 'wp_lin_micro',
+                name: 'Microgreen Germination Incubator',
+                x: 710, y: 620,
+                facing: 'left',
+                action: 'inspecting',
+                workText: 'Checking humidity in germination chamber',
+                moveText: 'Inspecting Microgreen Incubator',
+                duration: 5.0
+            },
+            {
+                id: 'wp_lin_nutrients',
+                name: 'Automated Nutrient Dosing Buffer',
+                x: 830, y: 620,
+                facing: 'right',
+                action: 'working',
+                workText: 'Balancing automated N-P-K nutrient buffer',
+                moveText: 'Walking to Nutrient Dosing Station',
+                duration: 6.0
+            },
+            {
+                id: 'wp_lin_console',
+                name: 'Greenhouse Climate Bio-Console',
+                x: 775, y: 580,
+                facing: 'down',
+                action: 'working',
+                workText: 'Calibrating aeroponic drip irrigation cycle',
+                moveText: 'Checking Greenhouse Master Console',
+                duration: 5.5
+            },
+            {
+                id: 'wp_lin_observe',
+                name: 'Seedling Observation Post',
+                x: 830, y: 655,
+                facing: 'left',
+                action: 'idle',
+                workText: 'Observing microgreen crop growth rates',
+                moveText: 'Returning to Crop Observation Area',
+                duration: 4.5
+            },
+            {
+                id: 'wp_lin_lines',
+                name: 'Aeroponic Delivery Drip Lines',
+                x: 715, y: 565,
+                facing: 'right',
+                action: 'inspecting',
+                workText: 'Inspecting drip lines for mineral deposits',
+                moveText: 'Checking Aeroponic Feeder Lines',
+                duration: 5.0
+            }
+        ]
+    },
+    philip: {
+        assignedRoom: 'power',
+        defaultStatus: 'Monitoring grid load & high-voltage stability',
+        waypoints: [
+            {
+                id: 'wp_phil_bat1',
+                name: 'Li-Ion Battery Banks Alpha & Beta',
+                x: 480, y: 100,
+                facing: 'left',
+                action: 'inspecting',
+                workText: 'Inspecting Li-Ion battery bank telemetry',
+                moveText: 'Heading to Li-Ion Battery Banks',
+                duration: 6.0
+            },
+            {
+                id: 'wp_phil_bat3',
+                name: 'Li-Ion Battery Bank Gamma',
+                x: 475, y: 140,
+                facing: 'left',
+                action: 'working',
+                workText: 'Testing bus voltage on backup battery string',
+                moveText: 'Inspecting Backup Battery String',
+                duration: 5.5
+            },
+            {
+                id: 'wp_phil_xfr',
+                name: 'HV Step-Down Transformer',
+                x: 535, y: 85,
+                facing: 'up',
+                action: 'working',
+                workText: 'Calibrating 480V step-down transformer',
+                moveText: 'Moving to HV Transformer Unit',
+                duration: 6.5
+            },
+            {
+                id: 'wp_phil_brk',
+                name: 'Primary Distribution Breakers',
+                x: 590, y: 110,
+                facing: 'right',
+                action: 'inspecting',
+                workText: 'Verifying solid-state distribution breakers',
+                moveText: 'Inspecting Primary Breakers Bus A',
+                duration: 5.0
+            },
+            {
+                id: 'wp_phil_inv',
+                name: 'Inverter & Auxiliary Switchgear',
+                x: 595, y: 145,
+                facing: 'right',
+                action: 'working',
+                workText: 'Monitoring DC-DC inverter wave harmonics',
+                moveText: 'Testing Inverter Switchgear Bus B',
+                duration: 5.5
+            },
+            {
+                id: 'wp_phil_console',
+                name: 'Power Telemetry & HV Console',
+                x: 535, y: 165,
+                facing: 'up',
+                action: 'working',
+                workText: 'Balancing outpost kilowatt power grid',
+                moveText: 'Returning to Power Grid Console',
+                duration: 7.0
+            },
+            {
+                id: 'wp_phil_post',
+                name: 'Chief Engineer Post',
+                x: 465, y: 175,
+                facing: 'right',
+                action: 'idle',
+                workText: 'Auditing high-voltage circuit stability',
+                moveText: 'Returning to Engineer Station',
+                duration: 4.5
+            }
+        ]
+    },
+    maya: {
+        assignedRoom: 'shelter',
+        defaultStatus: 'Evaluating crew vitals & radiation storm shield',
+        waypoints: [
+            {
+                id: 'wp_maya_shield',
+                name: 'Water-Jacket Storm Shielding',
+                x: 1030, y: 440,
+                facing: 'up',
+                action: 'inspecting',
+                workText: 'Checking water-shield radiation dosimeters',
+                moveText: 'Inspecting Water-Wall Radiation Shield',
+                duration: 6.0
+            },
+            {
+                id: 'wp_maya_bunk1',
+                name: 'Crew Bunk Alpha (Philip)',
+                x: 1090, y: 465,
+                facing: 'right',
+                action: 'working',
+                workText: 'Checking circadian lighting & sleep monitors',
+                moveText: 'Checking Crew Berth S-01 Sensors',
+                duration: 5.0
+            },
+            {
+                id: 'wp_maya_bunk2',
+                name: 'Crew Bunk Beta (Nova)',
+                x: 1090, y: 630,
+                facing: 'right',
+                action: 'working',
+                workText: 'Recording crew biometric baseline readings',
+                moveText: 'Reviewing Stasis Berth S-02 Biometrics',
+                duration: 5.5
+            },
+            {
+                id: 'wp_maya_rations',
+                name: 'Emergency Rations & Trauma Kit',
+                x: 1030, y: 665,
+                facing: 'down',
+                action: 'inspecting',
+                workText: 'Inventorying trauma supplies & dosimeter pens',
+                moveText: 'Inspecting Emergency Trauma Kit',
+                duration: 5.0
+            },
+            {
+                id: 'wp_maya_console',
+                name: 'Radiation Shelter Master Console',
+                x: 990, y: 555,
+                facing: 'right',
+                action: 'working',
+                workText: 'Tracking solar particle flux & space weather',
+                moveText: 'Moving to Radiation Master Console',
+                duration: 7.0
+            },
+            {
+                id: 'wp_maya_post',
+                name: 'Flight Surgeon Post',
+                x: 965, y: 500,
+                facing: 'down',
+                action: 'idle',
+                workText: 'Evaluating crew cardiovascular resilience',
+                moveText: 'Returning to Surgeon Station',
+                duration: 4.5
+            }
+        ]
+    }
+};
+
 const CREW_NPCS = [
     {
         id: 'vance',
         name: 'Cmdr. Vance',
         x: 960, y: 240,
+        assignedRoom: 'lab',
+        facing: 'down',
         suitColor: '#0284c7',
         hairColor: '#fde047',
         skinColor: '#fed7aa',
@@ -576,6 +864,8 @@ const CREW_NPCS = [
         id: 'lin',
         name: 'Dr. Elena Lin',
         x: 830, y: 635,
+        assignedRoom: 'greenhouse',
+        facing: 'left',
         suitColor: '#16a34a',
         hairColor: '#ea580c',
         skinColor: '#ffedd5',
@@ -604,6 +894,8 @@ const CREW_NPCS = [
         id: 'philip',
         name: 'Eng. Philip',
         x: 465, y: 175,
+        assignedRoom: 'power',
+        facing: 'right',
         suitColor: '#9a3412',
         hairColor: '#1e293b',
         skinColor: '#fdba74',
@@ -633,6 +925,8 @@ const CREW_NPCS = [
         id: 'maya',
         name: 'Dr. Maya Patel',
         x: 965, y: 500,
+        assignedRoom: 'shelter',
+        facing: 'down',
         suitColor: '#9333ea',
         hairColor: '#475569',
         skinColor: '#fed7aa',
@@ -823,7 +1117,7 @@ const CHAPTER_DIALOGUES = {
 };
 
 if (typeof module !== 'undefined') {
-    module.exports = { CHAPTERS, OBJECTS, TASK_OBJECT_MAP, CHAPTER_DIALOGUES };
+    module.exports = { CHAPTERS, OBJECTS, TASK_OBJECT_MAP, CHAPTER_DIALOGUES, CREW_NPCS, NPC_ROOM_BOUNDS, NPC_ACTIVITY_ROUTINES };
 }
 
 if (typeof window !== 'undefined') {
@@ -831,4 +1125,7 @@ if (typeof window !== 'undefined') {
     window.OBJECTS = OBJECTS;
     window.TASK_OBJECT_MAP = TASK_OBJECT_MAP;
     window.CHAPTER_DIALOGUES = CHAPTER_DIALOGUES;
+    window.CREW_NPCS = CREW_NPCS;
+    window.NPC_ROOM_BOUNDS = NPC_ROOM_BOUNDS;
+    window.NPC_ACTIVITY_ROUTINES = NPC_ACTIVITY_ROUTINES;
 }
