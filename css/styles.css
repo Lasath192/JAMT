@@ -1,135 +1,715 @@
+/* ==========================================================================
+   ASTRA-1: The Red Frontier — Warm Mars Sunset Game-GUI Design System
+   Palette: #A14646 (Maroon), #DA6556 (Red), #EB895B (Orange), #FDB773 (Gold)
+   ========================================================================== */
+
 :root {
-    --mars-red: #c2410c;
-    --hud-bg: rgba(10, 15, 28, 0.88);
-    --hud-border: rgba(56, 189, 248, 0.28);
+    /* 1. DESIGN TOKENS — Mars Sunset Palette */
+    /* Backgrounds */
+    --bg-deep:        #241010;   /* deepest Mars maroon sky */
+    --bg-night:       #341717;   /* behind panels / modal inner frame */
+    --cloud-1:        #A14646;   /* soft maroon sunset cloud shapes */
+    --cloud-2:        #DA6556;   /* warm coral-orange cloud highlights */
+
+    /* Panels */
+    --panel:          #7c3232;   /* primary panel / modal body */
+    --panel-2:        #A14646;   /* raised cards, rows, modal headers */
+    --panel-inset:    #4a1d1d;   /* recessed wells, progress tracks, tab bars, input bg */
+    --panel-hover:    #b34e4e;
+    --outline-soft:   #DA6556;   /* 1.5-2px inner borders on cards */
+    --outline-hero:   #fff7f0;   /* 2px outer border on modals */
+    --glow-hero:      0 0 24px rgba(253, 183, 115, 0.55), 0 0 2px #fff7f0;
+
+    /* Text */
+    --text-title:     #FDB773;   /* warm sunset gold display titles */
+    --text:           #fff7f0;   /* primary body, high contrast */
+    --text-muted:     #f7cbb0;   /* secondary labels, inactive tabs */
+    --text-dim:       #cfa08e;   /* disabled */
+
+    /* Accents */
+    --accent-lav:     #EB895B;   /* secondary accents, chips */
+    --accent-pink:    #FDB773;   /* primary CTA gradient start */
+    --accent-peach:   #EB895B;   /* primary CTA gradient end */
+    --accent-sky:     #FDB773;   /* progress fill, info highlights, focus ring */
+    --accent-blue:    #EB895B;   /* warm accent bar fill */
+    --accent-gold:    #FDB773;   /* rewards / SOL badge / title glow */
+    --accent-mint:    #4fd1a0;   /* success / verified / checkmarks */
+    --accent-heart:   #DA6556;   /* hearts, life */
+    --accent-warn:    #EB895B;   /* caution (sunset orange) */
+    --accent-danger:  #DA6556;   /* emergency (coral-red) */
+    --rank-1:         #FDB773;
+    --rank-2:         #EB895B;
+    --rank-3:         #DA6556;
+    --rank-n:         #A14646;
+
+    /* Gradients */
+    --btn-primary:    linear-gradient(180deg, #FDB773 0%, #EB895B 100%);  /* text #2d1212 */
+    --btn-secondary:  linear-gradient(180deg, #DA6556 0%, #A14646 100%);  /* text #fff7f0 */
+    --btn-tertiary:   linear-gradient(180deg, #ffe0b5 0%, #FDB773 100%);  /* text #341717 */
+    --btn-success:    linear-gradient(180deg, #7ee8bf 0%, #4fd1a0 100%);  /* text #142920 */
+    --btn-disabled:   #542424;
+
+    /* Shape */
+    --radius-modal:   16px;
+    --radius-card:    12px;
+    --radius-btn:     10px;
+    --radius-pill:    999px;
+    --radius-tile:    10px;
+
+    /* Legacy variable aliases mapped to Mars Sunset tokens */
+    --mars-red:       #DA6556;
+    --hud-bg:         rgba(124, 50, 50, 0.90);
+    --hud-border:     var(--outline-soft);
 }
+
 * {
     box-sizing: border-box;
     user-select: none;
     -webkit-user-select: none;
 }
+
+*:focus-visible {
+    outline: 3px solid var(--accent-sky) !important;
+    outline-offset: 2px !important;
+}
+
 body {
     margin: 0;
     padding: 0;
-    background-color: #050811;
-    color: #e2e8f0;
-    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-deep);
+    color: var(--text);
+    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 700;
     overflow: hidden;
     height: 100vh;
     width: 100vw;
 }
+
+.font-display {
+    font-family: 'Righteous', 'Fredoka', 'Baloo 2', cursive, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-title);
+    text-shadow: 0 0 12px rgba(253, 183, 115, 0.45);
+}
+
+.btn-primary.font-display,
+.btn-tertiary.font-display,
+.btn-success.font-display,
+.btn-danger.font-display {
+    text-shadow: none;
+    color: #2d1212;
+}
+
+.hud-topbar {
+    border-radius: 0 0 14px 14px !important;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+}
+
 .font-mono-tech {
     font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
 }
-.font-display {
-    font-family: 'Orbitron', sans-serif;
+
+/* ==========================================================================
+   2. GLOBAL NIGHT-SKY BACKDROP (Visible on menu/modal overlays only)
+   ========================================================================== */
+
+.cosmic-overlay {
+    background:
+        radial-gradient(ellipse 65% 45% at 15% 18%, rgba(218, 101, 86, 0.48) 0%, transparent 70%),
+        radial-gradient(ellipse 70% 50% at 85% 22%, rgba(161, 70, 70, 0.55) 0%, transparent 72%),
+        radial-gradient(ellipse 80% 55% at 50% 88%, rgba(218, 101, 86, 0.42) 0%, transparent 70%),
+        rgba(36, 16, 16, 0.88);
+    backdrop-filter: blur(10px);
 }
+
+.cosmic-sky-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.cosmic-cloud {
+    position: absolute;
+    border-radius: 999px;
+    filter: blur(42px);
+    opacity: 0.45;
+    animation: cloudDrift 90s ease-in-out infinite alternate;
+}
+
+.cosmic-cloud-1 {
+    width: 520px;
+    height: 240px;
+    top: -40px;
+    left: -80px;
+    background: radial-gradient(circle, var(--cloud-2) 0%, var(--cloud-1) 60%, transparent 100%);
+}
+
+.cosmic-cloud-2 {
+    width: 580px;
+    height: 260px;
+    bottom: -60px;
+    right: -100px;
+    background: radial-gradient(circle, var(--cloud-1) 0%, var(--bg-night) 70%, transparent 100%);
+    animation-duration: 115s;
+}
+
+.cosmic-star {
+    position: absolute;
+    color: var(--text-title);
+    opacity: 0.75;
+    animation: starTwinkle 4.5s ease-in-out infinite;
+    filter: drop-shadow(0 0 6px rgba(253, 183, 115, 0.75));
+}
+
+.cosmic-shooting-star {
+    position: absolute;
+    width: 140px;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(253, 183, 115, 0) 0%, rgba(253, 183, 115, 0.85) 80%, #FDB773 100%);
+    border-radius: 999px;
+    transform: rotate(-22deg);
+    opacity: 0.7;
+    box-shadow: 0 0 8px rgba(253, 183, 115, 0.7);
+}
+
+.cosmic-shooting-star::after {
+    content: "✦";
+    position: absolute;
+    right: -6px;
+    top: -10px;
+    font-size: 13px;
+    color: var(--text-title);
+    text-shadow: 0 0 8px #FDB773;
+}
+
+@keyframes starTwinkle {
+    0%, 100% { transform: scale(0.85); opacity: 0.45; }
+    50%      { transform: scale(1.18); opacity: 0.95; }
+}
+
+@keyframes cloudDrift {
+    0%   { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(38px, 16px, 0); }
+}
+
+/* ==========================================================================
+   3. SHARED COZY COSMIC COMPONENT LIBRARY
+   ========================================================================== */
+
+.panel,
 .hud-panel {
-    background: var(--hud-bg);
-    backdrop-filter: blur(14px);
-    border: 1px solid var(--hud-border);
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    background: rgba(124, 50, 50, 0.90);
+    backdrop-filter: blur(8px);
+    border: 1.5px solid var(--outline-soft);
+    border-radius: var(--radius-card);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 8px 24px rgba(36, 16, 16, 0.55);
 }
+
 .hud-panel-amber {
-    background: rgba(28, 16, 8, 0.92);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(245, 158, 11, 0.45);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+    background: rgba(124, 50, 50, 0.94);
+    backdrop-filter: blur(10px);
+    border: 2px solid var(--accent-warn);
+    border-radius: var(--radius-card);
+    box-shadow: 0 0 24px rgba(235, 137, 91, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
+
 .hud-panel-red {
-    background: rgba(35, 10, 14, 0.92);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(239, 68, 68, 0.6);
-    box-shadow: 0 0 25px rgba(239, 68, 68, 0.35);
+    background: rgba(110, 34, 34, 0.94);
+    backdrop-filter: blur(10px);
+    border: 2px solid var(--accent-danger);
+    border-radius: var(--radius-card);
+    box-shadow: 0 0 24px rgba(218, 101, 86, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
+
+/* Crisp White-Outlined Hero Modal Frame */
+.modal-shell {
+    position: relative;
+    background: var(--panel);
+    border: 2px solid var(--outline-hero);
+    border-radius: var(--radius-modal);
+    box-shadow: var(--glow-hero), inset 0 2px 0 rgba(255, 255, 255, 0.16);
+    padding: 8px;
+}
+
+.modal-shell-inner {
+    background: var(--bg-night);
+    border: 1.5px solid var(--outline-soft);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Floating Banner Title ABOVE Modal Panel (Game-GUI Signature) */
+.modal-title-ribbon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 4px 20px;
+    margin-bottom: -14px;
+    position: relative;
+    z-index: 35;
+    background: linear-gradient(180deg, #DA6556 0%, #A14646 100%);
+    border: 2px solid var(--outline-hero);
+    border-radius: 999px;
+    box-shadow: var(--glow-hero);
+}
+
+/* Top-Right Overlapping Round Lavender Close Button */
+.modal-close-orb {
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    z-index: 40;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    background: #FDB773;
+    border: 2px solid #2d1212;
+    box-shadow: 0 3px 0 #2d1212, 0 0 12px rgba(253, 183, 115, 0.45);
+    color: #2d1212;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 20px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 150ms ease-out, filter 150ms ease-out, box-shadow 150ms ease-out;
+}
+
+.modal-close-orb:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px) scale(1.05);
+}
+
+.modal-close-orb:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #2d1212;
+}
+
+/* Tactile Candy/Pastel Buttons */
+.btn-primary,
+.btn-secondary,
+.btn-tertiary,
+.btn-success,
+.btn-danger,
+.btn-disabled,
 .btn-tech {
-    transition: all 0.15s ease;
+    border-radius: var(--radius-btn);
+    border: 2px solid #2d1212;
+    box-shadow: 0 3px 0 #2d1212;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    min-height: 44px;
+    transition: transform 160ms ease-out, box-shadow 160ms ease-out, filter 160ms ease-out, background 160ms ease-out;
     position: relative;
     overflow: hidden;
 }
+
+.btn-compact {
+    min-height: 34px !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+}
+
+.btn-primary {
+    background: var(--btn-primary);
+    color: #2d1212;
+}
+
+.btn-secondary {
+    background: var(--btn-secondary);
+    color: #fff7f0;
+    text-shadow: 0 1px 2px rgba(36, 16, 16, 0.65);
+}
+
+.btn-tertiary {
+    background: var(--btn-tertiary);
+    color: #341717;
+}
+
+.btn-success {
+    background: var(--btn-success);
+    color: #142920;
+}
+
+.btn-danger {
+    background: linear-gradient(180deg, #EB895B 0%, #DA6556 100%);
+    color: #241010;
+}
+
+.btn-disabled,
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-tertiary:disabled,
+.btn-success:disabled,
+.btn-tech:disabled {
+    background: var(--btn-disabled) !important;
+    color: var(--text-dim) !important;
+    box-shadow: 0 2px 0 #341717 !important;
+    cursor: not-allowed !important;
+    opacity: 0.72;
+}
+
+.btn-primary:hover:not(:disabled),
+.btn-secondary:hover:not(:disabled),
+.btn-tertiary:hover:not(:disabled),
+.btn-success:hover:not(:disabled),
+.btn-danger:hover:not(:disabled),
 .btn-tech:hover:not(:disabled) {
+    filter: brightness(1.06);
     transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(56, 189, 248, 0.28);
+    box-shadow: 0 4px 0 #2d1212, 0 6px 16px rgba(253, 183, 115, 0.22);
 }
+
+.btn-primary:active:not(:disabled),
+.btn-secondary:active:not(:disabled),
+.btn-tertiary:active:not(:disabled),
+.btn-success:active:not(:disabled),
+.btn-danger:active:not(:disabled),
 .btn-tech:active:not(:disabled) {
-    transform: translateY(0px);
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #2d1212;
 }
+
+/* Tabs */
+.tabs {
+    background: var(--panel-inset);
+    border: 1.5px solid var(--outline-soft);
+    border-radius: var(--radius-card);
+    padding: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.tab-btn {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text-muted);
+    background: transparent;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 150ms ease-out;
+}
+
+.tab-btn:hover {
+    color: var(--text);
+    background: rgba(235, 137, 91, 0.18);
+}
+
+.tab-btn.active {
+    color: #ffffff;
+    background: var(--panel-2);
+    border-bottom: 2px solid #ffffff;
+    box-shadow: 0 2px 8px rgba(36, 16, 16, 0.45);
+}
+
+/* Card Rows (Checklist, Codex, Power Breakers) */
+.card-row {
+    background: var(--panel-2);
+    border: 1.5px solid var(--outline-soft);
+    border-radius: var(--radius-card);
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: transform 150ms ease-out, background 150ms ease-out, border-color 150ms ease-out;
+}
+
+.card-row:hover {
+    background: var(--panel-hover);
+}
+
+/* Progress Tracks & Segmented Bars */
+.progress {
+    background: var(--panel-inset);
+    border: 1px solid var(--outline-soft);
+    border-radius: 6px;
+    height: 12px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    background: linear-gradient(90deg, var(--accent-sky) 0%, var(--accent-blue) 100%);
+    height: 100%;
+    border-radius: 4px;
+    transition: width 220ms ease-out;
+}
+
+.progress-fill.progress-done {
+    background: linear-gradient(90deg, #EB895B 0%, var(--accent-mint) 100%);
+}
+
+.progress-segmented {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--panel-inset);
+    border: 1.5px solid var(--outline-soft);
+    border-radius: 8px;
+    padding: 4px 6px;
+}
+
+.progress-seg-pip {
+    flex: 1;
+    height: 10px;
+    border-radius: 3px;
+    background: var(--panel);
+    border: 1px solid rgba(218, 101, 86, 0.45);
+    transition: background 180ms ease-out, box-shadow 180ms ease-out;
+}
+
+.progress-seg-pip.filled {
+    background: var(--accent-sky);
+    box-shadow: 0 0 8px rgba(253, 183, 115, 0.55);
+}
+
+.progress-seg-pip.filled-mint {
+    background: var(--accent-mint);
+    box-shadow: 0 0 8px rgba(79, 209, 160, 0.55);
+}
+
+.progress-seg-pip.filled-warn {
+    background: var(--accent-warn);
+    box-shadow: 0 0 8px rgba(235, 137, 91, 0.55);
+}
+
+.progress-seg-pip.filled-danger {
+    background: var(--accent-danger);
+    box-shadow: 0 0 8px rgba(218, 101, 86, 0.55);
+}
+
+/* Resource & Objective Pills */
+.pill {
+    background: var(--panel-inset);
+    border: 1.5px solid var(--outline-soft);
+    border-radius: var(--radius-pill);
+    padding: 4px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: inset 0 2px 4px rgba(36, 16, 16, 0.45);
+}
+
+/* Toggle Pairs (Simplified/Classic UI, Audio ON/OFF, Cadet/Engineer) */
+.toggle-pair {
+    display: inline-flex;
+    align-items: center;
+    background: var(--panel-inset);
+    border: 1.5px solid var(--outline-soft);
+    border-radius: var(--radius-pill);
+    padding: 3px;
+    gap: 3px;
+    cursor: pointer;
+}
+
+.toggle-pair-opt {
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--text-muted);
+    background: var(--panel-2);
+    transition: all 150ms ease-out;
+    white-space: nowrap;
+}
+
+.toggle-pair-opt.is-active {
+    background: linear-gradient(180deg, var(--accent-pink) 0%, var(--accent-lav) 100%);
+    color: #2d1212;
+    box-shadow: 0 2px 0 #2d1212;
+}
+
+/* Lavender Select Dropdown */
+.select {
+    background: linear-gradient(180deg, #DA6556 0%, #A14646 100%);
+    color: #ffffff;
+    border: 2px solid #2d1212;
+    box-shadow: 0 3px 0 #2d1212;
+    border-radius: 10px;
+    padding: 6px 10px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.select option {
+    background: var(--bg-night);
+    color: var(--text);
+}
+
+/* Icon Tile */
+.icon-tile {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-tile);
+    background: var(--panel-inset);
+    border: 1.5px solid var(--outline-soft);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: inset 0 2px 4px rgba(36, 16, 16, 0.55);
+}
+
+/* Shield Badge for Sol / Level */
+.badge-shield {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(180deg, #fff7f0 0%, #FDB773 100%);
+    color: #2d1212;
+    border: 2px solid #2d1212;
+    box-shadow: 0 3px 0 #2d1212;
+    border-radius: 12px 12px 18px 18px;
+    padding: 4px 12px;
+    cursor: pointer;
+    transition: transform 150ms ease-out;
+}
+
+.badge-shield:hover {
+    transform: translateY(-1px);
+}
+
+.badge-shield:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #2d1212;
+}
+
+/* Keycap Hint */
+.keycap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    padding: 2px 7px;
+    border-radius: 8px;
+    background: var(--panel-inset);
+    border: 1.5px solid var(--outline-soft);
+    box-shadow: 0 2px 0 #241010;
+    color: var(--text-title);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 12px;
+}
+
+/* ==========================================================================
+   ANIMATIONS & MOTION (with prefers-reduced-motion respect)
+   ========================================================================== */
+
 @keyframes pulse-alert {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.45; }
+    0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+    50% { opacity: 0.72; transform: translateX(-50%) scale(1.02); }
 }
+
 .animate-alert {
     animation: pulse-alert 1.4s infinite ease-in-out;
 }
+
 @keyframes float-slow {
     0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(-4px); }
 }
+
 .animate-float {
-    animation: float-slow 3s infinite ease-in-out;
+    animation: float-slow 3.5s infinite ease-in-out;
 }
-/* Modal Viewport Safety & Guaranteed Sticky Header / Footer */
+
+@keyframes scaleUpAnim {
+    0% { transform: scale(0.92); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-scale-up {
+    animation: scaleUpAnim 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes missionUnlockGlow {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(253, 183, 115, 0.35), inset 0 0 15px rgba(253, 183, 115, 0.14);
+        border-color: var(--accent-sky);
+    }
+    50% {
+        box-shadow: 0 0 28px rgba(235, 137, 91, 0.65), inset 0 0 22px rgba(253, 183, 115, 0.28);
+        border-color: var(--accent-gold);
+    }
+}
+
+.mission-unlock-glow {
+    animation: missionUnlockGlow 3s ease-in-out infinite;
+}
+
+/* ==========================================================================
+   MODAL SAFETY, SCROLLBARS & PRINT STYLES
+   ========================================================================== */
+
 .modal-overlay {
     position: fixed;
     inset: 0;
     z-index: 50;
-    background: rgba(4, 7, 16, 0.88);
-    backdrop-filter: blur(14px);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    padding: 1rem 0.5rem;
+    padding: 1.5rem 0.75rem;
 }
+
 @media (min-height: 740px) {
     .modal-overlay {
         justify-content: center;
     }
 }
+
 .modal-card {
     width: 100%;
     display: flex;
     flex-direction: column;
-    max-height: calc(100vh - 2.5rem);
+    max-height: calc(100vh - 3rem);
     margin: auto 0;
     position: relative;
-    border-radius: 1rem;
-    overflow: hidden;
-}
-.modal-header-sticky {
-    position: sticky;
-    top: 0;
-    z-index: 30;
-    flex-shrink: 0;
-}
-.modal-footer-sticky {
-    position: sticky;
-    bottom: 0;
-    z-index: 30;
-    flex-shrink: 0;
 }
 
-/* Custom scrollbar for modals */
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
 }
 ::-webkit-scrollbar-track {
-    background: rgba(15, 23, 42, 0.6);
+    background: var(--panel-inset);
+    border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb {
-    background: rgba(56, 189, 248, 0.4);
-    border-radius: 3px;
+    background: var(--outline-soft);
+    border-radius: 999px;
+    border: 1px solid var(--panel-inset);
 }
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-sky);
+}
+
 canvas {
     display: block;
     width: 100%;
     height: 100%;
 }
 
-/* Printable Official NASA Junior Astronaut Certificate (@media print) */
+/* Printable Official Certificate */
 @media print {
     body * {
         visibility: hidden !important;
@@ -153,92 +733,38 @@ canvas {
     }
 }
 
+/* ==========================================================================
+   HUD SPECIFIC ENHANCEMENTS & METER INTERACTIONS
+   ========================================================================== */
 
-/* Modern Streamlined UI/UX Enhancements */
 #active-objective-pill {
-    backdrop-filter: blur(16px);
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 150ms ease-out, box-shadow 150ms ease-out;
 }
 #active-objective-pill:hover {
     transform: translateY(-1px);
-    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.25);
+    box-shadow: 0 0 18px rgba(253, 183, 115, 0.35);
 }
 #active-objective-pill:active {
-    transform: translateY(0px) scale(0.99);
+    transform: translateY(1px);
 }
 
 #pill-checklist-collapsed,
 #pill-trainer-collapsed {
-    backdrop-filter: blur(16px);
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 150ms ease-out, box-shadow 150ms ease-out;
 }
 #pill-checklist-collapsed:hover,
 #pill-trainer-collapsed:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(56, 189, 248, 0.25);
-}
-#pill-checklist-collapsed:active,
-#pill-trainer-collapsed:active {
-    transform: translateY(0px) scale(0.98);
-}
-
-#panel-checklist,
-#panel-trainer {
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
-}
-
-#cadet-meter-power,
-#cadet-meter-life,
-#cadet-meter-rad {
-    transition: all 0.15s ease;
-}
-#cadet-meter-power:hover,
-#cadet-meter-life:hover,
-#cadet-meter-rad:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.08);
-}
-
-/* Strict Horizontal HUD Hearts & Action Buttons Alignment */
-header .hud-header-item,
-#hud-cadet-meters > div,
-#hud-engineer-meters > div,
-#hud-hearts-container,
-#btn-quick-door-f,
-#btn-quick-dilemma,
-#btn-donki-weather,
-#btn-judge-hub,
-#btn-hud-mode,
-#btn-power-grid,
-#btn-codex,
-#btn-settings {
-    height: 34px !important;
-    min-height: 34px !important;
-    max-height: 34px !important;
-    display: inline-flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: center !important;
-    white-space: nowrap !important;
-    flex-shrink: 0 !important;
-    box-sizing: border-box !important;
-    line-height: 1 !important;
-    vertical-align: middle !important;
+    box-shadow: 0 0 16px rgba(253, 183, 115, 0.32);
 }
 
 #hud-hearts-container {
-    height: 34px !important;
-    min-height: 34px !important;
-    max-height: 34px !important;
+    height: 36px !important;
     display: inline-flex !important;
     flex-direction: row !important;
     align-items: center !important;
     justify-content: center !important;
-    flex-wrap: nowrap !important;
     white-space: nowrap !important;
-    min-width: 80px !important;
-    max-width: 90px !important;
-    padding: 0 8px !important;
     flex-shrink: 0 !important;
     box-sizing: border-box !important;
 }
@@ -247,80 +773,123 @@ header .hud-header-item,
     display: inline-flex !important;
     flex-direction: row !important;
     align-items: center !important;
-    justify-content: center !important;
-    flex-wrap: nowrap !important;
-    gap: 4px !important;
+    gap: 5px !important;
     white-space: nowrap !important;
     line-height: 1 !important;
     flex-shrink: 0 !important;
 }
 
 .heart-glyph {
-    display: inline-block !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     flex-shrink: 0 !important;
     white-space: nowrap !important;
     line-height: 1 !important;
-    font-size: 15px !important;
 }
-
-/* Door Proximity Floating Prompt */
-#door-proximity-prompt {
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    animation: float-slow 2.5s infinite ease-in-out;
-}
-
-/* Raw NASA Telemetry Drawer */
-details.nasa-telemetry-drawer summary::-webkit-details-marker {
-    display: none;
-}
-
 
 /* ==========================================================================
-   ASTRA-1 INTERACTIVE SIMULATION ACTIVITIES STYLING
+   COZY COSMIC MINI-GAME ACTIVITY SKINNING (#console-activity-mount)
+   Automatically harmonizes all 30 TASK_RENDERERS with the lavender sky theme
    ========================================================================== */
 
-/* Tech Slider Styling */
+#console-activity-mount .bg-slate-950,
+#console-activity-mount .bg-slate-950\/90,
+#console-activity-mount .bg-slate-950\/80,
+#console-activity-mount .bg-slate-900,
+#console-activity-mount .bg-slate-900\/90,
+#console-activity-mount .bg-slate-900\/80,
+#console-activity-mount .bg-slate-900\/70 {
+    background-color: var(--panel-inset) !important;
+}
+
+#console-activity-mount .bg-slate-800,
+#console-activity-mount .bg-slate-800\/90,
+#console-activity-mount .bg-slate-800\/80 {
+    background-color: var(--panel-2) !important;
+}
+
+#console-activity-mount .border-slate-800,
+#console-activity-mount .border-slate-700,
+#console-activity-mount .border-slate-600 {
+    border-color: var(--outline-soft) !important;
+}
+
+#console-activity-mount .text-slate-300,
+#console-activity-mount .text-slate-200 {
+    color: var(--text) !important;
+}
+
+#console-activity-mount .text-slate-400,
+#console-activity-mount .text-slate-500 {
+    color: var(--text-muted) !important;
+}
+
+#console-activity-mount .bg-sky-500,
+#console-activity-mount .bg-sky-600 {
+    background-color: var(--accent-blue) !important;
+}
+
+#console-activity-mount .text-sky-300,
+#console-activity-mount .text-sky-400 {
+    color: var(--accent-sky) !important;
+}
+
+#console-activity-mount .text-emerald-300,
+#console-activity-mount .text-emerald-400 {
+    color: var(--accent-mint) !important;
+}
+
+#console-activity-mount .text-amber-300,
+#console-activity-mount .text-amber-400 {
+    color: var(--accent-gold) !important;
+}
+
+#console-activity-mount .text-rose-400,
+#console-activity-mount .text-red-400 {
+    color: var(--accent-danger) !important;
+}
+
+/* Cozy Sliders */
 .tech-slider {
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
-    height: 10px;
-    background: #0f172a;
-    border: 1px solid #334155;
+    height: 12px;
+    background: var(--panel-inset);
+    border: 1.5px solid var(--outline-soft);
     border-radius: 9999px;
     outline: none;
     transition: all 0.2s ease;
 }
 .tech-slider:hover {
-    border-color: #38bdf8;
-    box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+    border-color: var(--accent-sky);
+    box-shadow: 0 0 12px rgba(253, 183, 115, 0.35);
 }
 .tech-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
-    background: #38bdf8;
-    border: 2px solid #ffffff;
+    background: linear-gradient(180deg, var(--accent-pink) 0%, var(--accent-peach) 100%);
+    border: 2px solid #2d1212;
     cursor: grab;
-    box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
-    transition: transform 0.1s ease, background 0.2s ease;
+    box-shadow: 0 2px 0 #2d1212, 0 0 10px rgba(235, 137, 91, 0.65);
+    transition: transform 0.1s ease;
 }
 .tech-slider::-webkit-slider-thumb:active {
     cursor: grabbing;
-    transform: scale(1.2);
-    background: #f59e0b;
-    box-shadow: 0 0 14px rgba(245, 158, 11, 0.9);
+    transform: scale(1.16);
 }
 .tech-slider::-moz-range-thumb {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
-    background: #38bdf8;
-    border: 2px solid #ffffff;
+    background: linear-gradient(180deg, var(--accent-pink) 0%, var(--accent-peach) 100%);
+    border: 2px solid #2d1212;
     cursor: grab;
-    box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+    box-shadow: 0 2px 0 #2d1212;
 }
 
 /* Activity Drag & Drop Elements */
@@ -328,11 +897,12 @@ details.nasa-telemetry-drawer summary::-webkit-details-marker {
     user-select: none;
     -webkit-user-select: none;
     cursor: grab;
+    border-radius: 12px !important;
     transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s ease, border-color 0.15s ease;
 }
 .activity-drag-item:active {
     cursor: grabbing;
-    transform: scale(1.05);
+    transform: scale(1.04);
 }
 .activity-drag-item.dragging {
     opacity: 0.5;
@@ -343,11 +913,13 @@ details.nasa-telemetry-drawer summary::-webkit-details-marker {
 .activity-drop-target {
     transition: all 0.2s ease;
     border-style: dashed;
+    border-color: var(--outline-soft);
+    border-radius: 12px !important;
 }
 .activity-drop-target.drag-over {
-    border-color: #38bdf8 !important;
-    background-color: rgba(56, 189, 248, 0.15) !important;
-    box-shadow: 0 0 16px rgba(56, 189, 248, 0.35) inset;
+    border-color: var(--accent-sky) !important;
+    background-color: rgba(253, 183, 115, 0.16) !important;
+    box-shadow: 0 0 16px rgba(253, 183, 115, 0.35) inset;
     transform: scale(1.02);
 }
 
@@ -365,7 +937,7 @@ details.nasa-telemetry-drawer summary::-webkit-details-marker {
     top: 0;
     bottom: 0;
     width: 0%;
-    background: rgba(56, 189, 248, 0.35);
+    background: rgba(253, 183, 115, 0.35);
     pointer-events: none;
     transition: width 0.05s linear;
 }
@@ -380,62 +952,63 @@ details.nasa-telemetry-drawer summary::-webkit-details-marker {
 }
 .rotary-knob:active {
     cursor: grabbing;
-    box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+    box-shadow: 0 0 20px rgba(253, 183, 115, 0.55);
 }
 
-/* Crop Tray & Optical Scanner */
 .crop-tray-card {
     transition: all 0.2s ease;
 }
 .crop-tray-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 6px 18px rgba(36, 16, 16, 0.55);
 }
 
-/* Console Activity Mount Custom Scrollbar */
-#console-activity-mount::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+/* Airlock Pipe Flow Chevrons */
+@keyframes flowChevrons {
+    0% { background-position: 0 0; }
+    100% { background-position: -32px 0; }
 }
-#console-activity-mount::-webkit-scrollbar-track {
-    background: rgba(15, 23, 42, 0.6);
-    border-radius: 4px;
+.pipe-chevrons {
+    background-image: repeating-linear-gradient(
+        -60deg,
+        transparent 0px,
+        transparent 6px,
+        rgba(253, 183, 115, 0.9) 6px,
+        rgba(253, 183, 115, 0.9) 10px,
+        transparent 10px,
+        transparent 16px
+    );
+    background-size: 32px 100%;
+    animation: flowChevrons 0.45s linear infinite;
+    animation-play-state: paused;
 }
-#console-activity-mount::-webkit-scrollbar-thumb {
-    background: #334155;
-    border-radius: 4px;
-}
-#console-activity-mount::-webkit-scrollbar-thumb:hover {
-    background: #475569;
+.pipe-chevrons.flowing {
+    animation-play-state: running;
 }
 
-/* Sequential Mission Unlock Glow & Celebration Effects */
-@keyframes missionUnlockGlow {
-    0%, 100% {
-        box-shadow: 0 0 15px rgba(56, 189, 248, 0.35), inset 0 0 15px rgba(245, 158, 11, 0.12);
-        border-color: rgba(56, 189, 248, 0.6);
+/* Respect Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .cosmic-cloud,
+    .cosmic-star,
+    .cosmic-shooting-star,
+    .animate-alert,
+    .animate-float,
+    .mission-unlock-glow,
+    .pipe-chevrons {
+        animation: none !important;
     }
-    50% {
-        box-shadow: 0 0 28px rgba(56, 189, 248, 0.65), inset 0 0 22px rgba(245, 158, 11, 0.28);
-        border-color: rgba(245, 158, 11, 0.85);
-    }
-}
-
-.mission-unlock-glow {
-    animation: missionUnlockGlow 3s ease-in-out infinite;
-}
-
-@keyframes scaleUpAnim {
-    0% {
-        transform: scale(0.92);
-        opacity: 0;
-    }
-    100% {
-        transform: scale(1);
-        opacity: 1;
+    .animate-scale-up {
+        animation: none !important;
     }
 }
 
-.animate-scale-up {
-    animation: scaleUpAnim 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* Door Proximity Floating Prompt */
+#door-proximity-prompt {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    animation: float-slow 2.5s infinite ease-in-out;
+}
+
+/* Raw NASA Telemetry Drawer */
+details.nasa-telemetry-drawer summary::-webkit-details-marker {
+    display: none;
 }

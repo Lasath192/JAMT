@@ -39,28 +39,233 @@ window.AstraActivities = (function () {
         }
     }
 
+    const SIMPLIFIED_TASK_GUIDES = {
+        // Mission 1
+        ch1_airlock: {
+            taskNum: 1,
+            steps: ['① Turn Valve', '② Hit 101.3 kPa', '③ Unlock Hatch'],
+            hint: 'Hold or drag the brass valve clockwise until pressure reaches 101.3 kPa.'
+        },
+        ch1_tool: {
+            taskNum: 2,
+            steps: ['① Click Multi-Tool', '② Click HV Fuse', '③ Pack in Pouch'],
+            hint: 'Click or drag both tools from the shelf into your astronaut pouch.'
+        },
+        ch1_life: {
+            taskNum: 3,
+            steps: ['① Check 5 Channels', '② Spot CO₂ Alert', '③ Hold Recalibrate'],
+            hint: 'Click the CO₂ warning channel, then hold the Recalibrate button.'
+        },
+        // Mission 2
+        ch2_crop_inspect: {
+            taskNum: 1,
+            steps: ['① Scan Trays', '② Find Yellow Leaves', '③ Log Diagnosis'],
+            hint: 'Click the yellowing wheat tray to scan and log the nutrient alert.'
+        },
+        ch2_greenhouse_power: {
+            taskNum: 2,
+            steps: ['① Drag Power Slider', '② Hit 5.0 kW', '③ Lock Spectrum'],
+            hint: 'Slide grow-light power into the 4.8–5.2 kW green zone and confirm.'
+        },
+        ch2_flush_irrigation: {
+            taskNum: 3,
+            steps: ['① Open Valve', '② Hold Flush 2s', '③ Close Valve'],
+            hint: 'Click the valve open, hold Flush for 2 seconds, then close the valve.'
+        },
+        // Mission 3
+        ch3_eva_prep: {
+            taskNum: 1,
+            steps: ['① Equip 4 Suit Parts', '② Pressurize Suit', '③ Pass Leak Test'],
+            hint: 'Click or drag all 4 suit items onto Cadet Nova, then run the seal test.'
+        },
+        ch3_rover_link: {
+            taskNum: 2,
+            steps: ['① Check 4 Systems', '② Fix Antenna', '③ Sync Rover'],
+            hint: 'Inspect all 4 Perseverance subsystems and clear the antenna fault.'
+        },
+        ch3_heli_inspect: {
+            taskNum: 3,
+            steps: ['① Flip 3 Switches', '② Spin Rotors', '③ Hold Reboot'],
+            hint: 'Turn on the 3 avionics switches in order, then hold Reboot.'
+        },
+        // Mission 4
+        ch4_shed_load: {
+            taskNum: 1,
+            steps: ['① Cut Lab Breaker', '② Cut Non-Essential', '③ Balance kW'],
+            hint: 'Toggle off non-essential breakers until power demand is safe.'
+        },
+        ch4_gen_backup: {
+            taskNum: 2,
+            steps: ['① Select Backup Bus', '② Hold Tie Lever 2s', '③ Online +12 kW'],
+            hint: 'Switch to Backup RTG Bus, then hold the Tie Lever for 2 seconds.'
+        },
+        ch4_dust_wipers: {
+            taskNum: 3,
+            steps: ['① Grab Wiper', '② Wipe 4 Panels', '③ Restore 100%'],
+            hint: 'Drag or click across all 4 dusty solar panels to clean them.'
+        },
+        // Mission 5
+        ch5_eva_suit: {
+            taskNum: 1,
+            steps: ['① Check Radar Window', '② Lock Umbilical', '③ Verify Pressure'],
+            hint: 'Confirm calm weather window, lock the umbilical, and check suit pressure.'
+        },
+        ch5_cycle_door: {
+            taskNum: 2,
+            steps: ['① Lock Inner Door', '② Turn Vent Valve', '③ Hit 0.6 kPa'],
+            hint: 'Lock the inner hatch, then turn the valve to vent down to 0.6 kPa.'
+        },
+        ch5_repair_junction: {
+            taskNum: 3,
+            steps: ['① Swap 50A Fuse', '② Wire +480V / -480V', '③ Close Box'],
+            hint: 'Insert the spare fuse and connect the red (+) and blue (-) cables.'
+        },
+        // Mission 6
+        ch6_filter_grab: {
+            taskNum: 1,
+            steps: ['① Locate LiOH Canister', '② Click to Grab', '③ Store in Pouch'],
+            hint: 'Click or drag the fresh LiOH scrubber canister into your pouch.'
+        },
+        ch6_filter_install: {
+            taskNum: 2,
+            steps: ['① Bypass Valve', '② Swap Canister', '③ Restore Flow'],
+            hint: 'Flip bypass valve, remove old filter, insert new LiOH, and restore flow.'
+        },
+        ch6_co2_verify: {
+            taskNum: 3,
+            steps: ['① Start Booster Fan', '② Watch CO₂ Drop', '③ Confirm <500 ppm'],
+            hint: 'Turn on the booster fan and wait until CO₂ drops below 500 ppm.'
+        },
+        // Mission 7
+        ch7_drill_core: {
+            taskNum: 1,
+            steps: ['① Enter Code 3-7-8', '② Unlock Carousel', '③ Grab Core Tube'],
+            hint: 'Type 3-7-8 on the keypad, then move the rock core tube into your case.'
+        },
+        ch7_raman_insert: {
+            taskNum: 2,
+            steps: ['① Open Drawer', '② Load Core Tube', '③ Hold Laser 2s'],
+            hint: 'Open the chamber, insert the rock tube, close it, and hold Laser Scan.'
+        },
+        ch7_catalogue_mineral: {
+            taskNum: 3,
+            steps: ['① Check 360/705 Peaks', '② Pick Smectite Clay', '③ Save Logbook'],
+            hint: 'Match the two laser peaks to Smectite Clay and log the discovery.'
+        },
+        // Mission 8
+        ch8_pipe_seal: {
+            taskNum: 1,
+            steps: ['① Find Pipe Seal Kit', '② Click to Grab', '③ Store in Pouch'],
+            hint: 'Click or drag the Pipe Seal Kit into your astronaut pouch.'
+        },
+        ch8_flush_bioreactor: {
+            taskNum: 2,
+            steps: ['① Close Inlet Valve', '② Hold Flush 2s', '③ Re-Open Inlet'],
+            hint: 'Close the inlet valve, hold Biocide Flush for 2s, then re-open the valve.'
+        },
+        ch8_conductivity_check: {
+            taskNum: 3,
+            steps: ['① Add Biocide Dose', '② Run Sensor Test', '③ Verify <50 µS'],
+            hint: 'Run the water purity test until conductivity drops below 50 µS/cm.'
+        },
+        // Mission 9
+        ch9_alarm_siren: {
+            taskNum: 1,
+            steps: ['① Grab Red Lever', '② Hold for 2 Seconds', '③ Sound Siren'],
+            hint: 'Press and hold the red Emergency Siren lever for 2 full seconds.'
+        },
+        ch9_verify_shielding: {
+            taskNum: 2,
+            steps: ['① Click 4 Shield Blocks', '② Fill Wall Slots', '③ Hit 96% Shield'],
+            hint: 'Click or drag all 4 water-jacket shield blocks into the bunker wall.'
+        },
+        ch9_shelter_evac: {
+            taskNum: 3,
+            steps: ['① Ping All 4 Crew', '② Confirm Inside', '③ Lock Hatch'],
+            hint: 'Click all 4 crew radio beacons to muster everyone inside the shelter.'
+        },
+        // Mission 10
+        ch10_package_cores: {
+            taskNum: 1,
+            steps: ['① Match 3 Tubes', '② Load ERV Slots', '③ Lock Vault'],
+            hint: 'Place the Clay, Basalt, and Carbonate tubes into their matching slots.'
+        },
+        ch10_greenhouse_seeds: {
+            taskNum: 2,
+            steps: ['① Pick Tomatoes', '② Pick Wheat & Greens', '③ Pack Cold Storage'],
+            hint: 'Click all 3 ripe hydroponic crop trays to harvest them for handover.'
+        },
+        ch10_final_report: {
+            taskNum: 3,
+            steps: ['① Aim Dish at Earth', '② Hold Transmit 2s', '③ Complete 100%'],
+            hint: 'Align the antenna to Earth, then hold Transmit until upload hits 100%.'
+        }
+    };
+
     /**
-     * Creates an activity header with step instructions and ARIA tip
+     * Creates an activity header with step pills (Simplified UI) or classic paragraph (Classic UI)
      */
     function createActivityHeader(title, stepText, ariaHint) {
+        const isSimplified = typeof window.state === 'undefined' || window.state.uiSimplified !== false;
+        const guide = SIMPLIFIED_TASK_GUIDES[activityState.activeTaskId];
+
+        if (!isSimplified) {
+            return `
+                <div class="bg-[#4a1d1d] border-2 border-[#DA6556] rounded-xl p-3 mb-3 shadow-md">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[11px] font-display tracking-wider text-[#FDB773] flex items-center gap-1.5">
+                            <i class="fa-solid fa-gamepad text-[#FDB773]"></i>
+                            <span>${title}</span>
+                        </span>
+                        <span class="pill py-0.5 px-2.5 text-[10px] font-extrabold text-[#FDB773] border-[#FDB773]/70">
+                            INTERACTIVE SIMULATION
+                        </span>
+                    </div>
+                    <p class="text-xs text-[#fff7f0] font-bold leading-relaxed">${stepText}</p>
+                    ${ariaHint ? `
+                        <div class="mt-2 pt-2 border-t border-[#DA6556]/70 text-[11px] text-[#EB895B] flex items-center gap-1.5 font-bold">
+                            <i class="fa-solid fa-robot text-[#FDB773]"></i>
+                            <span>ARIA: "${ariaHint}"</span>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        const taskBadge = guide
+            ? `<span class="pill py-0.5 px-2.5 border-[#FDB773]/70 text-[10px] font-extrabold text-[#FDB773]">TASK ${guide.taskNum} OF 3</span>`
+            : `<span class="pill py-0.5 px-2.5 border-[#FDB773]/70 text-[10px] font-extrabold text-[#FDB773]">INTERACTIVE</span>`;
+
+        const stepPillsHtml = guide ? `
+            <div class="flex flex-wrap items-center gap-1.5 my-2">
+                ${guide.steps.map((s, idx) => `
+                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold ${
+                        idx === 0
+                            ? 'bg-[#FDB773] text-[#341717] border border-[#2d1212]'
+                            : 'bg-[#A14646] border border-[#DA6556] text-[#fff7f0]'
+                    }">${s}</span>
+                    ${idx < guide.steps.length - 1 ? '<span class="text-[#f7cbb0] text-xs font-extrabold">→</span>' : ''}
+                `).join('')}
+            </div>
+        ` : '';
+
+        const conciseHint = guide ? guide.hint : stepText;
+
         return `
-            <div class="bg-gradient-to-r from-slate-900 via-sky-950/60 to-slate-900 border border-sky-500/40 rounded-xl p-3 mb-3 shadow-md">
-                <div class="flex items-center justify-between mb-1">
-                    <span class="text-[10px] font-mono-tech uppercase tracking-wider text-sky-400 font-bold flex items-center gap-1.5">
-                        <i class="fa-solid fa-gamepad text-amber-400"></i>
-                        <span>${title}</span>
-                    </span>
-                    <span class="text-[10px] font-mono-tech px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 font-semibold">
-                        INTERACTIVE SIMULATION
+            <div class="bg-[#4a1d1d] border-2 border-[#DA6556] rounded-xl p-3 mb-3 shadow-md">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                        ${taskBadge}
+                        <span class="text-xs sm:text-sm font-display text-[#FDB773] truncate">${title}</span>
+                    </div>
+                    <span class="pill py-0.5 px-2.5 text-[10px] font-extrabold text-[#4fd1a0] border-[#4fd1a0]/70 shrink-0">
+                        HANDS-ON
                     </span>
                 </div>
-                <p class="text-xs text-slate-100 font-medium leading-relaxed">${stepText}</p>
-                ${ariaHint ? `
-                    <div class="mt-2 pt-2 border-t border-sky-500/20 text-[11px] text-amber-300 flex items-center gap-1.5 font-mono-tech">
-                        <i class="fa-solid fa-robot text-sky-400"></i>
-                        <span>ARIA: "${ariaHint}"</span>
-                    </div>
-                ` : ''}
+                ${stepPillsHtml}
+                <p class="text-xs text-[#fff7f0] leading-snug">
+                    <span class="text-[#FDB773] font-extrabold">Action:</span> ${conciseHint}
+                </p>
             </div>
         `;
     }
@@ -71,24 +276,24 @@ window.AstraActivities = (function () {
     function showActivitySuccess(container, taskId, successTitle, successExplanation, onDone) {
         playSfx('success');
         if (typeof window.spawnFloatingText === 'function' && window.state && window.state.player) {
-            window.spawnFloatingText('★ PROCEDURE COMPLETE! ★', window.state.player.x, window.state.player.y - 25, '#22c55e');
+            window.spawnFloatingText('★ PROCEDURE COMPLETE! ★', window.state.player.x, window.state.player.y - 25, '#4fd1a0');
         }
 
         container.innerHTML = `
-            <div class="bg-emerald-950/70 border-2 border-emerald-400/80 rounded-2xl p-4 text-center animate-fade-in space-y-3 shadow-2xl">
-                <div class="w-12 h-12 mx-auto rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center text-emerald-300 text-xl shadow-lg">
+            <div class="bg-[#A14646] border-2 border-[#4fd1a0] rounded-2xl p-5 text-center animate-fade-in space-y-3 shadow-2xl">
+                <div class="icon-tile w-14 h-14 mx-auto rounded-2xl border-2 border-[#4fd1a0] text-[#4fd1a0] text-2xl">
                     <i class="fa-solid fa-circle-check"></i>
                 </div>
                 <div>
-                    <span class="text-[10px] font-mono-tech uppercase tracking-widest text-emerald-400 font-bold">TASK VERIFICATION COMPLETE</span>
-                    <h4 class="text-base font-bold font-display text-white mt-0.5">${successTitle}</h4>
+                    <span class="text-[10px] uppercase tracking-widest text-[#4fd1a0] font-extrabold">✓ TASK VERIFICATION COMPLETE</span>
+                    <h4 class="text-base sm:text-lg font-display text-[#FDB773] mt-0.5">${successTitle}</h4>
                 </div>
-                <div class="bg-slate-900/80 border border-emerald-500/40 rounded-xl p-3 text-xs text-slate-200 leading-relaxed text-left">
-                    <strong class="text-emerald-400 block mb-1 font-mono-tech text-[10px] uppercase">Scientific & Operational Takeaway:</strong>
+                <div class="bg-[#4a1d1d] border border-[#4fd1a0]/70 rounded-xl p-3 text-xs text-[#fff7f0] leading-relaxed text-left">
+                    <strong class="text-[#4fd1a0] block mb-1 text-[10px] font-extrabold uppercase tracking-wider">Scientific & Operational Takeaway:</strong>
                     ${successExplanation}
                 </div>
                 <div class="pt-2">
-                    <button id="btn-activity-proceed" class="btn-tech bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black px-6 py-2 rounded-xl text-xs sm:text-sm font-display flex items-center justify-center gap-2 mx-auto shadow-lg shadow-emerald-500/30 cursor-pointer">
+                    <button id="btn-activity-proceed" class="btn-success font-display !text-[#341717] px-6 py-2.5 text-xs sm:text-sm flex items-center justify-center gap-2 mx-auto cursor-pointer">
                         <span>CONFIRM & RETURN TO OUTPOST</span>
                         <i class="fa-solid fa-arrow-right"></i>
                     </button>
@@ -108,84 +313,277 @@ window.AstraActivities = (function () {
      * MISSION 1: THE FIRST BREATH (Sol 1–2)
      * ========================================================================= */
 
-    // Task 1: Cycle Airlock Pressure (Rotary Valve + Needle Gauge to 101.3 kPa)
+    // Task 1: Cycle Airlock Pressure (Rotary Valve + Animated Chamber + Needle Gauge to 101.3 kPa)
     function renderM1T1_AirlockPressure(container, onComplete) {
         let currentKPa = 0.6;
-        const targetKPa = 101.3;
         let isDone = false;
+        let displayWheelDeg = 0;
+        let targetWheelDeg = 0;
+        let gasFlowIntensity = 0;
+        let lastSoundTime = 0;
 
         container.innerHTML = `
             ${createActivityHeader(
                 'Airlock Depress/Pressurize System',
                 'Click and drag the rotary brass valve wheel clockwise to pressurize the chamber from 0.6 kPa up to nominal habitat pressure (101.3 kPa). Equalizing pressure unlocks the inner hatch.',
-                'Rotate the valve clockwise until the gauge needle settles inside the green 101.3 kPa zone!'
+                'Rotate the valve clockwise until gas fills the airlock and the inner habitat hatch slides open at 101.3 kPa!'
             )}
-            <div class="bg-slate-950/90 border border-sky-500/30 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-around gap-6">
-                <!-- Analog Gauge -->
-                <div class="flex flex-col items-center">
-                    <div class="relative w-44 h-44 rounded-full border-4 border-slate-700 bg-gradient-to-b from-slate-900 to-slate-950 shadow-inner flex items-center justify-center">
-                        <!-- Gauge Dial Arc Scale -->
+            <div class="bg-[#4a1d1d] border-2 border-[#DA6556] rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 items-stretch">
+                <!-- 1. Analog Gauge (Lavender & Cream Dial + Sky Needle + Mint Target Arc) -->
+                <div class="card-row flex-col justify-center p-3">
+                    <div class="relative w-36 h-36 rounded-full border-4 border-[#EB895B] bg-gradient-to-b from-[#7c3232] to-[#4a1d1d] shadow-inner flex items-center justify-center">
                         <svg viewBox="0 0 100 100" class="w-full h-full absolute inset-0">
-                            <!-- Background track -->
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="#1e293b" stroke-width="6" stroke-dasharray="188" stroke-dashoffset="47" transform="rotate(135 50 50)"/>
-                            <!-- Green safe target zone around 101.3 kPa (approx 84% of 120 kPa scale) -->
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="#22c55e" stroke-width="6" stroke-dasharray="24" stroke-dashoffset="138" transform="rotate(135 50 50)" opacity="0.8"/>
+                            <!-- Base track -->
+                            <circle cx="50" cy="50" r="39" fill="none" stroke="#341717" stroke-width="6" stroke-dasharray="184" stroke-dashoffset="0" stroke-linecap="round" transform="rotate(135 50 50)"/>
+                            <!-- Vacuum caution zone (0-25 kPa) -->
+                            <circle cx="50" cy="50" r="39" fill="none" stroke="#DA6556" stroke-width="6" stroke-dasharray="38 245" stroke-dashoffset="0" transform="rotate(135 50 50)" opacity="0.85"/>
+                            <!-- Safe target zone (99-103 kPa) -->
+                            <circle cx="50" cy="50" r="39" fill="none" stroke="#4fd1a0" stroke-width="7" stroke-dasharray="16 245" stroke-dashoffset="-147" transform="rotate(135 50 50)" opacity="0.98"/>
+                            <!-- Scale ticks -->
+                            <g id="gauge-ticks" stroke="#f7cbb0" stroke-width="1.3"></g>
                         </svg>
-                        <!-- Gauge Needle -->
-                        <div id="airlock-needle" class="absolute w-1 h-18 bg-amber-400 origin-bottom rounded-full transition-transform duration-75 shadow-[0_0_8px_#f59e0b]" style="bottom: 50%; transform: rotate(-135deg);"></div>
-                        <!-- Needle Pivot Cap -->
-                        <div class="w-5 h-5 rounded-full bg-slate-200 border-2 border-slate-700 z-10 shadow"></div>
-                        <span class="absolute bottom-6 text-[10px] font-mono-tech text-slate-400 font-bold">kPa ATM</span>
+                        <!-- Gauge Needle (Sky Blue) -->
+                        <div id="airlock-needle" class="absolute w-1.5 h-14 bg-[#FDB773] origin-bottom rounded-full shadow-[0_0_8px_#FDB773]" style="bottom: 50%; transform: rotate(-135deg);"></div>
+                        <!-- Needle Pivot Cap (Creamy Yellow) -->
+                        <div class="w-4 h-4 rounded-full bg-[#FDB773] border-2 border-[#2d1212] z-10 shadow"></div>
+                        <span class="absolute bottom-4 text-[10px] font-extrabold text-[#FDB773] tracking-wide">kPa ATM</span>
                     </div>
                     <div class="mt-2 text-center">
-                        <div id="airlock-digital-val" class="font-mono-tech font-bold text-lg text-amber-300">0.6 kPa</div>
-                        <div id="airlock-status-txt" class="text-[10px] font-mono-tech text-rose-400 font-semibold">● VACUUM HAZARD</div>
+                        <div id="airlock-digital-val" class="font-mono-tech font-extrabold text-base text-[#EB895B] tabular-nums">0.6 kPa</div>
+                        <div id="airlock-status-txt" class="text-[11px] font-extrabold text-[#DA6556]">⚠ VACUUM HAZARD</div>
                     </div>
                 </div>
 
-                <!-- Rotary Wheel Control -->
-                <div class="flex flex-col items-center">
-                    <div id="valve-wheel" class="w-36 h-36 rounded-full border-4 border-amber-500/80 bg-gradient-to-tr from-amber-950 via-slate-900 to-amber-900/60 shadow-2xl flex items-center justify-center cursor-grab active:cursor-grabbing relative select-none hover:scale-105 transition-transform" title="Click and drag around center to rotate valve">
-                        <!-- Valve Spokes -->
-                        <div class="absolute w-full h-2 bg-amber-400/70 rounded"></div>
-                        <div class="absolute w-2 h-full bg-amber-400/70 rounded"></div>
-                        <div class="w-12 h-12 rounded-full bg-slate-950 border-2 border-amber-400 flex items-center justify-center text-amber-300 text-xs font-mono-tech font-black z-10 shadow">
-                            TURN
+                <!-- 2. Live Animated Airlock Chamber Cross-Section + Intake Pipe -->
+                <div class="card-row flex-col items-stretch justify-between p-3">
+                    <div class="flex items-center justify-between text-[10px] font-extrabold tracking-wider mb-1.5 w-full">
+                        <span class="text-[#DA6556]">MARS</span>
+                        <span class="text-[#FDB773]">AIRLOCK</span>
+                        <span id="habitat-label" class="text-[#DA6556]">HABITAT</span>
+                    </div>
+
+                    <!-- Chamber Box with Left & Right Hatches (#341717 Inset Well) -->
+                    <div class="relative h-32 w-full rounded-xl border-2 border-[#DA6556] bg-[#341717] overflow-hidden flex items-center justify-center">
+                        <!-- Atmosphere pressure background tint -->
+                        <div id="chamber-atmo-bg" class="absolute inset-0 transition-colors duration-300" style="background: radial-gradient(circle at 50% 85%, rgba(218, 101, 86,0.22), rgba(52, 23, 23,0.96));"></div>
+                        <!-- Rising atmospheric fill level (White/Sky Mist) -->
+                        <div id="chamber-fill" class="absolute bottom-0 left-0 right-0 transition-all duration-150 pointer-events-none" style="height: 2%; background: linear-gradient(to top, rgba(255, 247, 240,0.28), rgba(253, 183, 115,0.06)); border-top: 1.5px solid rgba(253, 183, 115,0.45);"></div>
+
+                        <!-- Canvas for Swirling Gas & Floor Vent Jets -->
+                        <canvas id="chamber-fx" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+
+                        <!-- Left Mars Outer Hatch (Sealed) -->
+                        <div class="absolute left-0 top-0 bottom-0 w-3.5 bg-[#A14646] border-r-2 border-[#DA6556] flex flex-col items-center justify-center z-10" title="Outer Mars Hatch: Sealed">
+                            <div class="w-1.5 h-5 rounded-full bg-[#DA6556] shadow-[0_0_6px_#DA6556]"></div>
+                        </div>
+
+                        <!-- Center Astronaut + Live Readout -->
+                        <div class="relative z-10 flex flex-col items-center">
+                            <svg viewBox="0 0 40 48" class="w-9 h-11 drop-shadow">
+                                <rect x="6" y="16" width="5" height="16" rx="2" fill="#EB895B" stroke="#2d1212" stroke-width="1"/>
+                                <circle cx="20" cy="11" r="8" fill="#fff7f0" stroke="#FDB773" stroke-width="1.5"/>
+                                <rect x="14" y="8" width="12" height="6" rx="3" fill="#4a1d1d"/>
+                                <rect x="11" y="19" width="18" height="17" rx="4" fill="#fff7f0" stroke="#DA6556" stroke-width="1.2"/>
+                                <rect x="16" y="23" width="8" height="5" rx="1.5" fill="#FDB773"/>
+                                <rect x="12" y="36" width="6" height="9" rx="2" fill="#f7cbb0"/>
+                                <rect x="22" y="36" width="6" height="9" rx="2" fill="#f7cbb0"/>
+                            </svg>
+                            <span id="chamber-pct-badge" class="mt-0.5 px-2 py-0.5 rounded-full bg-[#4a1d1d]/95 border border-[#DA6556] text-[11px] font-mono-tech font-bold text-[#EB895B] tabular-nums">1%</span>
+                        </div>
+
+                        <!-- Floor Gas Intake Vent Grate -->
+                        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-2.5 bg-[#A14646] border-t border-[#FDB773]/70 rounded-t-md flex justify-around items-center px-1.5 z-10">
+                            <span class="w-1 h-1 bg-[#fff7f0] rounded-full opacity-90"></span>
+                            <span class="w-1 h-1 bg-[#fff7f0] rounded-full opacity-90"></span>
+                            <span class="w-1 h-1 bg-[#fff7f0] rounded-full opacity-90"></span>
+                        </div>
+
+                        <!-- Right Inner Habitat Hatch Door (Animated Slide Open, --panel-2) -->
+                        <div class="absolute right-0 top-0 bottom-0 w-4 bg-[#241010] border-l border-[#DA6556] overflow-hidden z-10">
+                            <div id="inner-hatch-door" class="w-full h-full bg-gradient-to-b from-[#DA6556] to-[#A14646] border-l-2 border-[#FDB773] flex items-center justify-center transition-transform duration-700 ease-out" style="transform: translateY(0%);">
+                                <div id="inner-hatch-led" class="w-1.5 h-5 rounded-full bg-[#DA6556] shadow-[0_0_8px_#DA6556]"></div>
+                            </div>
+                            <div id="inner-hatch-glow" class="absolute inset-0 bg-[#4fd1a0]/30 opacity-0 transition-opacity duration-500 pointer-events-none"></div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Status + Intake Pipe Flow Indicator -->
+                    <div class="mt-2 space-y-1.5 w-full">
+                        <div class="flex items-center justify-between text-[11px] font-bold">
+                            <span class="text-[#f7cbb0]">N₂/O₂ Intake:</span>
+                            <span id="hatch-badge" class="text-[#DA6556] font-extrabold">HATCH LOCKED</span>
+                        </div>
+                        <div class="relative h-3.5 rounded-full bg-[#341717] border border-[#DA6556] overflow-hidden flex items-center">
+                            <div id="pipe-flow" class="pipe-chevrons w-full h-full opacity-25 transition-opacity duration-200"></div>
+                            <span class="absolute right-1.5 text-[9px] font-bold text-[#FDB773] leading-none">◄◄</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Spinning Brass Rotary Wheel Control (Kept Warm Metallic Brass) -->
+                <div class="card-row flex-col justify-center p-3">
+                    <div id="valve-wheel" class="relative w-36 h-36 rounded-full border-4 border-[#DA6556] bg-[#341717] shadow-2xl flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none hover:scale-105 transition-transform" title="Click and drag around center to rotate brass valve">
+                        <!-- Rotating Wheel Rotor -->
+                        <div id="valve-rotor" class="absolute inset-1 rounded-full border-[6px] border-[#d9a441] bg-gradient-to-tr from-[#784910] via-[#4a1d1d] to-[#b4741d]/70 shadow-inner flex items-center justify-center will-change-transform">
+                            <!-- 4 Brass Spokes -->
+                            <div class="absolute w-full h-2.5 bg-gradient-to-r from-[#b4741d] via-[#FDB773] to-[#b4741d] rounded shadow"></div>
+                            <div class="absolute w-2.5 h-full bg-gradient-to-b from-[#b4741d] via-[#FDB773] to-[#b4741d] rounded shadow"></div>
+                            <!-- Perimeter Rivets -->
+                            <div class="absolute top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-[#FDB773]"></div>
+                            <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-[#FDB773]"></div>
+                            <div class="absolute left-1 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#FDB773]"></div>
+                            <div class="absolute right-1 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#FDB773]"></div>
+                            <!-- Knurled Rim Crank Handle Knob -->
+                            <div class="absolute -top-2.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-gradient-to-br from-[#FDB773] via-[#FDB773] to-[#b4741d] border-2 border-[#2d1212] shadow-[0_0_10px_rgba(253, 183, 115,0.85)]"></div>
+                        </div>
+
+                        <!-- Stationary Center Cap -->
+                        <div class="relative z-10 w-12 h-12 rounded-full bg-[#4a1d1d] border-2 border-[#FDB773] flex flex-col items-center justify-center shadow-lg pointer-events-none">
+                            <span class="text-xs font-extrabold text-[#FDB773] leading-none">TURN</span>
+                            <span id="wheel-deg-label" class="text-[10px] font-mono-tech text-[#FDB773] leading-tight tabular-nums">0°</span>
                         </div>
                     </div>
                     <div class="mt-3 flex items-center gap-2">
-                        <button id="btn-turn-valve-step" class="btn-tech bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded-lg text-xs font-mono-tech text-slate-200 flex items-center gap-1.5 cursor-pointer">
-                            <i class="fa-solid fa-rotate-right text-amber-400"></i>
+                        <button id="btn-turn-valve-step" class="btn-primary btn-compact px-3.5 text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fa-solid fa-rotate-right text-[#2d1212]"></i>
                             <span>Turn Valve (+15 kPa)</span>
                         </button>
                     </div>
-                    <span class="text-[10px] text-slate-400 font-mono-tech mt-1">Drag wheel or click step button</span>
+                    <span class="text-[11px] text-[#f7cbb0] font-bold mt-1 text-center">Drag wheel or click step button</span>
                 </div>
             </div>
         `;
 
         const wheel = container.querySelector('#valve-wheel');
+        const rotor = container.querySelector('#valve-rotor');
+        const wheelDegLabel = container.querySelector('#wheel-deg-label');
         const needle = container.querySelector('#airlock-needle');
         const digital = container.querySelector('#airlock-digital-val');
         const statusTxt = container.querySelector('#airlock-status-txt');
         const btnStep = container.querySelector('#btn-turn-valve-step');
+        const ticksGroup = container.querySelector('#gauge-ticks');
 
-        function updatePressure(newVal) {
+        const chamberAtmoBg = container.querySelector('#chamber-atmo-bg');
+        const chamberFill = container.querySelector('#chamber-fill');
+        const pctBadge = container.querySelector('#chamber-pct-badge');
+        const innerDoor = container.querySelector('#inner-hatch-door');
+        const innerLed = container.querySelector('#inner-hatch-led');
+        const innerGlow = container.querySelector('#inner-hatch-glow');
+        const hatchBadge = container.querySelector('#hatch-badge');
+        const habitatLabel = container.querySelector('#habitat-label');
+        const pipeFlow = container.querySelector('#pipe-flow');
+        const fxCanvas = container.querySelector('#chamber-fx');
+
+        // Populate SVG gauge scale ticks (-135deg to +135deg)
+        if (ticksGroup && typeof document.createElementNS === 'function') {
+            for (let i = 0; i <= 12; i++) {
+                const deg = -135 + (i / 12) * 270;
+                const rad = (deg - 90) * (Math.PI / 180);
+                const r1 = i % 3 === 0 ? 31 : 33;
+                const r2 = 36;
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', (50 + r1 * Math.cos(rad)).toFixed(1));
+                line.setAttribute('y1', (50 + r1 * Math.sin(rad)).toFixed(1));
+                line.setAttribute('x2', (50 + r2 * Math.cos(rad)).toFixed(1));
+                line.setAttribute('y2', (50 + r2 * Math.sin(rad)).toFixed(1));
+                if (i % 3 === 0) line.setAttribute('stroke', '#FDB773');
+                ticksGroup.appendChild(line);
+            }
+        }
+
+        // Particle system for chamber gas mist & vent jets
+        const ctx = fxCanvas && fxCanvas.getContext ? fxCanvas.getContext('2d') : null;
+        const particles = [];
+
+        function resizeFxCanvas() {
+            if (!fxCanvas) return;
+            const rect = fxCanvas.getBoundingClientRect ? fxCanvas.getBoundingClientRect() : { width: 180, height: 128 };
+            if (rect.width > 0 && rect.height > 0) {
+                fxCanvas.width = Math.round(rect.width);
+                fxCanvas.height = Math.round(rect.height);
+            }
+        }
+        resizeFxCanvas();
+
+        function spawnGasBurst(count, intensity = 1) {
+            const w = (fxCanvas && fxCanvas.width) ? fxCanvas.width : 180;
+            const h = (fxCanvas && fxCanvas.height) ? fxCanvas.height : 128;
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: w * 0.5 + (Math.random() - 0.5) * 24,
+                    y: h - 6,
+                    vx: (Math.random() - 0.5) * (1.8 + intensity * 2.2),
+                    vy: -(1.2 + Math.random() * (2.2 + intensity * 2.0)),
+                    r: 1.5 + Math.random() * 2.6,
+                    alpha: 0.75 + Math.random() * 0.25,
+                    life: 1.0,
+                    decay: 0.014 + Math.random() * 0.014,
+                    hue: isDone ? '#4fd1a0' : '#fff7f0'
+                });
+            }
+        }
+
+        function setHatchClosedStyles() {
+            if (innerDoor) innerDoor.style.transform = 'translateY(0%)';
+            if (innerLed) innerLed.className = 'w-1.5 h-5 rounded-full bg-[#DA6556] shadow-[0_0_8px_#DA6556]';
+            if (innerGlow) innerGlow.style.opacity = '0';
+            if (hatchBadge) {
+                hatchBadge.textContent = 'HATCH LOCKED';
+                hatchBadge.className = 'text-[#DA6556] font-extrabold';
+            }
+            if (habitatLabel) habitatLabel.className = 'text-[#DA6556] font-extrabold';
+        }
+
+        function updatePressure(newVal, deltaWheelDeg = 0, isClickStep = false) {
+            const prevKPa = currentKPa;
             currentKPa = Math.max(0.6, Math.min(120.0, newVal));
-            const angle = -135 + (currentKPa / 120) * 270;
-            if (needle) needle.style.transform = `rotate(${angle}deg)`;
+            targetWheelDeg += deltaWheelDeg;
+
+            const added = currentKPa - prevKPa;
+            if (added > 0.1) {
+                gasFlowIntensity = Math.min(1.0, gasFlowIntensity + (isClickStep ? 0.85 : 0.35));
+                spawnGasBurst(isClickStep ? 18 : 4, gasFlowIntensity);
+            }
+
+            const pct = Math.min(100, Math.max(1, Math.round((currentKPa / 101.3) * 100)));
             if (digital) digital.textContent = `${currentKPa.toFixed(1)} kPa`;
+            if (pctBadge) pctBadge.textContent = `${pct}%`;
+            if (chamberFill) chamberFill.style.height = `${Math.min(100, (currentKPa / 101.3) * 100)}%`;
 
             if (currentKPa >= 100.0 && currentKPa <= 103.0) {
                 if (statusTxt) {
-                    statusTxt.textContent = '● EQUALIZED (SAFE)';
-                    statusTxt.className = 'text-[10px] font-mono-tech text-emerald-400 font-bold';
+                    statusTxt.textContent = '✓ EQUALIZED (SAFE)';
+                    statusTxt.className = 'text-[11px] font-extrabold text-[#4fd1a0]';
                 }
+                if (digital) digital.className = 'font-mono-tech font-extrabold text-base text-[#4fd1a0] tabular-nums';
+                if (pctBadge) pctBadge.className = 'mt-0.5 px-2 py-0.5 rounded-full bg-[#4a1d1d]/95 border border-[#4fd1a0] text-[11px] font-mono-tech font-bold text-[#4fd1a0] tabular-nums';
+
+                // Slide open inner habitat hatch
+                if (innerDoor) innerDoor.style.transform = 'translateY(-86%)';
+                if (innerLed) innerLed.className = 'w-1.5 h-5 rounded-full bg-[#4fd1a0] shadow-[0_0_8px_#4fd1a0]';
+                if (innerGlow) innerGlow.style.opacity = '1';
+                if (hatchBadge) {
+                    hatchBadge.textContent = 'HATCH OPEN';
+                    hatchBadge.className = 'text-[#4fd1a0] font-extrabold';
+                }
+                if (habitatLabel) habitatLabel.className = 'text-[#4fd1a0] font-extrabold';
+                if (chamberAtmoBg) chamberAtmoBg.style.background = 'radial-gradient(circle at 50% 60%, rgba(79,209,160,0.32), rgba(52, 23, 23,0.92))';
+                if (chamberFill) chamberFill.style.background = 'linear-gradient(to top, rgba(79,209,160,0.30), rgba(253, 183, 115,0.10))';
+                if (btnStep) btnStep.disabled = true;
+
                 if (!isDone) {
                     isDone = true;
                     playSfx('airlockHiss');
                     if (window.state && window.state.player) {
                         window.state.cabinPressureKPa = 101.3;
+                        window.state.player.inSuit = true;
+                        window.state.player.suitChecked = true;
+                        window.state.player.outerDoorOpen = true;
+                    }
+                    if (typeof window.completeTask === 'function') {
+                        window.completeTask('ch1_airlock');
+                        if (window.state && window.state.chapterIdx === 2) window.completeTask('ch3_eva_prep');
+                        if (window.state && window.state.chapterIdx === 4) window.completeTask('ch5_cycle_door');
                     }
                     setTimeout(() => {
                         showActivitySuccess(
@@ -195,26 +593,124 @@ window.AstraActivities = (function () {
                             'Cabin atmosphere is now fully synchronized with habitat life support. Equalizing pressure prevents violent explosive decompression and allows the inner airlock hatch to safely open.',
                             onComplete
                         );
-                    }, 600);
+                    }, 950);
                 }
-            } else if (currentKPa < 100.0) {
+            } else if (currentKPa > 103.0) {
                 if (statusTxt) {
-                    statusTxt.textContent = `● PRESSURIZING... (${Math.round((currentKPa / 101.3) * 100)}%)`;
-                    statusTxt.className = 'text-[10px] font-mono-tech text-amber-400 font-bold';
+                    statusTxt.textContent = '! OVERPRESSURE (VENT CCW)';
+                    statusTxt.className = 'text-[11px] font-extrabold text-[#DA6556]';
                 }
+                if (digital) digital.className = 'font-mono-tech font-extrabold text-base text-[#DA6556] tabular-nums';
+                setHatchClosedStyles();
+            } else if (currentKPa > 2.0) {
+                if (statusTxt) {
+                    statusTxt.textContent = `● PRESSURIZING... (${pct}%)`;
+                    statusTxt.className = 'text-[11px] font-extrabold text-[#FDB773]';
+                }
+                if (digital) digital.className = 'font-mono-tech font-extrabold text-base text-[#FDB773] tabular-nums';
+                if (pctBadge) pctBadge.className = 'mt-0.5 px-2 py-0.5 rounded-full bg-[#4a1d1d]/95 border border-[#FDB773] text-[11px] font-mono-tech font-bold text-[#FDB773] tabular-nums';
+                if (chamberAtmoBg) chamberAtmoBg.style.background = 'radial-gradient(circle at 50% 80%, rgba(253, 183, 115,0.28), rgba(52, 23, 23,0.94))';
+                setHatchClosedStyles();
             } else {
                 if (statusTxt) {
-                    statusTxt.textContent = '● OVERPRESSURE WARNING';
-                    statusTxt.className = 'text-[10px] font-mono-tech text-rose-400 font-bold';
+                    statusTxt.textContent = '⚠ VACUUM HAZARD';
+                    statusTxt.className = 'text-[11px] font-extrabold text-[#DA6556]';
                 }
+                if (digital) digital.className = 'font-mono-tech font-extrabold text-base text-[#EB895B] tabular-nums';
+                if (pctBadge) pctBadge.className = 'mt-0.5 px-2 py-0.5 rounded-full bg-[#4a1d1d]/95 border border-[#DA6556] text-[11px] font-mono-tech font-bold text-[#EB895B] tabular-nums';
+                if (chamberAtmoBg) chamberAtmoBg.style.background = 'radial-gradient(circle at 50% 85%, rgba(218, 101, 86,0.22), rgba(52, 23, 23,0.96))';
+                setHatchClosedStyles();
             }
         }
 
-        // Rotary drag interaction
+        // Animation loop for wheel rotation, needle jitter, pipe chevrons, and chamber particles
+        function tick(now) {
+            if (!rotor || !container.contains(rotor)) return;
+
+            if (fxCanvas && fxCanvas.width === 0) resizeFxCanvas();
+
+            const wheelDiff = targetWheelDeg - displayWheelDeg;
+            if (Math.abs(wheelDiff) > 0.05) {
+                displayWheelDeg += wheelDiff * 0.22;
+            } else {
+                displayWheelDeg = targetWheelDeg;
+            }
+            rotor.style.transform = `rotate(${displayWheelDeg.toFixed(1)}deg)`;
+            if (wheelDegLabel) wheelDegLabel.textContent = `${Math.round(displayWheelDeg)}°`;
+
+            gasFlowIntensity *= 0.94;
+            if (gasFlowIntensity < 0.02) gasFlowIntensity = 0;
+
+            if (needle) {
+                const baseAngle = -135 + (currentKPa / 120) * 270;
+                const jitter = gasFlowIntensity > 0.05 ? Math.sin(now * 0.09) * (1.8 * gasFlowIntensity) : 0;
+                needle.style.transform = `rotate(${(baseAngle + jitter).toFixed(2)}deg)`;
+            }
+
+            if (pipeFlow) {
+                if (gasFlowIntensity > 0.05) {
+                    pipeFlow.classList.add('flowing');
+                    pipeFlow.style.opacity = (0.35 + gasFlowIntensity * 0.65).toFixed(2);
+                } else {
+                    pipeFlow.classList.remove('flowing');
+                    pipeFlow.style.opacity = '0.22';
+                }
+            }
+
+            if (ctx && fxCanvas) {
+                const w = fxCanvas.width || 180;
+                const h = fxCanvas.height || 128;
+                ctx.clearRect(0, 0, w, h);
+
+                if (currentKPa > 25 && Math.random() < (currentKPa / 101.3) * 0.12) {
+                    particles.push({
+                        x: 16 + Math.random() * (w - 32),
+                        y: h - 10 - Math.random() * (h * 0.6),
+                        vx: (Math.random() - 0.5) * 0.6,
+                        vy: -0.25 - Math.random() * 0.4,
+                        r: 1.1 + Math.random() * 1.4,
+                        alpha: 0.4,
+                        life: 1.0,
+                        decay: 0.018,
+                        hue: isDone ? '#4fd1a0' : '#FDB773'
+                    });
+                }
+
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vx *= 0.985;
+                    p.vy *= 0.99;
+                    if (p.x < 14 || p.x > w - 16) p.vx *= -0.8;
+                    if (p.y < 6) p.vy *= -0.3;
+                    p.life -= p.decay;
+                    if (p.life <= 0) {
+                        particles.splice(i, 1);
+                        continue;
+                    }
+                    ctx.globalAlpha = Math.max(0, p.life * p.alpha);
+                    ctx.fillStyle = p.hue;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1;
+            }
+
+            if (typeof requestAnimationFrame === 'function') {
+                requestAnimationFrame(tick);
+            }
+        }
+        if (typeof requestAnimationFrame === 'function') {
+            requestAnimationFrame(tick);
+        }
+
+        // Rotary pointer drag interaction
         let isDragging = false;
         let lastAngle = 0;
 
-        function getAngle(e) {
+        function getPointerAngle(e) {
             const rect = wheel.getBoundingClientRect();
             const cx = rect.left + rect.width / 2;
             const cy = rect.top + rect.height / 2;
@@ -223,35 +719,49 @@ window.AstraActivities = (function () {
             return Math.atan2(clientY - cy, clientX - cx) * (180 / Math.PI);
         }
 
-        const onStart = (e) => {
+        wheel.addEventListener('pointerdown', (e) => {
+            if (isDone) return;
             isDragging = true;
-            lastAngle = getAngle(e);
-        };
-        const onMove = (e) => {
+            lastAngle = getPointerAngle(e);
+            if (wheel.setPointerCapture && e.pointerId !== undefined) {
+                try { wheel.setPointerCapture(e.pointerId); } catch (_) {}
+            }
+        });
+
+        wheel.addEventListener('pointermove', (e) => {
             if (!isDragging || isDone) return;
-            const currentAngle = getAngle(e);
+            const currentAngle = getPointerAngle(e);
             let delta = currentAngle - lastAngle;
             if (delta > 180) delta -= 360;
             if (delta < -180) delta += 360;
             lastAngle = currentAngle;
-            if (Math.abs(delta) > 0.5) {
-                playSfx('valveRotate');
-                updatePressure(currentKPa + delta * 0.35);
+            if (Math.abs(delta) > 0.4) {
+                const nowMs = Date.now();
+                if (nowMs - lastSoundTime > 90) {
+                    playSfx('valveRotate');
+                    lastSoundTime = nowMs;
+                }
+                let nextKPa = currentKPa + delta * 0.28;
+                if (currentKPa < 100.0 && nextKPa >= 100.0 && nextKPa <= 103.5) {
+                    nextKPa = 101.3;
+                }
+                updatePressure(nextKPa, delta, false);
             }
-        };
-        const onEnd = () => { isDragging = false; };
+        });
 
-        wheel.addEventListener('mousedown', onStart);
-        window.addEventListener('mousemove', onMove);
-        window.addEventListener('mouseup', onEnd);
-        wheel.addEventListener('touchstart', onStart, { passive: true });
-        window.addEventListener('touchmove', onMove, { passive: true });
-        window.addEventListener('touchend', onEnd);
+        const endDrag = () => { isDragging = false; };
+        wheel.addEventListener('pointerup', endDrag);
+        wheel.addEventListener('pointercancel', endDrag);
 
         if (btnStep) {
             btnStep.addEventListener('click', () => {
+                if (isDone) return;
                 playSfx('valveRotate');
-                updatePressure(currentKPa + 15.0);
+                let nextKPa = currentKPa + 15.0;
+                if (currentKPa < 100.0 && nextKPa >= 99.5) {
+                    nextKPa = 101.3;
+                }
+                updatePressure(nextKPa, 90, true);
             });
         }
     }
@@ -3047,6 +3557,7 @@ window.AstraActivities = (function () {
         if (!container) return false;
         const renderer = TASK_RENDERERS[taskId];
         if (typeof renderer === 'function') {
+            activityState.activeTaskId = taskId;
             renderer(container, () => {
                 if (typeof window.completeTask === 'function') {
                     window.completeTask(taskId);

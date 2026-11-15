@@ -12,18 +12,23 @@ const CHAPTERS = [
         actTitle: "The Red Cradle",
         solRange: "Sol 01–02",
         solStart: 1,
-        title: "MISSION 1: The First Breath",
-        story: "In 2048, the Astra-1 expedition lands on Mars to occupy a research habitat 3D-printed from local basaltic regolith—the operational successor to NASA's famous CHAPEA Mars Dune Alpha. You are Cadet Nova. The habitat has operated on autonomous low-power hibernation for 6 months. Before the crew can unpack scientific gear, you must verify the life-support envelope and establish communication.",
-        science: "Astronauts follow strict commissioning checkouts before declaring a habitat safe. Modeled on Orion ECLSS and CHAPEA, pressure (101.3 kPa), oxygen partial pressure, and comms alignment must be verified first.",
-        dilemma: "Airlock Startup Purge: Do you run a fast-purge (instant, but expends 120 L of nitrogen reserve) or the multi-stage recirculation pump cycle (takes manual verification, but preserves 100% of buffer)?",
+        role: "Flight Commander",
+        title: "MISSION 1: Station Activation",
+        story: "Pressurize the airlock, unpack your toolkit, and stabilize cabin oxygen.",
+        science: "Humans need 101.3 kPa pressure and 21% O₂—just like sea level on Earth.",
+        scienceMore: "Mars outside pressure is under 1 kPa. Modeled on NASA's Orion ECLSS and CHAPEA, verifying pressure (101.3 kPa), oxygen partial pressure, and comms alignment first prevents decompression hazards.",
+        dilemma: "Cycle Airlock Slowly or Fast?",
+        classicStory: "In 2048, the Astra-1 expedition lands on Mars to occupy a research habitat 3D-printed from local basaltic regolith—the operational successor to NASA's famous CHAPEA Mars Dune Alpha. You are Cadet Nova. The habitat has operated on autonomous low-power hibernation for 6 months. Before the crew can unpack scientific gear, you must verify the life-support envelope and establish communication.",
+        classicScience: "Astronauts follow strict commissioning checkouts before declaring a habitat safe. Modeled on Orion ECLSS and CHAPEA, pressure (101.3 kPa), oxygen partial pressure, and comms alignment must be verified first.",
+        classicDilemma: "Airlock Startup Purge: Do you run a fast-purge (instant, but expends 120 L of nitrogen reserve) or the multi-stage recirculation pump cycle (takes manual verification, but preserves 100% of buffer)?",
         dilemmaChoices: [
-            { id: 'opt_recirc', label: 'Multi-Stage Recirculation (Save Buffer)', outcome: 'Preserved 100% nitrogen buffer. Nominal airlock cycle verified.', effect: { nitrogenSaved: true } },
-            { id: 'opt_fast', label: 'Fast-Purge Venting (Instant Entry)', outcome: 'Quick entry, but expended 120L nitrogen buffer. Cabin pressure set to 98 kPa.', effect: { pressureLoss: 3 } }
+            { id: 'opt_recirc', label: '🛡️ Standard 3-Min Cycle', pros: '+100% N₂ Reserve Saved', tag: 'Safe', tone: 'emerald', outcome: 'Preserved 100% nitrogen buffer. Nominal airlock cycle verified.', effect: { nitrogenSaved: true } },
+            { id: 'opt_fast', label: '⚡ Fast 90s Vent', pros: 'Instant Entry', tag: '-3 kPa Buffer', tone: 'amber', outcome: 'Quick entry, but expended 120L nitrogen buffer. Cabin pressure set to 98 kPa.', effect: { pressureLoss: 3 } }
         ],
         tasks: [
-            { id: 'ch1_airlock', text: 'Cycle Airlock Pressure (Airlock Console)', done: false },
-            { id: 'ch1_tool', text: 'Collect Diagnostic Multi-Tool (Storage Locker)', done: false },
-            { id: 'ch1_life', text: 'Verify ECLSS Life-Support Envelope (Life Support)', done: false }
+            { id: 'ch1_airlock', text: 'Cycle Airlock Pressure (Airlock)', room: '🚪 Airlock Bay', shortAction: 'Equalize cabin to 101.3 kPa', done: false },
+            { id: 'ch1_tool', text: 'Unpack Multi-Tool & Fuse (Storage)', room: '🧰 Storage Bay', shortAction: 'Grab Multi-Tool & HV Fuse', done: false },
+            { id: 'ch1_life', text: 'Verify Cabin Oxygen & ECLSS (Life Support)', room: '💨 Life Support', shortAction: 'Check 5 life-support channels', done: false }
         ]
     },
     {
@@ -32,18 +37,23 @@ const CHAPTERS = [
         actTitle: "The Red Cradle",
         solRange: "Sol 24–40",
         solStart: 24,
-        title: "MISSION 2: First Seeds in Red Soil",
-        story: "Packaged rations only last so long. Chief Botanist Dr. Elena Lin needs help setting up the vertical hydroponic racks. The crew's fresh food and psychological well-being depend on getting the first crop cycle planted and balancing the nutrient dosing.",
-        science: "Hydroponics uses water enriched with mineral salts instead of soil. NASA's CHAPEA experiments proved that fresh greens prevent micronutrient degradation and reduce crew isolation stress. 5 kW represents electrical power consumption for grow lights; PAR (Photosynthetically Active Radiation) is a distinct biological photon flux metric.",
-        dilemma: "Nutrient & LED Balance: High-intensity 24/7 LED lighting accelerates lettuce growth by 30% but consumes 5 kW continuously, risking night battery drain. Standard 16/8 photoperiod balances the grid.",
+        role: "Botanist",
+        title: "MISSION 2: Hydroponic Harvest Prep",
+        story: "Scan the wheat trays, set grow lights to 5 kW, and flush the water lines.",
+        science: "Plants use red and blue LED light best while making fresh oxygen and food.",
+        scienceMore: "Hydroponics uses water enriched with mineral salts instead of soil. NASA's CHAPEA experiments proved that fresh greens prevent micronutrient degradation and reduce crew isolation stress.",
+        dilemma: "How bright should we run the Greenhouse LEDs?",
+        classicStory: "Packaged rations only last so long. Chief Botanist Dr. Elena Lin needs help setting up the vertical hydroponic racks. The crew's fresh food and psychological well-being depend on getting the first crop cycle planted and balancing the nutrient dosing.",
+        classicScience: "Hydroponics uses water enriched with mineral salts instead of soil. NASA's CHAPEA experiments proved that fresh greens prevent micronutrient degradation and reduce crew isolation stress. 5 kW represents electrical power consumption for grow lights; PAR (Photosynthetically Active Radiation) is a distinct biological photon flux metric.",
+        classicDilemma: "Nutrient & LED Balance: High-intensity 24/7 LED lighting accelerates lettuce growth by 30% but consumes 5 kW continuously, risking night battery drain. Standard 16/8 photoperiod balances the grid.",
         dilemmaChoices: [
-            { id: 'opt_balanced_light', label: 'Standard 16/8 PAR Photoperiod', outcome: 'Balanced energy grid. Seedlings sprout cleanly with healthy root development.', effect: { foodBonus: 10, powerSafe: true } },
-            { id: 'opt_boost_light', label: 'Overclock 24/7 Grow LEDs (+5 kW)', outcome: 'Fast sprouts, but draws +5 kW continuously, pulling battery down by 15 kWh.', effect: { foodBonus: 16, batCost: 15 } }
+            { id: 'opt_balanced_light', label: '🌱 Standard 16/8 Cycle', pros: '+10 Food, Grid Safe', tag: 'Balanced', tone: 'emerald', outcome: 'Balanced energy grid. Seedlings sprout cleanly with healthy root development.', effect: { foodBonus: 10, powerSafe: true } },
+            { id: 'opt_boost_light', label: '⚡ 24/7 Max LEDs', pros: '+16 Food Yield', tag: '-15 kWh Battery', tone: 'amber', outcome: 'Fast sprouts, but draws +5 kW continuously, pulling battery down by 15 kWh.', effect: { foodBonus: 16, batCost: 15 } }
         ],
         tasks: [
-            { id: 'ch2_crop_inspect', text: 'Check Dwarf Wheat Trays (Greenhouse)', done: false },
-            { id: 'ch2_greenhouse_power', text: 'Set Grow-Light System to 5 kW (Power Room)', done: false },
-            { id: 'ch2_flush_irrigation', text: 'Flush Irrigation Pump Lines (Water Recycling)', done: false }
+            { id: 'ch2_crop_inspect', text: 'Scan Dwarf Wheat Trays (Greenhouse)', room: '🌿 Greenhouse', shortAction: 'Scan trays for yellow leaves', done: false },
+            { id: 'ch2_greenhouse_power', text: 'Set Grow Lights to 5 kW (Power Room)', room: '⚡ Power Room', shortAction: 'Slide LED power to 5.0 kW', done: false },
+            { id: 'ch2_flush_irrigation', text: 'Flush Irrigation Lines (Water Room)', room: '💧 Water Room', shortAction: 'Open valve & flush 2s', done: false }
         ]
     },
     {
@@ -52,18 +62,23 @@ const CHAPTERS = [
         actTitle: "The Red Cradle",
         solRange: "Sol 75–90",
         solStart: 75,
-        title: "MISSION 3: Commissioning Perseverance & Ingenuity",
-        story: "External robotic exploration begins! Staged outside the habitat are the Mars 2020 Perseverance Rover and Ingenuity Helicopter. As part of a historical robotic-systems simulation and future astronaut training exercise, Cadet Nova must suit up, inspect Perseverance's subsystems, and reboot Ingenuity rotor telemetry.",
-        science: "Perseverance and Ingenuity are historic NASA robotic explorers. Ingenuity's pioneering flight mission successfully ended in January 2024 after 72 flights, proving aerodynamic flight in Mars' 1% atmosphere.",
-        dilemma: "Rover Battery Re-charge: Do you recharge Perseverance from the habitat's battery bank (enabling immediate autonomous radar scans) or let its MMRTG nuclear generator trickle-charge slowly over 3 Sols?",
+        role: "EVA Specialist",
+        title: "MISSION 3: Rover & Drone Checkout",
+        story: "Put on your EVA suit, check Perseverance rover, and reboot Ingenuity helicopter.",
+        science: "Ingenuity proved flight is possible in Mars' ultra-thin 1% atmosphere.",
+        scienceMore: "Perseverance and Ingenuity are historic NASA robotic explorers. Ingenuity's pioneering mission completed 72 flights by January 2024, proving aerodynamic lift works in Mars' thin CO₂ air.",
+        dilemma: "How should we recharge the Perseverance Rover?",
+        classicStory: "External robotic exploration begins! Staged outside the habitat are the Mars 2020 Perseverance Rover and Ingenuity Helicopter. As part of a historical robotic-systems simulation and future astronaut training exercise, Cadet Nova must suit up, inspect Perseverance's subsystems, and reboot Ingenuity rotor telemetry.",
+        classicScience: "Perseverance and Ingenuity are historic NASA robotic explorers. Ingenuity's pioneering flight mission successfully ended in January 2024 after 72 flights, proving aerodynamic flight in Mars' 1% atmosphere.",
+        classicDilemma: "Rover Battery Re-charge: Do you recharge Perseverance from the habitat's battery bank (enabling immediate autonomous radar scans) or let its MMRTG nuclear generator trickle-charge slowly over 3 Sols?",
         dilemmaChoices: [
-            { id: 'opt_trickle', label: 'MMRTG Trickle Charge (Preserve Grid)', outcome: 'Preserved habitat power. Rover radar mapping will begin in 3 Sols.', effect: { pwrSaved: true } },
-            { id: 'opt_grid_charge', label: 'Hab Fast-Charge (-12 kWh Battery)', outcome: 'Perseverance fully powered! Long-range science scans available immediately.', effect: { batCost: 12, roverUnlocked: true } }
+            { id: 'opt_trickle', label: '🔋 Nuclear Trickle Charge', pros: 'Saves Habitat Battery', tag: '3-Sol Wait', tone: 'emerald', outcome: 'Preserved habitat power. Rover radar mapping will begin in 3 Sols.', effect: { pwrSaved: true } },
+            { id: 'opt_grid_charge', label: '⚡ Fast Habitat Charge', pros: 'Instant Rover Scans', tag: '-12 kWh Battery', tone: 'sky', outcome: 'Perseverance fully powered! Long-range science scans available immediately.', effect: { batCost: 12, roverUnlocked: true } }
         ],
         tasks: [
-            { id: 'ch3_eva_prep', text: 'Suit Up and Check Airlock Seal (Airlock)', done: false },
-            { id: 'ch3_rover_link', text: 'Inspect Perseverance Rover Subsystems (Mars Surface)', done: false },
-            { id: 'ch3_heli_inspect', text: 'Reboot Ingenuity Rotor Telemetry (Mars Surface)', done: false }
+            { id: 'ch3_eva_prep', text: 'Suit Up & Check Airlock Seal (Airlock)', room: '🚪 Airlock Bay', shortAction: 'Equip 4 suit parts & test seal', done: false },
+            { id: 'ch3_rover_link', text: 'Check Perseverance Rover (Mars Surface)', room: '🪨 Mars Surface', shortAction: 'Verify 4 rover subsystems', done: false },
+            { id: 'ch3_heli_inspect', text: 'Reboot Ingenuity Drone (Mars Surface)', room: '🚁 Mars Surface', shortAction: 'Flip 3 switches & hold reboot', done: false }
         ]
     },
 
@@ -74,18 +89,23 @@ const CHAPTERS = [
         actTitle: "The Great Dust Veil",
         solRange: "Sol 130–145",
         solStart: 130,
-        title: "MISSION 4: The Rising Sky of Copper",
-        story: "Orbital satellite radar warns of a localized Martian dust storm. Sky darkness surges, slashing solar array output to 8 kW while the habitat draws 24 kW—a dangerous 16 kW deficit! Cadet Nova must shed non-essential loads, switch to the sealed backup RTG/fission power source, and inspect exterior dust wipers.",
-        science: "Martian dust storms can last months, with atmospheric optical depth (tau) exceeding 4.0. RTGs are sealed solid-state power systems converting decay heat into electricity; they do not have refuelable tanks.",
-        dilemma: "Subsystem Load Shedding: Do you shut down the Science Lab (saving 4 kW) and pause sample research, or cut Greenhouse heating (risking crop root freeze)?",
+        role: "Power Engineer",
+        title: "MISSION 4: Solar Power Grid Defense",
+        story: "Turn off extra power loads, start the backup generator, and wipe dusty solar panels.",
+        science: "Fine Martian dust blocks sunlight and cuts solar panel power by over 50%.",
+        scienceMore: "Martian dust storms can last months with atmospheric optical depth (tau) exceeding 4.0. Sealed solid-state RTG units convert decay heat into electricity to bridge solar deficits.",
+        dilemma: "Which room should we power down during the dust storm?",
+        classicStory: "Orbital satellite radar warns of a localized Martian dust storm. Sky darkness surges, slashing solar array output to 8 kW while the habitat draws 24 kW—a dangerous 16 kW deficit! Cadet Nova must shed non-essential loads, switch to the sealed backup RTG/fission power source, and inspect exterior dust wipers.",
+        classicScience: "Martian dust storms can last months, with atmospheric optical depth (tau) exceeding 4.0. RTGs are sealed solid-state power systems converting decay heat into electricity; they do not have refuelable tanks.",
+        classicDilemma: "Subsystem Load Shedding: Do you shut down the Science Lab (saving 4 kW) and pause sample research, or cut Greenhouse heating (risking crop root freeze)?",
         dilemmaChoices: [
-            { id: 'opt_shed_lab', label: 'Shed Science Lab & Centrifuge (Save 4 kW)', outcome: 'Conserves 4 kW safely. Sample analysis paused, but crops and life support protected.', effect: { shedLab: true } },
-            { id: 'opt_shed_crops', label: 'Shed Greenhouse Heating (Risk Crops)', outcome: 'Saves 5 kW, but crop temperature drops to 4°C, causing 25% plant withering.', effect: { cropDamage: true } }
+            { id: 'opt_shed_lab', label: '🔬 Pause Science Lab', pros: 'Saves 4 kW Safely', tag: 'Crops Safe', tone: 'emerald', outcome: 'Conserves 4 kW safely. Sample analysis paused, but crops and life support protected.', effect: { shedLab: true } },
+            { id: 'opt_shed_crops', label: '🌡️ Cut Greenhouse Heat', pros: 'Saves 5 kW Power', tag: '-25% Crop Health', tone: 'amber', outcome: 'Saves 5 kW, but crop temperature drops to 4°C, causing 25% plant withering.', effect: { cropDamage: true } }
         ],
         tasks: [
-            { id: 'ch4_shed_load', text: 'Shed Non-Essential Laboratory Loads (Power Room)', done: false },
-            { id: 'ch4_gen_backup', text: 'Activate Backup Power Supply (Power Room)', done: false },
-            { id: 'ch4_dust_wipers', text: 'Inspect Exterior Dust Wipers (Solar Array EVA)', done: false }
+            { id: 'ch4_shed_load', text: 'Shed Non-Essential Loads (Power Room)', room: '⚡ Power Room', shortAction: 'Turn off optional breakers', done: false },
+            { id: 'ch4_gen_backup', text: 'Start Backup Generator (Power Room)', room: '🔋 Power Room', shortAction: 'Switch to RTG & pull lever 2s', done: false },
+            { id: 'ch4_dust_wipers', text: 'Wipe Solar Array Dust (Mars Surface)', room: '☀️ Solar Array', shortAction: 'Brush dust off 4 solar panels', done: false }
         ]
     },
     {
@@ -94,18 +114,23 @@ const CHAPTERS = [
         actTitle: "The Great Dust Veil",
         solRange: "Sol 190–205",
         solStart: 190,
-        title: "MISSION 5: The Zero-Visibility EVA",
-        story: "High winds damage an exterior solar-array junction. After weather sensors confirm a safe controlled EVA window, Cadet Nova must don the spacesuit, cycle the airlock according to strict interlock protocol, and replace the blown fuse at the cable junction box.",
-        science: "Safety is paramount: astronauts never conduct EVAs during zero-visibility gale conditions. Repairs occur only during verified calm windows with guide tethers and strict pressure checks.",
-        dilemma: "Tether Navigation: Do you stay strictly clipped to the habitat rail (takes longer, drains suit heating) or sprint directly to the array using radar beacons?",
+        role: "Safety Officer",
+        title: "MISSION 5: Storm EVA Repair",
+        story: "Lock your suit umbilical, depressurize the airlock, and fix the solar junction fuse.",
+        science: "Astronauts only go outside in calm windows using safety tethers and strict airlock checks.",
+        scienceMore: "Repairs never happen during zero-visibility gales. Once wind radar confirms a calm maintenance window, guide rails and interlock pressure checks keep astronauts safe.",
+        dilemma: "How should you cross the dusty yard to the solar array?",
+        classicStory: "High winds damage an exterior solar-array junction. After weather sensors confirm a safe controlled EVA window, Cadet Nova must don the spacesuit, cycle the airlock according to strict interlock protocol, and replace the blown fuse at the cable junction box.",
+        classicScience: "Safety is paramount: astronauts never conduct EVAs during zero-visibility gale conditions. Repairs occur only during verified calm windows with guide tethers and strict pressure checks.",
+        classicDilemma: "Tether Navigation: Do you stay strictly clipped to the habitat rail (takes longer, drains suit heating) or sprint directly to the array using radar beacons?",
         dilemmaChoices: [
-            { id: 'opt_safe_rail', label: 'Guide-Rail Safety Clipping (Safe)', outcome: 'Safe navigation with zero disorientation risk. Suit heater drained 15% power.', effect: { suitDrain: 15 } },
-            { id: 'opt_sprint_eva', label: 'Direct Radar Beacon Sprint (Fast)', outcome: 'Rapid repair! But wind buffeting causes minor suit telemetry glitch.', effect: { fastRepair: true } }
+            { id: 'opt_safe_rail', label: '🛡️ Clip to Guide Rail', pros: 'Zero Getting-Lost Risk', tag: '-15% Suit Heat', tone: 'emerald', outcome: 'Safe navigation with zero disorientation risk. Suit heater drained 15% power.', effect: { suitDrain: 15 } },
+            { id: 'opt_sprint_eva', label: '🏃 Fast Radar Sprint', pros: 'Quick Array Repair', tag: 'Wind Buffeting', tone: 'amber', outcome: 'Rapid repair! But wind buffeting causes minor suit telemetry glitch.', effect: { fastRepair: true } }
         ],
         tasks: [
-            { id: 'ch5_eva_suit', text: 'Put on EVA Suit & Umbilical (Airlock)', done: false },
-            { id: 'ch5_cycle_door', text: 'Cycle Outer Airlock Door (Airlock)', done: false },
-            { id: 'ch5_repair_junction', text: 'Repair Solar Cable Junction with Spare Fuse (Solar Array EVA)', done: false }
+            { id: 'ch5_eva_suit', text: 'Connect EVA Suit Umbilical (Airlock)', room: '🚪 Airlock Bay', shortAction: 'Check radar & lock umbilical', done: false },
+            { id: 'ch5_cycle_door', text: 'Depressurize Outer Airlock (Airlock)', room: '🚪 Airlock Bay', shortAction: 'Vent chamber to 0.6 kPa', done: false },
+            { id: 'ch5_repair_junction', text: 'Fix Solar Fuse & Cables (Mars Surface)', room: '☀️ Solar Array', shortAction: 'Swap fuse & wire +/- cables', done: false }
         ]
     },
     {
@@ -114,18 +139,23 @@ const CHAPTERS = [
         actTitle: "The Great Dust Veil",
         solRange: "Sol 250–265",
         solStart: 250,
-        title: "MISSION 6: ECLSS Scrubber Saturation",
-        story: "Fine dust infiltrates habitat intake filters, causing a simulated saturation in the primary amine CO₂ removal loop. Carbon dioxide climbs to 1,800 ppm in this training scenario. Nova must retrieve a fresh LiOH canister, install it, and verify that CO₂ drops below the 500 ppm baseline.",
-        science: "1,800 ppm and 500 ppm are game scenario values reflecting acute hypercapnia and nominal spacecraft target baselines. LiOH chemically binds CO2 into stable lithium carbonate.",
-        dilemma: "Backup Scrubber vs LiOH Swap: Engaging the backup CO₂ scrubber draws +3 kW immediately. Disassembling and replacing the LiOH filter takes physical work but consumes zero extra watts.",
+        role: "ECLSS Specialist",
+        title: "MISSION 6: CO₂ Scrubber Swap",
+        story: "Grab a fresh LiOH filter, swap out the clogged cartridge, and clear cabin CO₂.",
+        science: "Lithium Hydroxide (LiOH) crystals trap exhaled CO₂ so cabin air stays fresh.",
+        scienceMore: "Even 1% CO₂ in cabin air causes fatigue and headaches. Swapping chemical LiOH cartridges binds carbon dioxide into solid lithium carbonate without wasting continuous electricity.",
+        dilemma: "How should we lower high cabin CO₂ right now?",
+        classicStory: "Fine dust infiltrates habitat intake filters, causing a simulated saturation in the primary amine CO₂ removal loop. Carbon dioxide climbs to 1,800 ppm in this training scenario. Nova must retrieve a fresh LiOH canister, install it, and verify that CO₂ drops below the 500 ppm baseline.",
+        classicScience: "1,800 ppm and 500 ppm are game scenario values reflecting acute hypercapnia and nominal spacecraft target baselines. LiOH chemically binds CO2 into stable lithium carbonate.",
+        classicDilemma: "Backup Scrubber vs LiOH Swap: Engaging the backup CO₂ scrubber draws +3 kW immediately. Disassembling and replacing the LiOH filter takes physical work but consumes zero extra watts.",
         dilemmaChoices: [
-            { id: 'opt_swap_filter', label: 'Replace LiOH Cassette Manually (0 kW)', outcome: 'Permanent fix with 0 kW electrical penalty! CO₂ drops back to 420 ppm.', effect: { manualFilter: true } },
-            { id: 'opt_backup_scrub', label: 'Run Backup Electric Scrubber (+3 kW)', outcome: 'Instant CO₂ drop, but adds 3 kW load to an already stressed battery bank.', effect: { backupLoad: true } }
+            { id: 'opt_swap_filter', label: '🔧 Manual Filter Swap', pros: 'Uses 0 kW Extra Power', tag: 'Best Efficiency', tone: 'emerald', outcome: 'Permanent fix with 0 kW electrical penalty! CO₂ drops back to 420 ppm.', effect: { manualFilter: true } },
+            { id: 'opt_backup_scrub', label: '💨 Electric Backup Scrubber', pros: 'Instant CO₂ Drop', tag: '+3 kW Power Drain', tone: 'amber', outcome: 'Instant CO₂ drop, but adds 3 kW load to an already stressed battery bank.', effect: { backupLoad: true } }
         ],
         tasks: [
-            { id: 'ch6_filter_grab', text: 'Collect Fresh LiOH Canister (Storage Locker)', done: false },
-            { id: 'ch6_filter_install', text: 'Replace Saturated Scrubber (Life Support)', done: false },
-            { id: 'ch6_co2_verify', text: 'Verify CO₂ Levels Drop Below 500 ppm (Life Support)', done: false }
+            { id: 'ch6_filter_grab', text: 'Grab Fresh LiOH Canister (Storage)', room: '🧰 Storage Bay', shortAction: 'Pack LiOH canister in pouch', done: false },
+            { id: 'ch6_filter_install', text: 'Swap Clogged Scrubber (Life Support)', room: '💨 Life Support', shortAction: 'Bypass, swap filter & restore', done: false },
+            { id: 'ch6_co2_verify', text: 'Drop CO₂ Below 500 ppm (Life Support)', room: '💨 Life Support', shortAction: 'Run booster fan until <500 ppm', done: false }
         ]
     },
 
@@ -136,18 +166,23 @@ const CHAPTERS = [
         actTitle: "Outside the Red Line",
         solRange: "Sol 295–315",
         solStart: 295,
-        title: "MISSION 7: The Jezero Delta Core Expedition",
-        story: "The dust storm subsides. Clear skies reveal the ancient river delta of Jezero Crater. Perseverance spots a layered sedimentary deposit that could preserve signs of ancient Martian microbial life. Nova retrieves a sample tube, loads it into the lab's Raman spectrometer, and catalogues the mineral.",
-        science: "Raman spectroscopy uses laser inelastic scattering to identify molecular bonds. Simulated spectra here represent realistic phyllosilicates (smectite clays) formed in ancient liquid water.",
-        dilemma: "Drill Speed & Precision: Deep high-torque drilling risks jamming the diamond bit (ruining the tube). Cautious low-rpm drilling ensures a pristine sample but consumes extra rover power.",
+        role: "Geologist",
+        title: "MISSION 7: Jezero Rock Core Survey",
+        story: "Collect the rock core from the rover, scan it with the laser, and log the mineral.",
+        science: "Ancient Mars had liquid rivers and lakes—clay rocks still hold their chemical clues!",
+        scienceMore: "Raman spectroscopy uses laser light to fingerprint molecular bonds. Identifying smectite clay minerals proves liquid water once pooled inside Jezero Crater.",
+        dilemma: "How fast should the rover drill into the clay rock?",
+        classicStory: "The dust storm subsides. Clear skies reveal the ancient river delta of Jezero Crater. Perseverance spots a layered sedimentary deposit that could preserve signs of ancient Martian microbial life. Nova retrieves a sample tube, loads it into the lab's Raman spectrometer, and catalogues the mineral.",
+        classicScience: "Raman spectroscopy uses laser inelastic scattering to identify molecular bonds. Simulated spectra here represent realistic phyllosilicates (smectite clays) formed in ancient liquid water.",
+        classicDilemma: "Drill Speed & Precision: Deep high-torque drilling risks jamming the diamond bit (ruining the tube). Cautious low-rpm drilling ensures a pristine sample but consumes extra rover power.",
         dilemmaChoices: [
-            { id: 'opt_precision_drill', label: 'Cautious Low-RPM Coring (Pristine)', outcome: 'Pristine ancient delta sediment core recovered! Vacuum canister sealed in Lab.', effect: { pristineSample: true, scienceScore: 100 } },
-            { id: 'opt_fast_drill', label: 'High-Torque Rapid Coring (Risky)', outcome: 'Drill bit overheated, but core recovered with partial fracturing.', effect: { fracturedSample: true, scienceScore: 70 } }
+            { id: 'opt_precision_drill', label: '❄️ Slow Precision Drill', pros: '100% Intact Core', tag: '+100 Science', tone: 'sky', outcome: 'Pristine ancient delta sediment core recovered! Vacuum canister sealed in Lab.', effect: { pristineSample: true, scienceScore: 100 } },
+            { id: 'opt_fast_drill', label: '🔥 Fast High-Torque Drill', pros: 'Quick Extraction', tag: 'Cracked Sample', tone: 'amber', outcome: 'Drill bit overheated, but core recovered with partial fracturing.', effect: { fracturedSample: true, scienceScore: 70 } }
         ],
         tasks: [
-            { id: 'ch7_drill_core', text: 'Retrieve Drill Core Sample from Rover (Mars Surface)', done: false },
-            { id: 'ch7_raman_insert', text: 'Insert Sample into Raman Spectrometer (Science Lab)', done: false },
-            { id: 'ch7_catalogue_mineral', text: 'Catalogue Mineral Composition in Logbook (Science Lab)', done: false }
+            { id: 'ch7_drill_core', text: 'Get Rock Core from Rover (Mars Surface)', room: '🪨 Mars Surface', shortAction: 'Enter 3-7-8 & grab core tube', done: false },
+            { id: 'ch7_raman_insert', text: 'Scan Core with Laser (Science Lab)', room: '🔬 Science Lab', shortAction: 'Load tube & hold laser 2s', done: false },
+            { id: 'ch7_catalogue_mineral', text: 'Match Mineral Peaks (Science Lab)', room: '🔬 Science Lab', shortAction: 'Match spectrum & save log', done: false }
         ]
     },
     {
@@ -156,18 +191,23 @@ const CHAPTERS = [
         actTitle: "Outside the Red Line",
         solRange: "Sol 330–345",
         solStart: 330,
-        title: "MISSION 8: The Graywater Biofilm Crisis",
-        story: "Disaster in the Water Recycling Room! A bacterial biofilm obstructs the catalytic membrane, reducing throughput and driving water conductivity to 210 µS/cm. Nova must grab the pipe seal kit, flush the purifier, and verify water conductivity drops below 50 µS/cm.",
-        science: "Conductivity measures dissolved ions and salts in water. While low conductivity (<50 µS/cm) is a critical indicator of demineralization, biological sterility requires filtration and biocide.",
-        dilemma: "Water Crisis Triage: Do you flush the bioreactor with 200 Litres of fresh water (depleting reserves), or institute strict crew rationing to 1.2 L/day while running chemical biocide?",
+        role: "Water Tech",
+        title: "MISSION 8: Water Recycling Repair",
+        story: "Grab the plumbing seal kit, backflush the clogged water filter, and test purity.",
+        science: "Closed-loop space habitats recycle up to 98% of every drop of water!",
+        scienceMore: "Water conductivity measures dissolved salts and ions in µS/cm. Keeping conductivity under 50 µS/cm alongside biocide treatment keeps drinking water pure.",
+        dilemma: "How should we clean the clogged water bioreactor?",
+        classicStory: "Disaster in the Water Recycling Room! A bacterial biofilm obstructs the catalytic membrane, reducing throughput and driving water conductivity to 210 µS/cm. Nova must grab the pipe seal kit, flush the purifier, and verify water conductivity drops below 50 µS/cm.",
+        classicScience: "Conductivity measures dissolved ions and salts in water. While low conductivity (<50 µS/cm) is a critical indicator of demineralization, biological sterility requires filtration and biocide.",
+        classicDilemma: "Water Crisis Triage: Do you flush the bioreactor with 200 Litres of fresh water (depleting reserves), or institute strict crew rationing to 1.2 L/day while running chemical biocide?",
         dilemmaChoices: [
-            { id: 'opt_flush_water', label: 'Flush with 200L Fresh Water (Safe)', outcome: 'Bioreactor cleaned instantly, but reserve water drops to critical 220 Litres!', effect: { waterLoss: 200 } },
-            { id: 'opt_ration_water', label: 'Strict Crew Water Rationing (Tight)', outcome: 'Preserved water reserves. Crew reports dry throat and minor dehydration fatigue.', effect: { crewFatigue: 15 } }
+            { id: 'opt_flush_water', label: '💧 Full Water Backflush', pros: 'Instant Clean Filter', tag: '-200 L Reserve', tone: 'sky', outcome: 'Bioreactor cleaned instantly, but reserve water drops to critical 220 Litres!', effect: { waterLoss: 200 } },
+            { id: 'opt_ration_water', label: '🔧 Chemical Dose & Ration', pros: 'Saves Water Tank', tag: 'Crew Thirst', tone: 'amber', outcome: 'Preserved water reserves. Crew reports dry throat and minor dehydration fatigue.', effect: { crewFatigue: 15 } }
         ],
         tasks: [
-            { id: 'ch8_pipe_seal', text: 'Collect Pipe Seal Kit (Storage Locker)', done: false },
-            { id: 'ch8_flush_bioreactor', text: 'Flush Water Purifier & Bioreactor (Water Recycling)', done: false },
-            { id: 'ch8_conductivity_check', text: 'Verify Water Quality Conductivity < 50 µS/cm (Water Recycling)', done: false }
+            { id: 'ch8_pipe_seal', text: 'Grab Pipe Seal Kit (Storage)', room: '🧰 Storage Bay', shortAction: 'Pack seal kit in pouch', done: false },
+            { id: 'ch8_flush_bioreactor', text: 'Backflush Water Filter (Water Room)', room: '💧 Water Room', shortAction: 'Close inlet, flush 2s & open', done: false },
+            { id: 'ch8_conductivity_check', text: 'Test Water Purity <50 µS (Water Room)', room: '💧 Water Room', shortAction: 'Dose biocide until <50 µS/cm', done: false }
         ]
     },
 
@@ -178,18 +218,23 @@ const CHAPTERS = [
         actTitle: "The Solar Storm & Final Sol",
         solRange: "Sol 360–370",
         solStart: 360,
-        title: "MISSION 9: Solar Particle Event — Code Red",
-        story: "Space weather monitoring detects a major Coronal Mass Ejection launching high-energy solar energetic particles (SEPs) toward Mars! Without Earth's protective magnetic field, radiation at the surface surges. Nova must sound the alarm, verify regolith shelter shielding, and muster all crew inside.",
-        science: "Solar flares emit light/X-rays (traveling at light speed), while Coronal Mass Ejections (CMEs) launch massive plasma clouds and high-energy protons (SEPs) taking hours to days to reach Mars.",
-        dilemma: "Shelter Protocol Execution: All crew must enter Module 07. Do you pump the graywater jackets into the bunk walls immediately, or keep water circulating in the greenhouse crops?",
+        role: "Safety Officer",
+        title: "MISSION 9: Solar Storm Shelter",
+        story: "Sound the radiation siren, lock the water-shield blocks, and call all crew inside.",
+        science: "Water tanks around crew bunks block high-energy solar protons like a shield!",
+        scienceMore: "Coronal Mass Ejections fire swarms of charged protons across Mars. Hydrogen-rich materials like potable water and regolith blocks absorb ionizing radiation effectively.",
+        dilemma: "Where should we pump the water supply during the solar storm?",
+        classicStory: "Space weather monitoring detects a major Coronal Mass Ejection launching high-energy solar energetic particles (SEPs) toward Mars! Without Earth's protective magnetic field, radiation at the surface surges. Nova must sound the alarm, verify regolith shelter shielding, and muster all crew inside.",
+        classicScience: "Solar flares emit light/X-rays (traveling at light speed), while Coronal Mass Ejections (CMEs) launch massive plasma clouds and high-energy protons (SEPs) taking hours to days to reach Mars.",
+        classicDilemma: "Shelter Protocol Execution: All crew must enter Module 07. Do you pump the graywater jackets into the bunk walls immediately, or keep water circulating in the greenhouse crops?",
         dilemmaChoices: [
-            { id: 'opt_full_shield', label: 'Flood Water-Jacket Walls to Max Shielding', outcome: 'Complete radiation protection! Crew shielded safely at 0.05 mSv/h dose.', effect: { fullShield: true } },
-            { id: 'opt_partial_shield', label: 'Partial Shielding (Save Crop Flow)', outcome: 'Crops protected, but crew absorbs 0.85 mSv dose, requiring medical detox.', effect: { crewRadiation: true } }
+            { id: 'opt_full_shield', label: '🛡️ Flood Shelter Walls', pros: 'Max Crew Protection', tag: '0.05 mSv/h Safe', tone: 'emerald', outcome: 'Complete radiation protection! Crew shielded safely at 0.05 mSv/h dose.', effect: { fullShield: true } },
+            { id: 'opt_partial_shield', label: '🌱 Keep Greenhouse Flow', pros: 'Protects Plants', tag: 'Higher Radiation', tone: 'amber', outcome: 'Crops protected, but crew absorbs 0.85 mSv dose, requiring medical detox.', effect: { crewRadiation: true } }
         ],
         tasks: [
-            { id: 'ch9_alarm_siren', text: 'Sound Habitat Alarm Siren (Radiation Shelter Console)', done: false },
-            { id: 'ch9_verify_shielding', text: 'Verify Regolith Storm Shelter Shielding (Radiation Shelter)', done: false },
-            { id: 'ch9_shelter_evac', text: 'Muster Crew Inside Bunker (Radiation Shelter)', done: false }
+            { id: 'ch9_alarm_siren', text: 'Sound Radiation Siren (Shelter)', room: '🚨 Shelter Bay', shortAction: 'Hold red siren lever 2s', done: false },
+            { id: 'ch9_verify_shielding', text: 'Place 4 Shield Blocks (Shelter)', room: '🛡️ Shelter Bay', shortAction: 'Lock 4 water-shield blocks', done: false },
+            { id: 'ch9_shelter_evac', text: 'Call All 4 Crew to Bunker (Shelter)', room: '👨‍🚀 Shelter Bay', shortAction: 'Ping 4 crew & seal hatch', done: false }
         ]
     },
     {
@@ -198,17 +243,22 @@ const CHAPTERS = [
         actTitle: "The Solar Storm & Final Sol",
         solRange: "Sol 375–378",
         solStart: 375,
-        title: "MISSION 10: The Return Window — Handover",
-        story: "Sol 378 has arrived! The 378-day CHAPEA analog expedition is complete. The Earth Return Vehicle (ERV) is on final orbital approach. Nova and the crew must package Jezero core tubes into the ERV vault, harvest mature greenhouse crops, and transmit the final 378-Sol logbook to NASA Houston.",
-        science: "Outpost handover requires winterizing life support, archiving telemetry, and securing astrobiological samples. Radio communication between Mars and Earth experiences a 14-minute one-way light delay.",
-        dilemma: "Final Mission Legacy: Transmit the comprehensive 378-Sol Mission Telemetry Archive to Houston Flight Directors and receive your Junior Astronaut Trainer Certification Scorecard!",
+        role: "Mission Lead",
+        title: "MISSION 10: Earth Return Prep",
+        story: "Pack the Mars rock tubes, harvest fresh crops, and send the final report to Earth.",
+        science: "Every Martian rock sample is triple-sealed to protect Earth's biosphere.",
+        scienceMore: "Outpost handover archives 378 sols of life-support logs and prepares fresh crops while planetary protection seals keep Martian soil specimens sterile in transit.",
+        dilemma: "Final Outpost Handover Mode:",
+        classicStory: "Sol 378 has arrived! The 378-day CHAPEA analog expedition is complete. The Earth Return Vehicle (ERV) is on final orbital approach. Nova and the crew must package Jezero core tubes into the ERV vault, harvest mature greenhouse crops, and transmit the final 378-Sol logbook to NASA Houston.",
+        classicScience: "Outpost handover requires winterizing life support, archiving telemetry, and securing astrobiological samples. Radio communication between Mars and Earth experiences a 14-minute one-way light delay.",
+        classicDilemma: "Final Mission Legacy: Transmit the comprehensive 378-Sol Mission Telemetry Archive to Houston Flight Directors and receive your Junior Astronaut Trainer Certification Scorecard!",
         dilemmaChoices: [
-            { id: 'opt_full_handover', label: 'Execute Full Autonomous Outpost Handover', outcome: 'ASTRA-1 successfully certified! All systems nominal for the incoming relief crew.', effect: { certified: true } }
+            { id: 'opt_full_handover', label: '🚀 Full Autonomous Handover', pros: 'Certifies Astra-1 for Next Crew', tag: '100% Ready', tone: 'emerald', outcome: 'ASTRA-1 successfully certified! All systems nominal for the incoming relief crew.', effect: { certified: true } }
         ],
         tasks: [
-            { id: 'ch10_package_cores', text: 'Store Science Sample Canisters in ERV Vault (Science Lab)', done: false },
-            { id: 'ch10_greenhouse_seeds', text: 'Harvest Mature Greenhouse Crops (Greenhouse)', done: false },
-            { id: 'ch10_final_report', text: 'Transmit Final 378-Sol Expedition Logbook to NASA Houston (Science Lab)', done: false }
+            { id: 'ch10_package_cores', text: 'Pack 3 Rock Cores in Vault (Science Lab)', room: '📦 Science Lab', shortAction: 'Slot 3 sample tubes into vault', done: false },
+            { id: 'ch10_greenhouse_seeds', text: 'Harvest Ripe Crops (Greenhouse)', room: '🧺 Greenhouse', shortAction: 'Harvest 3 crop trays to storage', done: false },
+            { id: 'ch10_final_report', text: 'Send Final Report to Earth (Science Lab)', room: '📡 Science Lab', shortAction: 'Aim dish & hold transmit', done: false }
         ]
     }
 ];

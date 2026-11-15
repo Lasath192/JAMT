@@ -90,8 +90,9 @@ window.addEventListener('keydown', (e) => {
         }
         if (typeof isAnyModalOpen === 'function' && isAnyModalOpen()) return;
 
-        // Check if near Outer Airlock Door (within 75px)
-        if (state && state.player) {
+        // Prioritize Outer Airlock Door when pressing [F] near the hatch;
+        // pressing [E] checks the nearest object vs door distance first.
+        if (k === 'f' && state && state.player) {
             const distToDoor = Math.hypot(state.player.x - 276, state.player.y - 380);
             if (distToDoor <= 75) {
                 toggleOuterAirlockDoor();
@@ -422,13 +423,13 @@ function showPropDetailsCard(prop) {
     if (statEl) {
         statEl.textContent = '● ' + (prop.status || 'NOMINAL').toUpperCase();
         if ((prop.status || '').toLowerCase().includes('optimal') || (prop.status || '').toLowerCase().includes('nominal')) {
-            statEl.className = 'text-[10px] font-mono-tech text-emerald-400 font-bold';
+            statEl.className = 'text-[10px] font-extrabold text-[#4fd1a0]';
         } else {
-            statEl.className = 'text-[10px] font-mono-tech text-amber-400 font-bold';
+            statEl.className = 'text-[10px] font-extrabold text-[#EB895B]';
         }
     }
     if (titleEl) {
-        titleEl.innerHTML = `<i class="fa-solid fa-microchip text-sky-400 text-xs"></i> <span>${prop.name}</span>`;
+        titleEl.innerHTML = `<i class="fa-solid fa-microchip text-[#FDB773] text-xs"></i> <span>${prop.name}</span>`;
     }
     if (descEl) descEl.textContent = prop.info || 'NASA standard pressurized habitat life-support subsystem.';
 
@@ -833,43 +834,43 @@ function updateGame(dt) {
                 if (!state.player.outerDoorOpen) {
                     titleEl.textContent = '🚪 MAIN HABITAT ENTRANCE';
                     subEl.textContent = 'Press [F] to Open Door';
-                    promptEl.style.borderColor = '#38bdf8';
-                    if (kbdEl) kbdEl.className = 'bg-sky-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md animate-pulse';
+                    promptEl.style.borderColor = '#FDB773';
+                    if (kbdEl) kbdEl.className = 'keycap bg-[#FDB773] !text-[#341717] text-sm px-3 py-1 animate-pulse';
                 } else {
                     titleEl.textContent = '🚪 HABITAT ENTRANCE (OPEN)';
                     subEl.textContent = 'Press [F] to Close Door';
-                    promptEl.style.borderColor = '#22c55e';
-                    if (kbdEl) kbdEl.className = 'bg-emerald-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
+                    promptEl.style.borderColor = '#4fd1a0';
+                    if (kbdEl) kbdEl.className = 'keycap bg-[#4fd1a0] !text-[#341717] text-sm px-3 py-1';
                 }
             } else {
                 // Approaching habitat door from INSIDE: EVA Safety Procedure required
                 if (!state.player.outerDoorOpen) {
                     titleEl.textContent = '🔒 AIRLOCK OUTER HATCH';
                     subEl.textContent = 'Press [F] to Prepare for EVA';
-                    promptEl.style.borderColor = '#f59e0b';
-                    if (kbdEl) kbdEl.className = 'bg-amber-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md animate-pulse';
+                    promptEl.style.borderColor = '#FDB773';
+                    if (kbdEl) kbdEl.className = 'keycap bg-[#EB895B] !text-[#2d1212] text-sm px-3 py-1 animate-pulse';
                 } else {
                     titleEl.textContent = '💨 AIRLOCK OUTER HATCH (UNLOCKED)';
                     subEl.textContent = 'Press [F] to Close Hatch';
-                    promptEl.style.borderColor = '#22c55e';
-                    if (kbdEl) kbdEl.className = 'bg-emerald-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
+                    promptEl.style.borderColor = '#4fd1a0';
+                    if (kbdEl) kbdEl.className = 'keycap bg-[#4fd1a0] !text-[#341717] text-sm px-3 py-1';
                 }
             }
         } else if (nearestObj) {
             promptEl.classList.remove('hidden');
-            promptEl.style.borderColor = '#f59e0b';
+            promptEl.style.borderColor = '#FDB773';
             if (kbdEl) {
                 kbdEl.textContent = 'F';
-                kbdEl.className = 'bg-amber-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md animate-pulse';
+                kbdEl.className = 'keycap bg-[#EB895B] !text-[#2d1212] text-sm px-3 py-1 animate-pulse';
             }
             titleEl.textContent = nearestObj.name;
             subEl.textContent = 'Press [F] to interact';
         } else if (nearestNPC) {
             promptEl.classList.remove('hidden');
-            promptEl.style.borderColor = '#22c55e';
+            promptEl.style.borderColor = '#4fd1a0';
             if (kbdEl) {
                 kbdEl.textContent = 'F';
-                kbdEl.className = 'bg-emerald-400 text-slate-950 font-mono-tech font-black px-2.5 py-1 rounded-lg text-sm shadow-md';
+                kbdEl.className = 'keycap bg-[#4fd1a0] !text-[#341717] text-sm px-3 py-1';
             }
             titleEl.textContent = `Talk to ${nearestNPC.name} (${nearestNPC.role})`;
             subEl.textContent = 'Press [F] for Crew Dialogue';
